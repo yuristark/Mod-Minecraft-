@@ -10,7 +10,8 @@ const db = new PGlite();
 await db.exec(`
   create role anon nologin; create role authenticated nologin; create role service_role nologin bypassrls;
   create schema auth;
-  create table auth.users (id uuid primary key default gen_random_uuid(), email text unique, email_confirmed_at timestamptz);
+  create table auth.users (id uuid primary key default gen_random_uuid(), email text unique, email_confirmed_at timestamptz, created_at timestamptz default now(), last_sign_in_at timestamptz, raw_user_meta_data jsonb default '{}');
+  create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid references auth.users(id) on delete cascade, created_at timestamptz default now(), updated_at timestamptz default now(), refreshed_at timestamp, not_after timestamptz, user_agent text, ip inet);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   grant usage on schema auth to anon, authenticated, service_role;
@@ -29,11 +30,12 @@ await db.exec(`
 await db.exec(migracao);
 await db.exec(migracao); // precisa poder rodar de novo
 
-async function como(papel, uid, sql, params = []) {
+async function como(papel, uid, sql, params = [], headers = {}) {
   await db.exec('begin');
   try {
     await db.exec(`set local role ${papel}`);
     await db.query(`select set_config('request.jwt.claim.sub', $1, true)`, [uid || '']);
+    await db.query(`select set_config('request.headers', $1, true)`, [JSON.stringify(headers)]);
     const r = await db.query(sql, params);
     await db.exec('commit');
     return r.rows;
@@ -43,9 +45,9 @@ const um = async (...a) => Object.values((await como(...a))[0])[0];
 const falha = async (p, re) => { await assert.rejects(p, re); };
 let n = 0; const ok = m => { n++; console.log('  ✓ ' + m); };
 
-const novo = async (email, confirmado = true) =>
-  (await db.query(`insert into auth.users (email, email_confirmed_at) values ($1, $2) returning id`, [email, confirmado ? new Date() : null])).rows[0].id;
-const A = await novo('dono@teste.local', false), B = await novo('cliente@teste.local'), C = await novo('novo.dono@teste.local');
+const novo = async (email, confirmado = true, nome = '') =>
+  (await db.query(`insert into auth.users (email, email_confirmed_at, raw_user_meta_data) values ($1, $2, $3) returning id`, [email, confirmado ? new Date() : null, JSON.stringify(nome ? { nome } : {})])).rows[0].id;
+const A = await novo('dono@teste.local', false), B = await novo('cliente@teste.local', true, 'Cliente Teste'), C = await novo('novo.dono@teste.local');
 
 // Vitrine
 let pub = await um('anon', null, 'select public.config_publica()');
@@ -130,5 +132,49 @@ const ev = (await db.query(`select tipo from public.eventos order by id`)).rows.
 assert.ok(ev.includes('propriedade_transferida') && ev.includes('pagamento_duplicado'));
 assert.ok((await como('authenticated', C, 'select * from public.admin_listar_eventos(10)')).length > 0);
 await falha(como('authenticated', B, 'select * from public.admin_listar_eventos(10)'), /Apenas o dono/); ok('tudo fica registrado no histórico, visível só para o dono');
+
+
+// Perfil, presença, sessões e registro de acessos
+const H = { 'x-forwarded-for': '200.1.2.3, 10.0.0.1', 'user-agent': 'Mozilla/5.0 Teste' };
+await como('authenticated', B, 'select public.registrar_presenca()', [], H);
+let pf = (await db.query('select * from public.perfis where user_id = $1', [B])).rows[0];
+assert.equal(pf.nome, 'Cliente Teste'); assert.equal(pf.visto_ip, '200.1.2.3'); assert.equal(pf.visto_navegador, 'Mozilla/5.0 Teste'); ok('presença guarda IP e navegador do cabeçalho e o nome do cadastro');
+await como('authenticated', B, `select public.registrar_acesso('login')`, [], H);
+await como('authenticated', B, `select public.registrar_acesso('login')`, [], H);
+await como('authenticated', B, `select public.registrar_acesso('invasao')`, [], H);
+assert.equal((await db.query('select count(*)::int n from public.acessos_log where user_id = $1', [B])).rows[0].n, 1); ok('registro de acesso sem repetição e só com tipos válidos');
+await falha(como('anon', null, 'select public.meu_perfil()'), /permission denied/); ok('anônimo não vê perfil');
+await db.query(`insert into auth.sessions (user_id, user_agent, ip, refreshed_at) values ($1, 'Chrome no Windows', '200.1.2.3', now()), ($1, 'Safari no iPhone', '177.9.8.7', now())`, [B]);
+let meu = await um('authenticated', B, 'select public.meu_perfil()');
+assert.equal(meu.email, 'cliente@teste.local'); assert.equal(meu.nome, 'Cliente Teste'); assert.equal(meu.sessoes.length, 2);
+assert.equal(meu.acessos.length, 1); assert.equal(meu.acesso.ativo, true); assert.equal(meu.compras.length, 2); assert.equal(meu.online, true); ok('meu perfil traz conta, acesso, compras, aparelhos logados e acessos');
+await falha(como('authenticated', B, `select public.salvar_meu_perfil('', '', '', '', '', '')`), /Informe seu nome/);
+await falha(como('authenticated', B, `select public.salvar_meu_perfil('Cliente', '', '', '123', '', '')`), /Telefone inválido/);
+await falha(como('authenticated', B, `select public.salvar_meu_perfil('Cliente', '', '', '', '123', '')`), /CPF ou CNPJ inválido/);
+await como('authenticated', B, `select public.salvar_meu_perfil('Cliente Silva', 'Empresa X', 'Gerente', '(11) 98765-4321', '529.982.247-25', 'São Paulo')`, [], H);
+meu = await um('authenticated', B, 'select public.meu_perfil()');
+assert.equal(meu.nome, 'Cliente Silva'); assert.equal(meu.empresa, 'Empresa X'); ok('perfil é validado e salvo');
+assert.equal((await como('authenticated', A, 'select * from public.perfis')).length, 0); ok('ninguém lê o perfil dos outros');
+await falha(como('authenticated', B, 'select * from public.admin_listar_usuarios()'), /Apenas o dono/);
+const us = await como('authenticated', C, 'select * from public.admin_listar_usuarios()');
+assert.equal(us.length, 3);
+const ub = us.find(u => u.email === 'cliente@teste.local');
+assert.equal(ub.online, true); assert.equal(ub.sessoes, 2); assert.equal(ub.tem_acesso, true); assert.equal(ub.nome, 'Cliente Silva');
+assert.equal(us.find(u => u.email === 'novo.dono@teste.local').origem, 'dono');
+assert.equal((await como('authenticated', C, `select * from public.admin_listar_usuarios('empresa x')`)).length, 1); ok('dono vê todos os usuários, quem está online e quantos aparelhos estão logados');
+const det = await um('authenticated', C, 'select public.admin_detalhe_usuario($1)', [B]);
+assert.equal(det.sessoes.length, 2); assert.ok(det.eventos.length > 0); ok('dono vê o detalhe de cada usuário');
+const res2 = await um('authenticated', C, 'select public.admin_resumo()');
+assert.equal(res2.usuarios, 3); assert.equal(res2.online_agora, 1); assert.equal(res2.logados, 1); assert.equal(res2.vendas_30d.length, 30); ok('resumo traz usuários, online, logados e vendas dos últimos 30 dias');
+await falha(como('authenticated', C, 'select public.admin_encerrar_sessoes($1)', [C]), /Sair de todos/);
+assert.equal((await um('authenticated', C, 'select public.admin_encerrar_sessoes($1)', [B])).encerradas, 2);
+assert.equal((await um('authenticated', B, 'select public.meu_perfil()')).sessoes.length, 0); ok('dono desconecta os aparelhos de um usuário');
+await falha(como('authenticated', C, `select public.excluir_minha_conta('EXCLUIR')`), /dono da loja não pode/);
+await falha(como('authenticated', B, `select public.excluir_minha_conta('sim')`), /Digite EXCLUIR/);
+await como('authenticated', B, `select public.excluir_minha_conta('EXCLUIR')`);
+assert.equal((await db.query('select count(*)::int n from auth.users where id = $1', [B])).rows[0].n, 0);
+const restantes = await como('authenticated', C, 'select * from public.admin_listar_compras(50)');
+assert.equal(restantes.length, 2); assert.ok(restantes.every(r => /cliente@teste.local \(conta excluída\)/.test(r.email)));
+assert.equal((await db.query('select count(*)::int n from public.acessos_log where user_id is null')).rows[0].n, 2); ok('conta excluída: dados pessoais apagados, compras e registro de acesso guardados sem vínculo');
 
 console.log(`banco: ${n} verificações OK`);

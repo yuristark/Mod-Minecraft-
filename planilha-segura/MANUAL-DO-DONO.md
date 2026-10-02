@@ -19,7 +19,12 @@ O caminho de uma venda:
 3. O Mercado Pago avisa o Supabase.
 4. O acesso é liberado sozinho, em poucos segundos.
 
-As planilhas dos clientes **nunca** passam pelo servidor. O Supabase só guarda e-mail, senha (criptografada) e o registro das compras.
+As planilhas dos clientes **nunca** passam pelo servidor. O Supabase guarda:
+- a conta: e-mail, senha criptografada e os dados de perfil que o cliente preencher;
+- o registro das compras;
+- o registro de acessos: data, hora, IP e navegador de cada login e abertura do aplicativo.
+
+O registro de acessos é exigido pelo Marco Civil da Internet (art. 15) e alimenta o painel "quem está online".
 
 O dinheiro cai direto na conta Mercado Pago do dono. Ninguém mais tem acesso a ele.
 
@@ -151,7 +156,12 @@ Se o site mostrar "o config.json está com a chave SECRETA", você colou a chave
 | Mudar o preço | Painel → Loja → Preço. Vale para as próximas compras; quem já comprou continua com acesso |
 | Parar de vender, ou usar só para você | Painel → desmarque **Vendas abertas**. Só você e quem você liberar entram |
 | Cliente esqueceu a senha | Ele mesmo clica em "Esqueci minha senha" na tela de login |
-| Atualizar o aplicativo | Envie o novo `planilha-segura.html` ao depósito **app**, substituindo o antigo, **e** publique de novo a pasta `dist/loja` gerada na mesma versão |
+| Ver quem está usando agora | Painel → Visão geral → **Online agora**, ou Painel → **Usuários** → filtro "Online agora" |
+| Ver quem está logado e em quais aparelhos | Painel → **Usuários** (coluna Aparelhos). Clique na pessoa para ver aparelhos, IPs, últimos acessos, compras e histórico |
+| Desconectar alguém (ex.: conta compartilhada) | Painel → Usuários → clique na pessoa → **Desconectar aparelhos**. Vale em até 1 hora |
+| Cliente quer ver ou corrigir os próprios dados | Ele mesmo abre **Meu perfil** (menu com o nome dele no canto do aplicativo) |
+| Cliente pede para apagar a conta (LGPD) | Ele mesmo faz em Meu perfil → Privacidade → Excluir minha conta. As compras ficam registradas sem vínculo com ele |
+| Atualizar para uma nova versão | 1) Rode de novo o arquivo SQL inteiro no SQL Editor (ele atualiza sem apagar dados); 2) envie o novo `planilha-segura.html` ao depósito **app**, substituindo o antigo; 3) publique de novo a pasta `dist/loja` da mesma versão |
 
 > As duas pastas de cada versão precisam andar juntas. A página da loja autoriza só o código daquela versão do aplicativo. Se você trocar só uma delas, o aplicativo não abre.
 
@@ -216,7 +226,8 @@ O que já vem protegido:
 | Mensagem ou sintoma | Causa provável | Solução |
 | --- | --- | --- |
 | "Este site ainda não foi configurado" | `config.json` com os valores de exemplo | Passo D |
-| "O banco de dados não está atualizado" | O SQL não foi executado | Passo A, item 5 |
+| "O banco de dados não está atualizado" | O SQL não foi executado, ou é de uma versão anterior | Rode de novo o arquivo SQL inteiro (Passo A, item 5) |
+| A coluna "Aparelhos" aparece sempre zerada | O banco não deixou ler a lista de sessões do Supabase Auth | Os demais dados continuam funcionando; avise o suporte do produto |
 | "O arquivo do aplicativo ainda não foi enviado" | Falta o arquivo no depósito **app** | Passo A, item 7 |
 | O link de confirmação abre uma página errada | Site URL ou Redirect URLs diferentes do endereço real | Passo A, item 9 |
 | E-mails de confirmação não chegam | Limite do e-mail padrão do Supabase | Configure SMTP próprio |
@@ -228,6 +239,10 @@ O que já vem protegido:
 
 - **CNPJ** para emitir nota fiscal. Pergunte a um contador qual regime serve para venda de software.
 - **Termos de Uso** no site: o que está incluído, reembolso em 7 dias, suporte, limite de responsabilidade.
-- **Política de Privacidade (LGPD):** quais dados você guarda (e-mail e registro de compras), para quê, por quanto tempo e como o cliente pede para apagar.
-  - Para apagar a conta de um cliente: Supabase → Authentication → Users → excluir. As compras e o acesso dele são apagados junto.
+- **Política de Privacidade (LGPD):** quais dados você guarda, para quê, por quanto tempo e como o cliente pede para apagar. Neste produto são:
+  - conta: e-mail, nome e dados de perfil preenchidos pelo cliente, usados para liberar o acesso, dar suporte e emitir nota;
+  - compras: valor, data e situação, guardados por obrigação fiscal;
+  - registro de acessos: data, hora, IP e navegador, guardados por 13 meses. O Marco Civil da Internet exige no mínimo 6 meses, e o registro serve à segurança da conta;
+  - o conteúdo das planilhas **não** é coletado.
+  - O cliente vê tudo em Meu perfil, baixa uma cópia (.json) e pode excluir a conta sozinho. Se preferir fazer por ele: Supabase → Authentication → Users → excluir. Nos dois casos as compras e o registro de acessos ficam guardados sem vínculo com a pessoa.
 - **Licença de terceiros:** o produto usa SheetJS Community Edition e supabase-js. Mantenha os créditos (tela de Segurança do aplicativo e aviso de licença dentro da página da loja) e os arquivos de licença em `vendor/`.

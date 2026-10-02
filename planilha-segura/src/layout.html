@@ -1,300 +1,480 @@
 <title>Planilha Segura</title>
 <style>
 [hidden]{display:none!important}
-/* Layout: barra lateral verde-escura fixa à esquerda; à direita topo com caminho e páginas simples em cartões brancos. */
 :root{
-  --bg:#f5f8f7; --card:#ffffff; --ink:#1c2926; --muted:#6a7671; --line:#e2e8e5; --soft:#f0f4f2;
-  --primary:#1a674b; --primary-ink:#ffffff; --primary-soft:#e9f3ee;
-  --side:#112b26; --side-ink:#c2d0cb; --side-dim:#8ba99a; --side-line:#28433a; --side-active:#244b3c; --lime:#c4ec88; --lime-ink:#173c27;
-  --mark:#eef7d9; --mark-edge:#a9cf6b; --gone:#fbeceb; --gone-ink:#a23b33;
-  --ok:#2f7d4f; --warn:#9a6409; --warn-soft:#fdf4e2; --danger:#b23a32;
-  --font:Arial,Helvetica,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f3f6f4; --bg2:#eaf0ec; --card:#ffffff; --ink:#14221e; --ink2:#334540; --muted:#66756f; --line:#e1e8e4; --soft:#f2f6f3; --hover:#eef4f0;
+  --primary:#167a57; --primary-2:#0f5f43; --primary-ink:#ffffff; --primary-soft:#e5f3ec; --ring:rgba(22,122,87,.28);
+  --side:#0d2620; --side-2:#123128; --side-ink:#c9d8d1; --side-dim:#86a396; --side-line:rgba(255,255,255,.08); --side-active:rgba(196,236,136,.12); --lime:#c4ec88; --lime-ink:#173c27;
+  --mark:#eef8dc; --mark-edge:#9fcb5c; --gone:#fdeceb; --gone-ink:#b2382e;
+  --ok:#21835a; --ok-soft:#e3f4ea; --warn:#a1640a; --warn-soft:#fdf3e1; --danger:#c0392f; --danger-soft:#fdecea; --info:#2563a8; --info-soft:#e7f0fa;
+  --c1:#167a57; --c2:#2563a8; --c3:#a1640a; --c4:#7c4dbb;
+  --shadow:0 1px 2px rgba(16,32,26,.05),0 2px 6px rgba(16,32,26,.05); --shadow-lg:0 12px 32px rgba(16,32,26,.14),0 2px 6px rgba(16,32,26,.06);
+  --r:14px; --r-sm:9px;
+  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
-  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
-  --side:#0b1a16; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:#203630; --side-active:#1f3d32; --lime:#b9e27c; --lime-ink:#173c27;
-  --mark:rgba(169,207,107,.18); --mark-edge:rgba(169,207,107,.6); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
-  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73;
+  --bg:#0b1210; --bg2:#0f1916; --card:#131d1a; --ink:#e4eeea; --ink2:#c3d1cb; --muted:#93a59e; --line:#22302b; --soft:#18231f; --hover:#1b2824;
+  --primary:#4cc08f; --primary-2:#6fd3a7; --primary-ink:#06140e; --primary-soft:#163027; --ring:rgba(76,192,143,.35);
+  --side:#08130f; --side-2:#0c1a15; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:rgba(255,255,255,.06); --side-active:rgba(196,236,136,.10); --lime:#b9e27c;
+  --mark:rgba(159,203,92,.16); --mark-edge:rgba(159,203,92,.65); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
+  --ok:#5fd39a; --ok-soft:rgba(95,211,154,.12); --warn:#e8b55c; --warn-soft:rgba(232,181,92,.12); --danger:#ff7d73; --danger-soft:rgba(255,125,115,.12); --info:#7fb2ef; --info-soft:rgba(127,178,239,.12);
+  --c1:#4cc08f; --c2:#7fb2ef; --c3:#e8b55c; --c4:#b495e6;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 16px 40px rgba(0,0,0,.5);
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
-  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
-  --side:#0b1a16; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:#203630; --side-active:#1f3d32; --lime:#b9e27c; --lime-ink:#173c27;
-  --mark:rgba(169,207,107,.18); --mark-edge:rgba(169,207,107,.6); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
-  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73;
+  --bg:#0b1210; --bg2:#0f1916; --card:#131d1a; --ink:#e4eeea; --ink2:#c3d1cb; --muted:#93a59e; --line:#22302b; --soft:#18231f; --hover:#1b2824;
+  --primary:#4cc08f; --primary-2:#6fd3a7; --primary-ink:#06140e; --primary-soft:#163027; --ring:rgba(76,192,143,.35);
+  --side:#08130f; --side-2:#0c1a15; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:rgba(255,255,255,.06); --side-active:rgba(196,236,136,.10); --lime:#b9e27c;
+  --mark:rgba(159,203,92,.16); --mark-edge:rgba(159,203,92,.65); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
+  --ok:#5fd39a; --ok-soft:rgba(95,211,154,.12); --warn:#e8b55c; --warn-soft:rgba(232,181,92,.12); --danger:#ff7d73; --danger-soft:rgba(255,125,115,.12); --info:#7fb2ef; --info-soft:rgba(127,178,239,.12);
+  --c1:#4cc08f; --c2:#7fb2ef; --c3:#e8b55c; --c4:#b495e6;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 16px 40px rgba(0,0,0,.5);
   color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
 h1,h2,h3,p{margin:0}
-h1{font-size:26px;font-weight:600;letter-spacing:-.6px;line-height:1.25;text-wrap:balance}
-h2{font-size:16px;font-weight:600;letter-spacing:-.2px}
+h1{font-size:28px;font-weight:700;letter-spacing:-.8px;line-height:1.2;text-wrap:balance}
+h2{font-size:15px;font-weight:650;letter-spacing:-.2px}
 h3{font-size:14px;font-weight:600}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid #75ab91;outline-offset:2px}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+svg{flex:none}
 
-/* estrutura */
-.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
-.side{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;padding:26px 14px 18px;position:sticky;top:0;height:100vh}
-.brand{display:flex;align-items:center;gap:10px;padding:0 8px 26px;color:#fff;font-size:19px;font-weight:700;letter-spacing:-.6px}
-.brand span{font-weight:400;color:#dfe9e4}
-.brand small{display:block;font-size:9px;letter-spacing:1.4px;color:var(--side-dim);font-weight:400;margin-top:3px}
-.nav{display:grid;gap:3px}
-.nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;color:var(--side-ink);padding:11px 12px;border-radius:7px;font-size:14px;text-align:left}
-.nav button:hover{background:rgba(255,255,255,.05)}
-.nav button[aria-current="page"]{background:var(--side-active);color:#d6f5a8;box-shadow:inset 3px 0 var(--lime)}
-.side-note{margin-top:auto;padding:16px 14px;border:1px solid var(--side-line);border-radius:9px}
-.side-note strong{display:block;color:#eef6ef;font-size:13px}
-.side-note p{font-size:12px;line-height:1.7;color:#a9bcb0;margin-top:6px}
-.side-note .ver{color:var(--side-dim);font-size:11px;margin-top:10px}
+/* ---------- estrutura ---------- */
+.app{display:grid;grid-template-columns:252px minmax(0,1fr);min-height:100vh}
+.side{background:linear-gradient(180deg,var(--side-2),var(--side));color:var(--side-ink);display:flex;flex-direction:column;padding:22px 14px 16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.brand{display:flex;align-items:center;gap:11px;padding:2px 10px 24px;color:#fff;text-decoration:none}
+.brand .logo{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--lime),#7fcf95);display:grid;place-items:center;color:var(--lime-ink);box-shadow:0 4px 14px rgba(196,236,136,.25)}
+.brand b{display:block;font-size:16px;font-weight:700;letter-spacing:-.4px}
+.brand small{display:block;font-size:11px;color:var(--side-dim);margin-top:1px}
+.nav-label{font-size:10.5px;font-weight:600;letter-spacing:1.1px;text-transform:uppercase;color:var(--side-dim);padding:14px 12px 6px}
+.nav{display:grid;gap:2px}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;color:var(--side-ink);padding:9px 12px;border-radius:9px;font-size:13.5px;text-align:left;transition:background .15s,color .15s}
+.nav button svg{opacity:.85}
+.nav button:hover{background:rgba(255,255,255,.05);color:#fff}
+.nav button[aria-current="page"]{background:var(--side-active);color:var(--lime);font-weight:600}
+.nav button[aria-current="page"] svg{opacity:1}
+.nav .count{margin-left:auto;font-size:11px;background:rgba(255,255,255,.08);color:var(--side-ink);border-radius:999px;padding:1px 7px;font-weight:600}
+.side-foot{margin-top:auto;display:grid;gap:10px;padding-top:16px}
+.side-note{padding:14px;border:1px solid var(--side-line);border-radius:12px;background:rgba(255,255,255,.02)}
+.side-note strong{display:flex;align-items:center;gap:7px;color:#eef6ef;font-size:12.5px}
+.side-note p{font-size:12px;line-height:1.6;color:#9fb6aa;margin-top:6px}
+.side-note .ver{color:var(--side-dim);font-size:11px;margin-top:8px}
+.user{display:flex;align-items:center;gap:10px;width:100%;border:1px solid var(--side-line);background:rgba(255,255,255,.03);color:var(--side-ink);padding:9px 10px;border-radius:12px;text-align:left}
+.user:hover{background:rgba(255,255,255,.07)}
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--lime-ink);background:var(--lime);flex:none;letter-spacing:.3px}
+.user .who{min-width:0;flex:1}
+.user .who b{display:block;color:#fff;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user .who small{display:block;color:var(--side-dim);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.umenu{position:relative}
+.umenu .pop{position:absolute;left:0;right:0;bottom:calc(100% + 8px);background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;display:grid;z-index:30}
+.umenu .pop button{display:flex;align-items:center;gap:10px;border:0;background:none;text-align:left;padding:9px 10px;border-radius:8px;font-size:13px}
+.umenu .pop button:hover{background:var(--hover)}
+.umenu .pop hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
 .main{min-width:0;display:flex;flex-direction:column}
-.topbar{height:64px;border-bottom:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-inline:clamp(16px,3vw,36px)}
-.crumb{font-size:13px;color:var(--muted)}
-.crumb strong{color:var(--ink);font-weight:500}
-.pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ok);background:var(--primary-soft);padding:6px 10px;border-radius:6px;white-space:nowrap}
-.content{width:100%;max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:30px 40px}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
-.head p{color:var(--muted);margin-top:8px;font-size:14px}
-@media (max-width:860px){
+.topbar{position:sticky;top:0;z-index:20;height:62px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--card) 86%,transparent);backdrop-filter:saturate(1.4) blur(10px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-inline:clamp(16px,3vw,36px)}
+.crumb{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px;min-width:0}
+.crumb strong{color:var(--ink);font-weight:600}
+.top-r{display:flex;align-items:center;gap:8px}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ok);background:var(--ok-soft);padding:6px 11px;border-radius:999px;white-space:nowrap;font-weight:500}
+.iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--ink2)}
+.iconbtn:hover{background:var(--hover)}
+.content{width:100%;max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:28px 56px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.head p{color:var(--muted);margin-top:6px;font-size:14.5px}
+.view{animation:entra .2s ease both}
+@keyframes entra{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (max-width:900px){
   .app{grid-template-columns:minmax(0,1fr)}
-  .side{position:static;height:auto;padding:14px 16px}
-  .brand{padding:0 0 12px}
-  .nav{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;gap:4px}
-  .nav button{padding:8px 12px}
-  .side-note{display:none}
+  .side{position:sticky;top:0;z-index:25;height:auto;padding:10px 12px;flex-direction:row;align-items:center;gap:10px;overflow:visible}
+  .brand{padding:0}
+  .brand>span:last-child,.nav-label,.side-note{display:none}
+  .navs{flex:1;min-width:0;display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-webkit-mask-image:linear-gradient(90deg,#000 88%,transparent)}
+  .navs::-webkit-scrollbar{display:none}
+  .nav{display:flex;gap:4px}
+  .nav button{padding:7px 10px;font-size:13px;white-space:nowrap;width:auto}
+  .side-foot{margin:0;padding:0}
+  .user .who,.user>svg{display:none}
+  .user{padding:3px;border-radius:50%;width:auto}
+  .umenu .pop{left:auto;right:0;bottom:auto;top:calc(100% + 8px);min-width:220px}
   .topbar{display:none}
+  h1{font-size:23px}
+  .hero{padding:20px;border-radius:16px}
+  .hero h1{font-size:24px}
+  .content{padding-block:18px 40px}
 }
 
-/* peças */
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
-.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--line)}
-.card-h p{color:var(--muted);font-size:12px;margin-top:4px}
+/* ---------- peças ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-h p{color:var(--muted);font-size:12.5px;margin-top:3px}
+.card-h .ttl{display:flex;align-items:center;gap:10px}
 .card-b{padding:18px 20px;display:grid;gap:14px}
-.card-b>p{color:var(--muted);max-width:70ch;line-height:1.7}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:7px;padding:9px 15px;font-size:13px;font-weight:500;white-space:nowrap}
-.btn:hover{border-color:#9dbba8}
-.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
-.btn.primary:hover{filter:brightness(.92)}
+.card-b>p{color:var(--muted);max-width:72ch;line-height:1.7}
+.ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary);flex:none}
+.ico.b{background:var(--info-soft);color:var(--info)}
+.ico.w{background:var(--warn-soft);color:var(--warn)}
+.ico.p{background:color-mix(in srgb,var(--c4) 14%,transparent);color:var(--c4)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 15px;font-size:13px;font-weight:550;white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s,transform .05s}
+.btn:hover{background:var(--hover);border-color:color-mix(in srgb,var(--primary) 30%,var(--line))}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);box-shadow:0 1px 2px rgba(0,0,0,.08),inset 0 1px 0 rgba(255,255,255,.12)}
+.btn.primary:hover{background:var(--primary-2);border-color:var(--primary-2)}
 .btn.lime{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
-.btn.small{padding:6px 10px;font-size:12px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.link{border:0;background:none;padding:0;color:var(--primary);font-size:12px}
+.btn.ghost{background:transparent;border-color:transparent}
+.btn.ghost:hover{background:var(--hover)}
+.btn.small{padding:6px 10px;font-size:12px;border-radius:8px}
+.btn.big{padding:12px 20px;font-size:14px;border-radius:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.link{border:0;background:none;padding:0;color:var(--primary);font-size:12.5px;font-weight:550}
 .link:hover{text-decoration:underline}
 .link.danger{color:var(--danger)}
-.muted{color:var(--muted)}
-.field{display:grid;gap:5px}
-.field>span{font-size:12px;color:var(--muted)}
-.input{width:100%;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:6px;padding:7px 9px;font-size:13px}
-textarea.input{font-family:var(--mono);font-size:12px;min-height:130px;resize:vertical}
-.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
-.check input{margin-top:2px;accent-color:var(--primary)}
-.tag{font-size:11px;color:#5a7e56;background:var(--primary-soft);padding:3px 7px;border-radius:5px;white-space:nowrap}
+.field{display:grid;gap:6px}
+.field>span{font-size:12px;color:var(--muted);font-weight:500}
+.input{width:100%;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:9px;padding:8px 11px;font-size:13px;transition:border-color .15s,box-shadow .15s}
+.input:hover{border-color:color-mix(in srgb,var(--muted) 40%,var(--line))}
+.input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 3px var(--ring)}
+textarea.input{font-family:var(--mono);font-size:12px;min-height:140px;resize:vertical}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45}
+.check input{margin-top:2px;accent-color:var(--primary);width:15px;height:15px}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--ok);background:var(--ok-soft);padding:3px 8px;border-radius:999px;white-space:nowrap}
 .tag.warn{color:var(--warn);background:var(--warn-soft)}
+.tag.info{color:var(--info);background:var(--info-soft)}
+.tag.gray{color:var(--muted);background:var(--soft)}
+.kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-bottom-width:2px;border-radius:6px;padding:1px 6px;background:var(--soft);color:var(--ink2)}
 
-/* visão geral */
-.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
-.metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
-.metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:14px}
-.metric b{display:block;font-size:28px;font-weight:500;letter-spacing:-1px;line-height:1.1}
-.metric small{display:block;font-size:11px;color:var(--muted);margin-top:10px}
-.metric.green{background:var(--primary-soft);border-color:transparent}
-@media (max-width:1000px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.overview{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}
-.ov-col{display:grid;gap:24px;min-width:0}
-@media (max-width:1100px){.overview{grid-template-columns:minmax(0,1fr)}}
-.filerow{display:flex;align-items:center;gap:12px;padding:18px 20px;flex-wrap:wrap}
-.filerow .ficon{width:38px;height:38px;border-radius:7px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none}
-.filerow strong{display:block;font-size:14px;font-weight:500;overflow-wrap:anywhere}
-.filerow small{color:var(--muted);font-size:12px}
-.filerow .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-.activity{list-style:none;margin:0;padding:0 20px}
-.activity li{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--soft)}
+/* ---------- início ---------- */
+.hero{position:relative;overflow:hidden;border-radius:20px;padding:28px;background:radial-gradient(1200px 300px at 100% 0%,rgba(196,236,136,.22),transparent 60%),linear-gradient(135deg,#0f2f26,#0d241e 55%,#11372b);color:#e8f2ec;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;margin-bottom:22px;box-shadow:var(--shadow-lg)}
+.hero h1{color:#fff;font-size:30px}
+.hero .sub{color:#b9cdc3;margin-top:10px;font-size:15px;max-width:52ch;line-height:1.6}
+.hero .acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.hero .btn{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff}
+.hero .btn:hover{background:rgba(255,255,255,.12)}
+.hero .btn.lime{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
+.hero .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
+.hero .chips span{font-size:11.5px;color:#cfe0d6;border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:3px 10px}
+.drop{border:1.5px dashed rgba(196,236,136,.55);border-radius:16px;background:rgba(255,255,255,.04);padding:26px 20px;display:grid;justify-items:center;gap:10px;text-align:center;cursor:pointer;transition:background .15s,border-color .15s}
+.drop:hover,.drop.on{background:rgba(196,236,136,.08);border-color:var(--lime)}
+.drop .big{width:54px;height:54px;border-radius:16px;background:rgba(196,236,136,.16);display:grid;place-items:center;color:var(--lime)}
+.drop strong{color:#fff;font-size:15px}
+.drop small{color:#a9c0b4}
+.filecard{display:grid;gap:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px}
+.filecard .top{display:flex;align-items:center;gap:12px}
+.filecard .fi{width:44px;height:44px;border-radius:12px;background:rgba(196,236,136,.16);color:var(--lime);display:grid;place-items:center}
+.filecard b{display:block;color:#fff;overflow-wrap:anywhere}
+.filecard small{color:#a9c0b4}
+.filecard .acts{margin-top:0}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 18px 16px;box-shadow:var(--shadow);display:grid;gap:4px;position:relative}
+.metric .mi{position:absolute;right:14px;top:14px}
+.metric span{font-size:12.5px;color:var(--muted);font-weight:500}
+.metric b{font-size:28px;font-weight:700;letter-spacing:-1px;line-height:1.15;margin-top:6px}
+.metric small{font-size:12px;color:var(--muted)}
+@media (max-width:1100px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{grid-template-columns:minmax(0,1fr)}}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:22px;align-items:start}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.grid2{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){.grid3{grid-template-columns:minmax(0,1fr)}}
+.health{display:grid;grid-template-columns:auto minmax(0,1fr);gap:20px;align-items:center;padding:20px}
+.ringw{position:relative;width:118px;height:118px}
+.ringw svg{transform:rotate(-90deg)}
+.ringw .val{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ringw .val b{font-size:30px;font-weight:750;letter-spacing:-1px;line-height:1}
+.ringw.mini .val b{font-size:19px}
+.ringw.mini .val small{display:none}
+.ringw .val small{font-size:11px;color:var(--muted);display:block;margin-top:2px}
+.hlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.hlist li{display:flex;align-items:center;gap:10px;font-size:13px}
+.hlist .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);flex:none}
+.hlist .dot.ok{background:var(--ok)}
+.hlist .q{margin-left:auto;color:var(--muted);font-size:12px}
+.activity{list-style:none;margin:0;padding:4px 20px}
+.activity li{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}
 .activity li:last-child{border-bottom:0}
-.activity .dot{width:30px;height:30px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none;font-size:11px;font-weight:700}
-.activity strong{display:block;font-size:13px;font-weight:500}
+.activity .dot{width:30px;height:30px;border-radius:9px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none;font-size:11.5px;font-weight:700}
+.activity strong{display:block;font-size:13px;font-weight:600}
 .activity small{font-size:12px;color:var(--muted)}
 .activity .r{margin-left:auto;font-size:12px;color:var(--muted);text-align:right}
-.start{background:var(--side);color:#fff;border-radius:10px;padding:24px 22px}
-.start h2{font-size:21px;font-weight:500;line-height:1.35;letter-spacing:-.6px}
-.start>p{color:#bbcdc0;font-size:13px;margin-top:10px;line-height:1.7}
-.start ol{list-style:none;margin:22px 0;padding:0;display:grid;gap:18px}
-.start li{display:flex;gap:12px;align-items:center}
-.start li>span{width:28px;height:28px;border:1px solid #648168;color:#d0e9b0;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:none}
-.start li strong{font-size:13px;font-weight:500;display:block}
-.start li p{font-size:12px;color:#a7c0ad}
-.start .btn{width:100%}
-.note{display:flex;gap:9px;color:var(--muted);font-size:12px;line-height:1.7;padding:0 4px}
+.tile{display:grid;gap:8px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:var(--r);padding:18px;box-shadow:var(--shadow);transition:transform .15s,box-shadow .15s,border-color .15s}
+.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg);border-color:color-mix(in srgb,var(--primary) 30%,var(--line))}
+.tile b{font-size:14px}
+.tile small{color:var(--muted);font-size:12.5px;line-height:1.55}
+.section-t{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:28px 0 12px}
+.section-t h2{font-size:16px}
 
-/* limpar */
-.srcbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 18px;margin-bottom:16px}
+/* ---------- limpar ---------- */
+.srcbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;padding:14px 18px;margin-bottom:14px}
+.srcbar .fi{width:40px;height:40px;border-radius:11px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none}
 .srcbar .who{flex:1 1 220px;min-width:0}
-.srcbar .who strong{display:block;font-weight:500;overflow-wrap:anywhere}
+.srcbar .who strong{display:block;font-weight:600;overflow-wrap:anywhere}
 .srcbar .who small{color:var(--muted);font-size:12px}
 .srcbar .field{min-width:110px}
 .srcbar .acts{display:flex;gap:8px;flex-wrap:wrap}
-.pastebox{padding:16px 18px;margin-bottom:16px;display:grid;gap:10px}
-.work{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);gap:16px;align-items:start}
-@media (max-width:960px){.work{grid-template-columns:minmax(0,1fr)}}
-.rname{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pastebox{padding:16px 18px;margin-bottom:14px;display:grid;gap:10px}
+.diag{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px;border-radius:var(--r);border:1px solid color-mix(in srgb,var(--warn) 30%,var(--line));background:linear-gradient(90deg,var(--warn-soft),var(--card) 70%)}
+.diag.bom{border-color:color-mix(in srgb,var(--ok) 30%,var(--line));background:linear-gradient(90deg,var(--ok-soft),var(--card) 70%)}
+.diag .score{font-size:20px;font-weight:750;letter-spacing:-.5px;min-width:46px}
+.diag .txt{flex:1 1 260px;min-width:0;font-size:13px}
+.diag .txt small{display:block;color:var(--muted);font-size:12px}
+.sugs{display:grid;gap:8px;padding:0 0 14px}
+.sug{display:flex;align-items:center;gap:12px;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.sug .t{flex:1;min-width:0;font-size:13px}
+.sug .t small{display:block;color:var(--muted);font-size:12px}
+.work{display:grid;grid-template-columns:minmax(300px,370px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1000px){.work{grid-template-columns:minmax(0,1fr)}}
+.rhead{display:flex;align-items:center;gap:8px;padding:14px 16px 10px}
+.rhead h2{flex:1}
+.rname{display:flex;gap:8px;padding:0 16px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .rname .input{flex:1 1 140px;font-weight:600}
-.rname select{flex:0 1 150px}
-.steps{list-style:none;margin:0;padding:6px 8px}
-.step{border-radius:7px}
-.step.open{background:var(--soft)}
-.step-head{display:flex;align-items:center;gap:10px;padding:9px 8px}
-.step-n{font-size:11px;color:var(--muted);width:18px;text-align:right;flex:none}
-.step-title{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;font-size:13px;font-weight:500}
+.rname select{flex:0 1 160px}
+.steps{list-style:none;margin:0;padding:8px;display:grid;gap:4px;max-height:min(62vh,760px);overflow:auto}
+.step{border-radius:11px;border:1px solid transparent;transition:background .15s,border-color .15s}
+.step:hover{background:var(--soft)}
+.step.open{background:var(--soft);border-color:var(--line)}
+.step-head{display:flex;align-items:center;gap:10px;padding:8px 8px}
+.step-ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;flex:none;font-size:11px;font-weight:700;color:#fff;background:var(--c1)}
+.step-ic.g2{background:var(--c2)}.step-ic.g3{background:var(--c3)}.step-ic.g4{background:var(--c4)}
+.step.off .step-ic{background:var(--muted)}
+.step-title{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;font-size:13px;font-weight:600}
 .step-title small{display:block;font-weight:400;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
-.step.off .step-title{opacity:.45}
-.step-badge{margin:-4px 8px 7px 36px;font-size:11.5px;color:var(--muted)}
+.step.off .step-title{opacity:.5}
+.step-badge{margin:-4px 8px 8px 48px;font-size:11.5px;color:var(--muted)}
 .step-badge .w{color:var(--warn)}
-.step-body{padding:2px 12px 12px 36px;display:grid;gap:10px}
+.step-body{padding:4px 12px 14px 48px;display:grid;gap:11px}
 .step-tools{display:flex;gap:14px;flex-wrap:wrap;padding-top:2px}
-.switch{position:relative;width:30px;height:18px;flex:none}
-.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line)}
-.switch span::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--card);transition:transform .15s}
+.switch{position:relative;width:34px;height:20px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2);transition:transform .15s}
 .switch input:checked+span{background:var(--primary)}
-.switch input:checked+span::after{transform:translateX(12px)}
-.switch input:focus-visible+span{outline:3px solid #75ab91;outline-offset:2px}
+.switch input:checked+span::after{transform:translateX(14px)}
+.switch input:focus-visible+span{outline:3px solid var(--ring);outline-offset:2px}
 .cols{display:flex;flex-wrap:wrap;gap:5px}
-.colbtn{border:1px solid var(--line);background:var(--card);border-radius:5px;padding:3px 8px;font-size:12px;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.colbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 10px;font-size:12px;max-width:100%;overflow-wrap:anywhere;text-align:left;transition:background .15s}
+.colbtn:hover{border-color:var(--primary)}
 .colbtn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
 .colbtn.missing{border-style:dashed;color:var(--warn)}
-.rfoot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
-.rfoot select{flex:1 1 100%}
+.rfoot{display:grid;gap:10px;padding:12px 16px;border-top:1px solid var(--line)}
+.rlinks{display:flex;flex-wrap:wrap;gap:6px 14px}
 .tbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
 .tbar .sum{font-size:13px;color:var(--muted)}
-.tbar .sum b{color:var(--ink);font-weight:500}
+.tbar .sum b{color:var(--ink);font-weight:650}
 .tright{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
-.seg button{border:0;background:var(--card);padding:6px 12px;font-size:12px}
-.seg button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary);font-weight:600}
-.search{width:180px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;padding:2px;background:var(--soft)}
+.seg button{border:0;background:none;padding:5px 12px;font-size:12.5px;border-radius:8px;color:var(--muted);font-weight:550}
+.seg button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+.search{width:190px;padding-left:32px;background:var(--card) no-repeat 10px center/14px}
+.searchw{position:relative}
+.searchw svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
 .menu{position:relative}
 .menu summary{list-style:none}
 .menu summary::-webkit-details-marker{display:none}
-.menu .list{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.10);padding:6px;display:grid;min-width:210px;z-index:5}
-.menu .list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:5px;font-size:13px}
-.menu .list button:hover{background:var(--soft)}
+.menu .list{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow-lg);padding:6px;display:grid;min-width:250px;z-index:15}
+.menu .list button{display:flex;gap:10px;align-items:flex-start;border:0;background:none;text-align:left;padding:9px 10px;border-radius:8px;font-size:13px}
+.menu .list button small{display:block;color:var(--muted);font-size:11.5px}
+.menu .list button:hover{background:var(--hover)}
 .warnline{padding:9px 16px;font-size:12.5px;background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--line)}
-.tablewrap{overflow:auto;max-height:min(66vh,700px)}
+.tablewrap{overflow:auto;max-height:min(66vh,740px)}
 table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
-.grid th,.grid td{border-bottom:1px solid var(--soft);padding:9px 12px;text-align:left;vertical-align:top;white-space:pre-wrap;max-width:300px;overflow-wrap:anywhere}
-.grid thead th{position:sticky;top:0;background:var(--card);color:var(--muted);font-weight:400;font-size:12px;white-space:nowrap;border-bottom:1px solid var(--line);z-index:1}
-.grid th.ln,.grid td.ln{color:var(--muted);font-size:11px;text-align:right;min-width:40px}
-.grid td.chg{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
-.grid tr.gone td:not(.ln){background:var(--gone);color:var(--gone-ink);text-decoration:line-through}
-.grid td.ok{color:var(--ok)}
-.grid td.bad{color:var(--danger)}
+.grid th,.grid td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top;white-space:nowrap;max-width:320px;overflow:hidden;text-overflow:ellipsis}
+.grid tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--soft) 55%,transparent)}
+.grid tbody tr:hover td{background:var(--hover)}
+.grid thead th{position:sticky;top:0;background:var(--card);color:var(--ink2);font-weight:600;font-size:12px;border-bottom:1px solid var(--line);z-index:1}
+.grid thead th small{display:block;font-weight:500;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.grid th.ln,.grid td.ln{color:var(--muted);font-size:11px;text-align:right;min-width:44px;position:sticky;left:0;background:var(--card);z-index:1}
+.grid thead th.ln{z-index:2}
+.grid td.chg{background:var(--mark)!important;box-shadow:inset 0 -2px 0 var(--mark-edge)}
+.grid th.chg{color:var(--primary)}
+.grid tr.gone td:not(.ln){background:var(--gone)!important;color:var(--gone-ink);text-decoration:line-through}
+.grid td.ok{color:var(--ok);font-weight:600}
+.grid td.bad{color:var(--danger);font-weight:600}
 .pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;font-size:12px;color:var(--muted)}
-.pager i{display:inline-block;width:12px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px;background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
+.pager .legend{display:flex;gap:14px;flex-wrap:wrap}
+.pager i{display:inline-block;width:12px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:5px;background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
 .pager i.g{background:var(--gone);box-shadow:none;border:1px solid var(--gone-ink)}
-.blank{padding:48px 20px;text-align:center;display:grid;gap:10px;justify-items:center;color:var(--muted)}
-.blank strong{color:var(--ink);font-size:16px;font-weight:600}
-.blank .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:6px}
-.drop-hint{position:fixed;inset:0;background:rgba(26,103,75,.14);border:3px dashed var(--primary);z-index:50;display:grid;place-items:center;font-size:22px;color:var(--ink);pointer-events:none}
+.blank{padding:56px 20px;text-align:center;display:grid;gap:10px;justify-items:center;color:var(--muted)}
+.blank .big{width:64px;height:64px;border-radius:18px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;margin-bottom:6px}
+.blank strong{color:var(--ink);font-size:17px;font-weight:700}
+.blank p{max-width:46ch}
+.blank .acts{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+.drop-hint{position:fixed;inset:12px;background:color-mix(in srgb,var(--primary) 12%,transparent);border:3px dashed var(--primary);border-radius:20px;z-index:50;display:grid;place-items:center;font-size:22px;font-weight:700;color:var(--ink);pointer-events:none;backdrop-filter:blur(2px)}
 
-/* automações e segurança */
-.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;align-items:start}
-.formrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
-details.more summary{cursor:pointer;color:var(--primary);font-size:13px}
-.code{margin:10px 0 0;font-family:var(--mono);font-size:11.5px;line-height:1.55;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:12px;max-height:340px;overflow:auto;white-space:pre}
-ol.howto{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted);line-height:1.6}
-ol.howto b{color:var(--ink);font-weight:500}
-ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 5px;border-radius:4px}
-.picker{border:1.5px dashed #b6c9a7;border-radius:9px;background:var(--soft);padding:22px 16px;display:grid;gap:8px;justify-items:center;text-align:center}
+/* ---------- modelos, guia, automações, segurança ---------- */
+.models{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.model{display:grid;gap:10px;align-content:start;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px;box-shadow:var(--shadow)}
+.model .mh{display:flex;align-items:center;gap:10px}
+.model p{color:var(--muted);font-size:12.5px;line-height:1.6}
+.model ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:5px}
+.model li{font-size:11px;color:var(--ink2);background:var(--soft);border-radius:999px;padding:2px 8px}
+.model .btn{justify-self:start;margin-top:4px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:22px;align-items:start}
+.formrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.stepper{list-style:none;margin:0;padding:0;display:grid;gap:14px}
+.stepper>li{display:grid;grid-template-columns:30px minmax(0,1fr);gap:12px}
+.stepper .n{width:30px;height:30px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;font-weight:700;font-size:12.5px}
+.stepper .c{display:grid;gap:10px;min-width:0}
+.stepper .c>b{font-size:13.5px;margin-top:5px}
+details.more summary{cursor:pointer;color:var(--primary);font-size:13px;font-weight:550}
+.code{margin:10px 0 0;font-family:var(--mono);font-size:11.5px;line-height:1.55;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:12px;max-height:340px;overflow:auto;white-space:pre}
+code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6px;border-radius:5px;border:1px solid var(--line)}
+.picker{border:1.5px dashed color-mix(in srgb,var(--primary) 45%,var(--line));border-radius:14px;background:var(--soft);padding:26px 16px;display:grid;gap:8px;justify-items:center;text-align:center}
 .picker small{color:var(--muted)}
 .btable{width:100%;border-collapse:collapse;font-size:13px}
-.btable th,.btable td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--soft);vertical-align:top}
-.btable th{color:var(--muted);font-weight:400;font-size:12px}
+.btable th,.btable td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.btable th{color:var(--muted);font-weight:500;font-size:12px}
 .btable td.n{text-align:right;font-variant-numeric:tabular-nums}
+.batch-wrap{overflow:auto}
 .prot{list-style:none;margin:0;padding:6px 20px}
-.prot li{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--soft);color:var(--ok)}
+.prot li{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);color:var(--ok)}
 .prot li:last-child{border-bottom:0}
-.prot strong{display:block;color:var(--ink);font-size:13px;font-weight:600}
-.prot p{color:var(--muted);font-size:13px;line-height:1.7;margin-top:4px;max-width:70ch}
+.prot strong{display:block;color:var(--ink);font-size:13.5px;font-weight:650}
+.prot p{color:var(--muted);font-size:13px;line-height:1.65;margin-top:4px;max-width:72ch}
 .limits{width:100%;border-collapse:collapse;font-size:13px}
-.limits td{padding:11px 20px;border-bottom:1px solid var(--soft)}
+.limits td{padding:11px 20px;border-bottom:1px solid var(--line)}
 .limits td:last-child{text-align:right;color:var(--muted)}
+.guide{display:grid;gap:12px}
+.acc{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.acc>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:16px 18px;font-weight:650}
+.acc>summary::-webkit-details-marker{display:none}
+.acc>summary::after{content:"";margin-left:auto;width:9px;height:9px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);transition:transform .2s}
+.acc[open]>summary::after{transform:rotate(-135deg)}
+.acc>summary small{display:block;font-weight:400;color:var(--muted);font-size:12.5px}
+.acc .body{padding:0 18px 18px 64px;color:var(--ink2);line-height:1.7;display:grid;gap:10px}
+.acc .body ol,.acc .body ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.acc .body b{color:var(--ink)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.rule{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;background:var(--soft);border-radius:12px;padding:12px 14px}
+.rule .n{width:28px;height:28px;border-radius:8px;background:var(--primary);color:var(--primary-ink);display:grid;place-items:center;font-weight:700;font-size:12px}
+.rule b{display:block;font-size:13px}
+.rule small{color:var(--muted);font-size:12.5px;line-height:1.55}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px 24px}
+.keys div{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#173c2f;color:#fff;padding:10px 16px;border-radius:7px;font-size:13px;z-index:60;max-width:calc(100% - 32px)}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#10261f;color:#fff;padding:11px 16px;border-radius:12px;font-size:13px;z-index:60;max-width:calc(100% - 32px);box-shadow:var(--shadow-lg);display:flex;gap:10px;align-items:center;animation:sobe .2s ease}
+@keyframes sobe{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media (max-width:560px){
+  .metrics{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+  .metric{padding:14px}
+  .metric b{font-size:22px}
+  .metric .mi{display:none}
+  .health{grid-template-columns:minmax(0,1fr)}
+  .health>.ringw{justify-self:center}
+  .hero .btn.big{padding:10px 14px;font-size:13px}
+  .search{width:100%}
+  .searchw{flex:1 1 100%}
+  .tright{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
 <div class="app">
   <aside class="side">
-    <div class="brand">
-      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17"/></svg>
-      <div>planilha<span>segura</span><small>MENOS ROTINA. MAIS CONTROLE.</small></div>
+    <a class="brand" href="#inicio" data-tab="inicio">
+      <span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M3.5 9.5h17M9.5 3.5v17"/><path d="m13 15 1.6 1.6L18 13" stroke-width="2.4"/></svg></span>
+      <span><b>Planilha Segura</b><small>Menos rotina. Mais controle.</small></span>
+    </a>
+    <div class="navs">
+      <div class="nav-label">Trabalho</div>
+      <nav class="nav" aria-label="Seções">
+        <button data-tab="inicio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Visão geral</button>
+        <button data-tab="limpar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Limpar planilha<span class="count" id="navSug" hidden></span></button>
+        <button data-tab="modelos"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2z"/><path d="M8 8h8M8 12h5"/></svg>Modelos de receita</button>
+        <button data-tab="automatizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Automações</button>
+      </nav>
+      <div class="nav-label">Ajuda</div>
+      <nav class="nav" aria-label="Ajuda">
+        <button data-tab="guia"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>Guia e boas práticas</button>
+        <button data-tab="seguranca"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Segurança</button>
+      </nav>
     </div>
-    <nav class="nav" aria-label="Seções">
-      <button data-tab="inicio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Visão geral</button>
-      <button data-tab="limpar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Limpar planilha</button>
-      <button data-tab="automatizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Automações</button>
-      <button data-tab="seguranca"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Segurança</button>
-    </nav>
-    <div class="side-note">
-      <strong>Seus dados, seu computador.</strong>
-      <p>As planilhas são lidas e limpas aqui no navegador. Nada é enviado para servidores.</p>
-      <p class="ver">Versão {{VERSION}}</p>
+    <div class="side-foot">
+      <div class="side-note" id="sideNote">
+        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Seus dados, seu computador.</strong>
+        <p>As planilhas são lidas e limpas aqui no navegador. Nada é enviado para servidores.</p>
+        <p class="ver">Versão {{VERSION}}</p>
+      </div>
+      <div class="umenu" id="userBox" hidden>
+        <div class="pop" id="userPop" hidden role="menu">
+          <button data-act="conta" data-acao="perfil" role="menuitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Meu perfil</button>
+          <button data-act="conta" data-acao="painel" id="userPainel" role="menuitem" hidden><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Painel do dono</button>
+          <hr>
+          <button data-act="conta" data-acao="sair" role="menuitem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sair</button>
+        </div>
+        <button class="user" data-act="user-menu" aria-haspopup="menu" aria-expanded="false" aria-controls="userPop">
+          <span class="avatar" id="userAvatar">?</span>
+          <span class="who"><b id="userName"></b><small id="userEmail"></small></span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m7 15 5-5 5 5"/></svg>
+        </button>
+      </div>
     </div>
   </aside>
 
   <div class="main">
     <header class="topbar">
-      <div class="crumb">Planilha Segura › <strong id="crumb">Visão geral</strong></div>
-      <span class="pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Processado no seu navegador</span>
+      <div class="crumb">Planilha Segura <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg> <strong id="crumb">Visão geral</strong></div>
+      <div class="top-r">
+        <span class="pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Processado no seu navegador</span>
+        <button class="iconbtn" data-act="tema" id="themeBtn" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </div>
     </header>
 
     <div class="content">
       <!-- VISÃO GERAL -->
-      <section id="view-inicio">
-        <div class="head"><div><h1>Menos tarefas. Mais possibilidades.</h1><p>Organize suas planilhas e deixe a parte repetitiva por conta da receita.</p></div>
-          <button class="btn primary" data-act="pick">+ Abrir planilha</button></div>
-        <div class="metrics" id="metrics"></div>
-        <div class="overview">
-          <div class="ov-col">
-            <div class="card">
-              <div class="card-h"><div><h2>Planilha atual</h2><p>Abra um arquivo do computador ou cole as células do Excel.</p></div></div>
-              <div class="filerow" id="ovFile"></div>
+      <section id="view-inicio" class="view">
+        <div class="hero">
+          <div>
+            <h1 id="hello">Planilhas limpas, padronizadas e prontas para usar.</h1>
+            <p class="sub">Abra um arquivo, receba um diagnóstico com tudo o que precisa ser arrumado e baixe um Excel bem formatado. Depois, automatize para nunca mais repetir o trabalho.</p>
+            <div class="acts">
+              <button class="btn lime big" data-act="pick"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Abrir planilha</button>
+              <button class="btn big" data-act="paste-open">Colar do Excel</button>
+              <button class="btn big ghost" data-tab="guia" style="color:#cfe0d6">Como funciona</button>
             </div>
-            <div class="card">
-              <div class="card-h"><h2>O que a receita fez</h2><button class="link" data-tab="limpar">Ver planilha ›</button></div>
-              <ul class="activity" id="activity"></ul>
-            </div>
+            <div class="chips"><span>Excel .xlsx/.xls</span><span>CSV</span><span>Google Sheets</span><span>ODS</span><span>JSON</span></div>
           </div>
-          <aside class="ov-col">
-            <div class="start">
-              <h2>Da planilha bagunçada ao trabalho resolvido.</h2>
-              <p>Três passos para simplificar sua rotina.</p>
-              <ol>
-                <li><span>1</span><div><strong>Traga sua planilha</strong><p>Excel, CSV ou colando as células.</p></div></li>
-                <li><span>2</span><div><strong>Monte a receita</strong><p>Escolha o que deve ser arrumado.</p></div></li>
-                <li><span>3</span><div><strong>Confira e baixe</strong><p>Ou agende para rodar sozinho.</p></div></li>
-              </ol>
-              <button class="btn lime" data-tab="limpar">Ir para a planilha</button>
-            </div>
-            <p class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;margin-top:2px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>O arquivo original nunca é alterado. Você sempre baixa uma cópia nova.</p>
-          </aside>
+          <div id="ovFile"></div>
+        </div>
+        <div class="metrics" id="metrics"></div>
+        <div class="grid2">
+          <div class="card">
+            <div class="card-h"><div class="ttl"><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><div><h2>Saúde da planilha</h2><p>Diagnóstico automático do arquivo aberto.</p></div></div></div>
+            <div id="health"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div class="ttl"><span class="ico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h2>O que a receita fez</h2><p>Cada etapa e o que ela corrigiu.</p></div></div><button class="link" data-tab="limpar">Ver planilha ›</button></div>
+            <ul class="activity" id="activity"></ul>
+          </div>
+        </div>
+        <div class="section-t"><h2>Atalhos</h2></div>
+        <div class="grid3">
+          <button class="tile" data-tab="modelos"><span class="ico p"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2z"/></svg></span><b>Modelos de receita</b><small>Contatos, financeiro, vendas, estoque, RH e mais, prontos para usar.</small></button>
+          <button class="tile" data-tab="automatizar"><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><b>Automatizar no Google Sheets</b><small>A limpeza roda sozinha todo dia, mesmo com o computador desligado.</small></button>
+          <button class="tile" data-tab="guia"><span class="ico w"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v13a3 3 0 0 0-3-3H2zM22 4h-6a4 4 0 0 0-4 4v13a3 3 0 0 1 3-3h7z"/></svg></span><b>Boas práticas</b><small>As 10 regras para montar planilhas que nunca dão problema.</small></button>
         </div>
       </section>
 
       <!-- LIMPAR -->
-      <section id="view-limpar" hidden>
-        <div class="head"><div><h1>Limpar planilha</h1><p>Escolha as etapas, confira o resultado e baixe quando estiver pronto.</p></div></div>
+      <section id="view-limpar" class="view" hidden>
+        <div class="head"><div><h1>Limpar planilha</h1><p>Monte a receita, confira cada mudança e baixe quando estiver pronto.</p></div></div>
         <div class="card srcbar" id="source"></div>
         <div class="card pastebox" id="pastePanel" hidden>
           <label class="field"><span>Cole as células copiadas do Excel ou Google Sheets (a primeira linha deve ser o cabeçalho)</span>
             <textarea class="input" id="pasteText" placeholder="Nome&#9;E-mail&#9;Telefone"></textarea></label>
           <div style="display:flex;gap:8px"><button class="btn primary" data-act="paste-load">Carregar</button><button class="btn" data-act="paste-close">Cancelar</button></div>
         </div>
+        <div id="diag"></div>
         <div class="work">
           <aside class="card" aria-label="Receita">
-            <div class="card-h"><div><h2>Receita</h2><p>As etapas rodam de cima para baixo.</p></div></div>
+            <div class="rhead">
+              <h2>Receita</h2>
+              <button class="iconbtn" data-act="undo" id="undoBtn" title="Desfazer (Ctrl+Z)" aria-label="Desfazer" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
+              <button class="iconbtn" data-act="redo" id="redoBtn" title="Refazer (Ctrl+Shift+Z)" aria-label="Refazer" disabled><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 14 5-5-5-5"/><path d="M20 9H9a5 5 0 0 0 0 10h3"/></svg></button>
+            </div>
             <div class="rname">
               <input class="input" id="recipeName" aria-label="Nome da receita" maxlength="80">
               <select class="input" id="recipeLoad" aria-label="Abrir receita"></select>
@@ -302,10 +482,12 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
             <ol class="steps" id="steps"></ol>
             <div class="rfoot">
               <select class="input" id="addStep" aria-label="Adicionar etapa"></select>
-              <button class="link" data-act="recipe-save">Salvar</button>
-              <button class="link" data-act="recipe-export">Exportar</button>
-              <button class="link" data-act="recipe-import">Importar</button>
-              <button class="link danger" data-act="recipe-clear">Limpar etapas</button>
+              <div class="rlinks">
+                <button class="link" data-act="recipe-save">Salvar</button>
+                <button class="link" data-act="recipe-export">Exportar</button>
+                <button class="link" data-act="recipe-import">Importar</button>
+                <button class="link danger" data-act="recipe-clear">Limpar etapas</button>
+              </div>
             </div>
           </aside>
           <section class="card" style="min-width:0" aria-label="Resultado">
@@ -316,14 +498,14 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
                   <button data-act="view" data-view="result" aria-pressed="true">Resultado</button>
                   <button data-act="view" data-view="original" aria-pressed="false">Original</button>
                 </div>
-                <input class="input search" id="search" type="search" placeholder="Procurar" aria-label="Procurar na tabela">
+                <div class="searchw"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="input search" id="search" type="search" placeholder="Procurar  /" aria-label="Procurar na tabela"></div>
                 <details class="menu" id="dlMenu">
-                  <summary class="btn primary">Baixar ▾</summary>
+                  <summary class="btn primary"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Baixar</summary>
                   <div class="list">
-                    <button data-act="export" data-fmt="xlsx">Excel (.xlsx)</button>
-                    <button data-act="export" data-fmt="csv">CSV (.csv)</button>
-                    <button data-act="export" data-fmt="json">JSON (.json)</button>
-                    <button data-act="copy-table">Copiar para colar no Excel</button>
+                    <button data-act="export" data-fmt="xlsx"><span><b>Excel formatado (.xlsx)</b><small>Cabeçalho fixo, filtros, números e datas de verdade</small></span></button>
+                    <button data-act="export" data-fmt="csv"><span><b>CSV (.csv)</b><small>Para importar em sistemas</small></span></button>
+                    <button data-act="export" data-fmt="json"><span><b>JSON (.json)</b><small>Para integrações e APIs</small></span></button>
+                    <button data-act="copy-table"><span><b>Copiar tabela</b><small>Cole no Excel ou no Google Sheets</small></span></button>
                   </div>
                 </details>
               </div>
@@ -335,51 +517,66 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
         </div>
       </section>
 
+      <!-- MODELOS -->
+      <section id="view-modelos" class="view" hidden>
+        <div class="head"><div><h1>Modelos de receita</h1><p>Receitas prontas para os tipos de planilha mais comuns. As colunas são reconhecidas pelo cabeçalho da sua planilha.</p></div></div>
+        <div class="models" id="modelos"></div>
+      </section>
+
       <!-- AUTOMAÇÕES -->
-      <section id="view-automatizar" hidden>
-        <div class="head"><div><h1>Automações</h1><p>Use a receita atual sem precisar repetir o trabalho.</p></div></div>
+      <section id="view-automatizar" class="view" hidden>
+        <div class="head"><div><h1>Automações</h1><p>Use a receita atual sem repetir o trabalho: no Google Sheets todo dia, ou em vários arquivos de uma vez.</p></div></div>
         <div class="two">
           <div class="card">
-            <div class="card-h"><div><h2>Rodar sozinho no Google Sheets</h2><p>Funciona mesmo com o computador desligado.</p></div></div>
+            <div class="card-h"><div class="ttl"><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><div><h2>Rodar sozinho no Google Sheets</h2><p>Funciona mesmo com o computador desligado.</p></div></div><span class="tag" id="gsReceita"></span></div>
             <div class="card-b">
-              <div class="formrow">
-                <label class="field"><span>Aba com os dados</span><input class="input" id="gsSource" value="Dados"></label>
-                <label class="field"><span>Linha do cabeçalho</span><input class="input" id="gsHeader" type="number" min="1" max="50" value="1"></label>
-                <label class="field"><span>Aba do resultado</span><input class="input" id="gsOutput" value="Resultado"></label>
-              </div>
-              <div class="formrow">
-                <label class="field"><span>Quando rodar</span>
-                  <select class="input" id="gsFreq">
-                    <option value="daily">Todo dia</option>
-                    <option value="hourly">A cada hora</option>
-                    <option value="weekly">Toda semana</option>
-                    <option value="edit">Sempre que a planilha for editada</option>
-                    <option value="manual">Só quando eu mandar</option>
-                  </select></label>
-                <label class="field" id="gsHourF"><span>Horário</span><select class="input" id="gsHour"></select></label>
-                <label class="field" id="gsDayF"><span>Dia</span>
-                  <select class="input" id="gsDay">
-                    <option value="MONDAY">Segunda</option><option value="TUESDAY">Terça</option><option value="WEDNESDAY">Quarta</option><option value="THURSDAY">Quinta</option><option value="FRIDAY">Sexta</option><option value="SATURDAY">Sábado</option><option value="SUNDAY">Domingo</option>
-                  </select></label>
-              </div>
-              <label class="check"><input type="checkbox" id="gsBackup" checked> Guardar o resultado anterior numa aba de backup</label>
-              <label class="check"><input type="checkbox" id="gsLog" checked> Registrar cada execução numa aba de histórico</label>
-              <label class="check"><input type="checkbox" id="gsProtect" checked> Proteger a aba do resultado contra edição de outras pessoas</label>
-              <div style="display:flex;gap:8px;flex-wrap:wrap">
-                <button class="btn primary" data-act="gs-copy">Copiar script</button>
-                <button class="btn" data-act="gs-download">Baixar .txt</button>
-              </div>
-              <ol class="howto">
-                <li>Na planilha do Google, abra <b>Extensões → Apps Script</b>.</li>
-                <li>Apague o conteúdo de <code>Código.gs</code>, cole o script e salve.</li>
-                <li>Escolha a função <code>ativarAutomacao</code>, clique em <b>Executar</b> e autorize.</li>
-                <li>Pronto: o menu <b>Planilha Segura</b> aparece na planilha para executar ou desativar.</li>
+              <ol class="stepper">
+                <li><span class="n">1</span><div class="c"><b>Onde estão os dados e quando rodar</b>
+                  <div class="formrow">
+                    <label class="field"><span>Aba com os dados</span><input class="input" id="gsSource" value="Dados" maxlength="100"></label>
+                    <label class="field"><span>Linha do cabeçalho</span><input class="input" id="gsHeader" type="number" min="1" max="50" value="1"></label>
+                    <label class="field"><span>Aba do resultado</span><input class="input" id="gsOutput" value="Resultado" maxlength="90"></label>
+                  </div>
+                  <div class="formrow">
+                    <label class="field"><span>Quando rodar</span>
+                      <select class="input" id="gsFreq">
+                        <option value="daily">Todo dia</option>
+                        <option value="hourly">A cada hora</option>
+                        <option value="weekly">Toda semana</option>
+                        <option value="edit">Sempre que a planilha for editada</option>
+                        <option value="manual">Só quando eu mandar</option>
+                      </select></label>
+                    <label class="field" id="gsHourF"><span>Horário</span><select class="input" id="gsHour"></select></label>
+                    <label class="field" id="gsDayF"><span>Dia</span>
+                      <select class="input" id="gsDay">
+                        <option value="MONDAY">Segunda</option><option value="TUESDAY">Terça</option><option value="WEDNESDAY">Quarta</option><option value="THURSDAY">Quinta</option><option value="FRIDAY">Sexta</option><option value="SATURDAY">Sábado</option><option value="SUNDAY">Domingo</option>
+                      </select></label>
+                  </div>
+                  <label class="check"><input type="checkbox" id="gsFormat" checked> Deixar a aba do resultado bem formatada (cabeçalho destacado e fixo, filtros, larguras, números e datas)</label>
+                  <label class="check"><input type="checkbox" id="gsBackup" checked> Guardar o resultado anterior numa aba de backup</label>
+                  <label class="check"><input type="checkbox" id="gsLog" checked> Registrar cada execução numa aba de histórico</label>
+                  <label class="check"><input type="checkbox" id="gsProtect" checked> Proteger a aba do resultado contra edição de outras pessoas</label>
+                </div></li>
+                <li><span class="n">2</span><div class="c"><b>Copie o script</b>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap">
+                    <button class="btn primary" data-act="gs-copy"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>Copiar script</button>
+                    <button class="btn" data-act="gs-download">Baixar .txt</button>
+                  </div>
+                  <details class="more"><summary>Ver o código</summary><pre class="code" id="gsCode" tabindex="0"></pre></details>
+                </div></li>
+                <li><span class="n">3</span><div class="c"><b>Cole e ative na sua planilha</b>
+                  <ol style="margin:0;padding-left:18px;color:var(--muted);display:grid;gap:5px;line-height:1.6">
+                    <li>Na planilha do Google, abra <b style="color:var(--ink)">Extensões → Apps Script</b>.</li>
+                    <li>Apague o conteúdo de <code>Código.gs</code>, cole o script e salve (<span class="kbd">Ctrl</span> <span class="kbd">S</span>).</li>
+                    <li>Escolha a função <code>ativarAutomacao</code>, clique em <b style="color:var(--ink)">Executar</b> e autorize.</li>
+                    <li>Pronto: o menu <b style="color:var(--ink)">Planilha Segura</b> aparece na planilha para executar ou desativar.</li>
+                  </ol>
+                </div></li>
               </ol>
-              <details class="more"><summary>Ver o código</summary><pre class="code" id="gsCode" tabindex="0"></pre></details>
             </div>
           </div>
           <div class="card">
-            <div class="card-h"><div><h2>Vários arquivos de uma vez</h2><p>A mesma receita para todos, num único arquivo de saída.</p></div></div>
+            <div class="card-h"><div class="ttl"><span class="ico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg></span><div><h2>Vários arquivos de uma vez</h2><p>A mesma receita para todos, num único Excel formatado.</p></div></div></div>
             <div class="card-b">
               <div class="formrow">
                 <label class="field"><span>Saída</span>
@@ -388,8 +585,9 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
                   <select class="input" id="batchSheet"><option value="same">Mesmo nome da aba atual</option><option value="first">Sempre a primeira</option></select></label>
               </div>
               <div class="picker">
+                <span class="ico b" style="width:46px;height:46px;border-radius:14px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg></span>
                 <button class="btn primary" data-act="batch-pick">Selecionar arquivos</button>
-                <small>XLSX, XLS, ODS, CSV ou JSON · até 40 arquivos</small>
+                <small>XLSX, XLS, ODS, CSV ou JSON · até 40 arquivos · ou arraste vários arquivos para esta tela</small>
               </div>
               <div id="batchOut"></div>
             </div>
@@ -397,32 +595,80 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
         </div>
       </section>
 
+      <!-- GUIA -->
+      <section id="view-guia" class="view" hidden>
+        <div class="head"><div><h1>Guia e boas práticas</h1><p>Tudo o que você precisa para automatizar e manter planilhas bem feitas.</p></div></div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="card-h"><div class="ttl"><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span><div><h2>As 10 regras de uma planilha bem feita</h2><p>Siga estas regras e qualquer sistema, fórmula ou automação vai funcionar de primeira.</p></div></div></div>
+          <div class="card-b"><div class="rules" id="regras"></div></div>
+        </div>
+        <div class="guide">
+          <details class="acc" open><summary><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span><span>Comece em 4 passos<small>Do arquivo bagunçado ao Excel pronto.</small></span></summary>
+            <div class="body"><ol>
+              <li><b>Abra a planilha</b>: arraste o arquivo para a tela, clique em “Abrir planilha” ou copie as células no Excel e aperte <span class="kbd">Ctrl</span> <span class="kbd">V</span> aqui.</li>
+              <li><b>Veja o diagnóstico</b>: a nota de saúde mostra o que está errado (espaços, datas misturadas, e-mails inválidos, duplicadas). Clique em <b>Corrigir tudo</b> ou escolha um modelo de receita.</li>
+              <li><b>Confira</b>: as células alteradas ficam marcadas em verde. Na visão “Original”, as linhas removidas aparecem riscadas, com a etapa que as removeu.</li>
+              <li><b>Baixe</b> o Excel formatado, ou leve a receita para o Google Sheets para rodar sozinha.</li>
+            </ol></div></details>
+          <details class="acc"><summary><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span>Como automatizar de verdade<small>Três formas, da mais simples à mais completa.</small></span></summary>
+            <div class="body">
+              <p><b>1. Receita salva</b>: monte a receita uma vez, clique em <b>Salvar</b> e use todo mês. Ela fica neste navegador; use <b>Exportar</b> para levar para outro computador ou mandar para a equipe.</p>
+              <p><b>2. Vários arquivos de uma vez</b>: em Automações, selecione até 40 arquivos (ex.: um por filial ou por mês). A receita é aplicada em todos e sai um único Excel, juntando tudo ou com uma aba por arquivo, mais uma aba de resumo.</p>
+              <p><b>3. Google Sheets no piloto automático</b>: o script gerado roda dentro da sua conta Google na frequência escolhida (a cada hora, todo dia, toda semana ou depois de cada edição). Ele lê a aba de dados, aplica a receita e grava o resultado formatado em outra aba, sem tocar no original. Se algo der errado, o Google avisa por e-mail e a aba de histórico mostra o motivo.</p>
+              <p><b>Dica:</b> se os dados chegam de um formulário, de outro sistema ou de uma importação, aponte o script para essa aba. Assim o resultado limpo estará sempre atualizado.</p>
+            </div></details>
+          <details class="acc"><summary><span class="ico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></span><span>O que cada etapa faz<small>Referência rápida das etapas de limpeza.</small></span></summary>
+            <div class="body" id="guiaEtapas"></div></details>
+          <details class="acc"><summary><span class="ico w"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg></span><span>Perguntas frequentes<small>Problemas comuns e como resolver.</small></span></summary>
+            <div class="body">
+              <p><b>O cabeçalho não está na primeira linha.</b> Na barra do arquivo, mude “Cabeçalho na linha” para a linha certa.</p>
+              <p><b>A etapa diz “Coluna não encontrada”.</b> A receita foi feita para outra planilha. Abra a etapa e escolha a coluna correta (as que não existem aparecem tracejadas).</p>
+              <p><b>Números viraram texto no Excel.</b> Use “Padronizar valores” na coluna e baixe como “Excel formatado”: os valores saem como números de verdade, prontos para somar.</p>
+              <p><b>Datas trocaram dia e mês.</b> Datas como 03/05 são lidas no padrão brasileiro (dia/mês). Use “Padronizar datas” e confira a coluna marcada.</p>
+              <p><b>O arquivo está protegido por senha.</b> Abra no Excel, remova a senha em Arquivo → Informações e salve de novo.</p>
+              <p><b>O script do Google pediu autorização “não verificada”.</b> É normal para scripts próprios: clique em Avançado → Acessar. O script só acessa a planilha onde foi instalado.</p>
+              <p><b>Planilha muito grande ficou lenta.</b> Cada mudança na receita processa tudo de novo. Acima de 200 mil linhas, prefira a automação no Google Sheets.</p>
+            </div></details>
+          <details class="acc"><summary><span class="ico p"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg></span><span>Atalhos de teclado<small>Para trabalhar mais rápido.</small></span></summary>
+            <div class="body"><div class="keys">
+              <div><span>Abrir planilha</span><span><span class="kbd">Ctrl</span> <span class="kbd">O</span></span></div>
+              <div><span>Colar células do Excel</span><span><span class="kbd">Ctrl</span> <span class="kbd">V</span></span></div>
+              <div><span>Baixar Excel formatado</span><span><span class="kbd">Ctrl</span> <span class="kbd">E</span></span></div>
+              <div><span>Desfazer na receita</span><span><span class="kbd">Ctrl</span> <span class="kbd">Z</span></span></div>
+              <div><span>Refazer na receita</span><span><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Z</span></span></div>
+              <div><span>Procurar na tabela</span><span><span class="kbd">/</span></span></div>
+            </div><p class="muted" style="font-size:12.5px">No Mac, use <span class="kbd">⌘</span> no lugar de <span class="kbd">Ctrl</span>.</p></div></details>
+        </div>
+      </section>
+
       <!-- SEGURANÇA -->
-      <section id="view-seguranca" hidden>
+      <section id="view-seguranca" class="view" hidden>
         <div class="head"><div><h1>Segurança</h1><p>Como seus arquivos são tratados.</p></div></div>
         <div class="two">
-          <div class="card"><div class="card-h"><h2>Proteções</h2></div><ul class="prot" id="secList"></ul></div>
-          <div class="card"><div class="card-h"><h2>Limites</h2></div>
-            <table class="limits"><tbody>
-              <tr><td>Tamanho por arquivo</td><td>50 MB</td></tr>
-              <tr><td>Células por aba</td><td>3.000.000</td></tr>
-              <tr><td>Abas lidas por arquivo</td><td>60</td></tr>
-              <tr><td>Arquivos por lote</td><td>40</td></tr>
-              <tr><td>Etapas por receita</td><td>60</td></tr>
-            </tbody></table>
-            <div class="card-b"><p>Planilhas grandes funcionam, mas cada mudança na receita processa tudo de novo. Para centenas de milhares de linhas, prefira a automação no Google Sheets.</p></div>
-          </div>
-          <div class="card"><div class="card-h"><h2>Privacidade (LGPD)</h2></div>
-            <div class="card-b">
-              <p>O conteúdo das planilhas nunca é coletado nem transmitido: ele é lido e processado apenas na memória do navegador de quem usa e é descartado ao fechar a página.</p>
-              <p>Na versão com login, só ficam guardados o e-mail da conta e o registro da compra, usados para liberar o acesso.</p>
-              <p>Neste navegador, o único dado guardado é a configuração das receitas que você escolhe salvar (nomes de etapas e de colunas), no armazenamento local deste navegador. Você pode apagá-lo limpando os dados do site.</p>
-              <p>No agendamento pelo Google Sheets, o processamento acontece na conta Google de quem instala o script, que só tem permissão de acessar a própria planilha.</p>
+          <div class="card"><div class="card-h"><div class="ttl"><span class="ico"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg></span><h2>Proteções</h2></div></div><ul class="prot" id="secList"></ul></div>
+          <div style="display:grid;gap:22px">
+            <div class="card"><div class="card-h"><h2>Limites</h2></div>
+              <table class="limits"><tbody>
+                <tr><td>Tamanho por arquivo</td><td>50 MB</td></tr>
+                <tr><td>Células por aba</td><td>3.000.000</td></tr>
+                <tr><td>Abas lidas por arquivo</td><td>60</td></tr>
+                <tr><td>Arquivos por lote</td><td>40</td></tr>
+                <tr><td>Etapas por receita</td><td>60</td></tr>
+              </tbody></table>
+              <div class="card-b"><p>Planilhas grandes funcionam, mas cada mudança na receita processa tudo de novo. Para centenas de milhares de linhas, prefira a automação no Google Sheets.</p></div>
             </div>
-          </div>
-          <div class="card"><div class="card-h"><h2>Componentes de terceiros</h2></div>
-            <div class="card-b">
-              <p>Leitura e gravação de arquivos Excel: SheetJS Community Edition 0.18.5, © SheetJS LLC, licença Apache 2.0. Distribuída junto com o produto e executada em ambiente isolado.</p>
+            <div class="card"><div class="card-h"><h2>Privacidade (LGPD)</h2></div>
+              <div class="card-b">
+                <p>O conteúdo das planilhas nunca é coletado nem transmitido: ele é lido e processado apenas na memória do navegador de quem usa e é descartado ao fechar a página.</p>
+                <p>Na versão com login, ficam guardados os dados da conta (e-mail, nome e dados de perfil que você preencher), o registro da compra e o registro de acessos (data, hora, endereço IP e navegador), usados para liberar o acesso, dar suporte e cumprir o Marco Civil da Internet.</p>
+                <p>Neste navegador, o único dado guardado é a configuração das receitas que você escolhe salvar (nomes de etapas e de colunas) e a preferência de tema. Você pode apagá-los limpando os dados do site.</p>
+                <p>No agendamento pelo Google Sheets, o processamento acontece na conta Google de quem instala o script, que só tem permissão de acessar a própria planilha.</p>
+              </div>
+            </div>
+            <div class="card"><div class="card-h"><h2>Componentes de terceiros</h2></div>
+              <div class="card-b">
+                <p>Leitura de arquivos Excel: SheetJS Community Edition 0.18.5, © SheetJS LLC, licença Apache 2.0. Distribuída junto com o produto e executada em ambiente isolado. O Excel formatado é gerado por código próprio.</p>
+              </div>
             </div>
           </div>
         </div>
@@ -442,5 +688,7 @@ ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padd
 <script type="text/plain" id="xlsx-src">{{XLSX}}</script>
 
 {{ENGINE}}
+
+{{XLSXW}}
 
 {{APP}}

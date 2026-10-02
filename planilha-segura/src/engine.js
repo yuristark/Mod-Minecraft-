@@ -1,6 +1,6 @@
 function PlanilhaEngine() {
   'use strict';
-  var INVIS = /[​-‍⁠﻿­]/g;
+  var INVIS = /[​-‍⁠\uFEFF­]/g;
   var EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/i;
   var MESES = dict({ jan:1, fev:2, mar:3, abr:4, mai:5, jun:6, jul:7, ago:8, set:9, out:10, nov:11, dez:12 });
   var PARTICULAS = dict({ de:1, da:1, do:1, das:1, dos:1, e:1, di:1, du:1, del:1, van:1, von:1 });
@@ -152,6 +152,10 @@ function PlanilhaEngine() {
   }
   function fmtCpf(d) { return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4'); }
   function fmtCnpj(d) { return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5'); }
+
+  function semAcento(s) { return S(s).normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+  function fmtCep(s) { var d = S(s).replace(/\D/g, ''); if (d.length === 7) d = '0' + d; return d.length === 8 ? d.slice(0, 5) + '-' + d.slice(5) : null; }
+  var SEPS = { space_first: ' ', space: ' ', comma: ',', semicolon: ';', dash: '-', slash: '/', pipe: '|' };
 
   function titleCase(s) {
     return S(s).toLocaleLowerCase('pt-BR').split(/(\s+)/).map(function (w, i) {
@@ -346,6 +350,142 @@ function PlanilhaEngine() {
       ctx.rows.forEach(function (r) { if (r.ch[old]) { delete r.ch[old]; r.ch[to] = 1; } });
       ctx.rep.renamed = to;
     },
+    clean: function (ctx, p) {
+      var idx = pick(ctx, p.cols, true), keep = p.keep || 'all';
+      ctx.rows.forEach(function (r) {
+        idx.forEach(function (i) {
+          var v = S(r.v[i]);
+          if (isEmpty(v)) return;
+          if (p.accents !== false) v = semAcento(v);
+          if (keep === 'digits') v = v.replace(/\D/g, '');
+          else if (keep === 'letters') v = v.replace(/[^\p{L}\s]/gu, '').replace(/\s{2,}/g, ' ').trim();
+          else if (keep === 'alnum') v = v.replace(/[^\p{L}\p{N}\s]/gu, '').replace(/\s{2,}/g, ' ').trim();
+          set(ctx, r, i, v);
+        });
+      });
+    },
+    cep: function (ctx, p) {
+      var bad = 0;
+      pick(ctx, p.cols, false).forEach(function (i) {
+        ctx.rows.forEach(function (r) {
+          if (isEmpty(r.v[i])) return;
+          var f = fmtCep(r.v[i]);
+          if (!f) { bad++; return; }
+          set(ctx, r, i, f);
+        });
+      });
+      if (bad) ctx.rep.warn.push(bad + ' CEP(s) sem 8 dígitos; ficaram como estavam.');
+    },
+    split: function (ctx, p) {
+      var i = one(ctx, p.col);
+      if (i < 0) return;
+      var mode = p.sep || 'space_first', sep = mode === 'custom' ? S(p.custom) : SEPS[mode];
+      if (!sep) { ctx.rep.warn.push('Informe o separador.'); return; }
+      var n = mode === 'space_first' ? 2 : Math.max(2, Math.min(10, parseInt(p.parts, 10) || 2));
+      var base = ctx.headers[i];
+      var nomes = S(p.names).split(',').map(function (x) { return x.trim(); });
+      var cols = [];
+      for (var k = 0; k < n; k++) cols.push(addCol(ctx, nomes[k] || (mode === 'space_first' ? (k ? 'Sobrenome' : 'Primeiro nome') : base + ' ' + (k + 1)), i + k));
+      ctx.rows.forEach(function (r) {
+        var v = S(r.v[i]).replace(INVIS, '').trim(), parts;
+        if (!v) parts = [];
+        else if (mode === 'space_first') { var at = v.search(/\s/); parts = at < 0 ? [v] : [v.slice(0, at), v.slice(at).trim()]; }
+        else {
+          parts = v.split(sep).map(function (x) { return x.trim(); });
+          if (parts.length > n) parts = parts.slice(0, n - 1).concat([parts.slice(n - 1).join(sep + (sep === ' ' ? '' : ' ')).trim()]);
+        }
+        cols.forEach(function (c, k) { r.v[c] = parts[k] || ''; });
+      });
+      if (p.keepOriginal === false) {
+        ctx.headers.splice(i, 1);
+        ctx.rows.forEach(function (r) { r.v.splice(i, 1); });
+        ctx.rep.cols++;
+      }
+    },
+    merge: function (ctx, p) {
+      var idx = pick(ctx, p.cols, false);
+      if (idx.length < 2) { if (idx.length) ctx.rep.warn.push('Escolha pelo menos duas colunas.'); return; }
+      var JUNTA = { space: ' ', comma: ', ', semicolon: '; ', dash: ' - ', slash: ' / ', pipe: ' | ', none: '' };
+      var sep = p.sep === 'custom' ? S(p.custom) : (JUNTA[p.sep] != null ? JUNTA[p.sep] : ' ');
+      var names = idx.map(function (i) { return ctx.headers[i]; });
+      var col = addCol(ctx, S(p.name).trim() || names.join(' + '), null);
+      ctx.rows.forEach(function (r) {
+        r.v[col] = idx.map(function (i) { return S(r.v[i]).trim(); }).filter(function (x) { return x !== ''; }).join(sep);
+      });
+      if (p.removeOriginals) {
+        var gone = idx.slice().sort(function (a, b) { return b - a; });
+        gone.forEach(function (i) { ctx.headers.splice(i, 1); ctx.rows.forEach(function (r) { r.v.splice(i, 1); }); });
+        ctx.rep.cols += gone.length;
+      }
+    },
+    calc: function (ctx, p) {
+      var a = one(ctx, p.a);
+      if (a < 0) return;
+      var op = p.op || 'add', b = -1, kb = null;
+      if (S(p.b).trim()) { b = one(ctx, p.b); if (b < 0) return; }
+      else {
+        kb = op === 'diffdays' ? parseDate(p.bConst) : parseNum(p.bConst, 'auto');
+        if (kb == null) { ctx.rep.warn.push(op === 'diffdays' ? 'Escolha a segunda coluna ou informe uma data.' : 'Escolha a segunda coluna ou informe um número.'); return; }
+      }
+      var NOMES = { add: 'Soma', sub: 'Diferença', mul: 'Produto', div: 'Divisão', pct: 'Percentual', diffdays: 'Dias' };
+      var col = addCol(ctx, S(p.name).trim() || NOMES[op] || 'Resultado', null);
+      var bad = 0;
+      function dias(o) { return Date.UTC(o.y, o.m - 1, o.d) / 86400000; }
+      ctx.rows.forEach(function (r) {
+        var out = '';
+        if (op === 'diffdays') {
+          var da = parseDate(r.v[a]), db = b >= 0 ? parseDate(r.v[b]) : kb;
+          if (da && db) out = String(Math.round(dias(da) - dias(db)));
+          else if (!isEmpty(r.v[a])) bad++;
+        } else {
+          var x = parseNum(r.v[a], 'auto'), y = b >= 0 ? parseNum(r.v[b], 'auto') : kb, n = null;
+          if (x != null && y != null) {
+            if (op === 'add') n = x + y; else if (op === 'sub') n = x - y; else if (op === 'mul') n = x * y;
+            else if (op === 'div') n = y === 0 ? null : x / y; else if (op === 'pct') n = x * y / 100;
+          }
+          if (n != null && isFinite(n)) out = fmtNum(Math.round(n * 1e10) / 1e10, p.to || 'br', p.decimals == null ? '2' : p.decimals);
+          else if (!isEmpty(r.v[a])) bad++;
+        }
+        r.v[col] = out;
+      });
+      if (bad) ctx.rep.warn.push(bad + ' linha(s) sem valor válido para o cálculo; ficaram em branco.');
+    },
+    group: function (ctx, p) {
+      var by = pick(ctx, p.by, false);
+      if (!by.length) return;
+      var agg = p.agg || 'count', vi = -1;
+      if (agg !== 'count') { vi = one(ctx, p.value); if (vi < 0) return; }
+      var groups = [], map = Object.create(null), bad = 0;
+      ctx.rows.forEach(function (r) {
+        var key = by.map(function (i) { return K(r.v[i]); }).join('\u0001');
+        var g = map[key];
+        if (!g) { g = map[key] = { first: r, vals: by.map(function (i) { return S(r.v[i]).trim(); }), n: 0, nums: [] }; groups.push(g); }
+        else { ctx.removed[r.o] = ctx.si; ctx.rep.removed++; }
+        g.n++;
+        if (vi >= 0 && !isEmpty(r.v[vi])) { var x = parseNum(r.v[vi], 'auto'); if (x == null) bad++; else g.nums.push(x); }
+      });
+      var vname = vi >= 0 ? ctx.headers[vi] : '';
+      var label = { sum: 'Soma de ', avg: 'Média de ', min: 'Mínimo de ', max: 'Máximo de ' }[agg];
+      var headers = by.map(function (i) { return ctx.headers[i]; }).concat(['Quantidade']);
+      if (vi >= 0) headers.push(label + vname);
+      ctx.headers = headers;
+      ctx.rows = groups.map(function (g) {
+        var v = g.vals.concat([String(g.n)]);
+        if (vi >= 0) {
+          var res = null, a = g.nums;
+          if (a.length) {
+            if (agg === 'sum' || agg === 'avg') { res = a.reduce(function (s, x) { return s + x; }, 0); if (agg === 'avg') res /= a.length; }
+            else res = agg === 'min' ? Math.min.apply(null, a) : Math.max.apply(null, a);
+          }
+          v.push(res == null ? '' : fmtNum(Math.round(res * 1e10) / 1e10, 'br', '2'));
+        }
+        var ch = dict(); ch.Quantidade = 1; if (vi >= 0) ch[headers[headers.length - 1]] = 1;
+        return { v: v, o: g.first.o, ch: ch };
+      });
+      if (p.sortDesc !== false) ctx.rows.sort(function (x, y) { return (parseNum(y.v[y.v.length - 1], 'br') || 0) - (parseNum(x.v[x.v.length - 1], 'br') || 0); });
+      ctx.rep.info.push(groups.length + (groups.length === 1 ? ' grupo' : ' grupos'));
+      if (bad) ctx.rep.warn.push(bad + ' valor(es) não numérico(s) ignorado(s) no cálculo.');
+    },
     sort: function (ctx, p) {
       var i = one(ctx, p.col);
       if (i < 0) return;
@@ -373,6 +513,96 @@ function PlanilhaEngine() {
     }
   };
 
+
+  // ---------------------------------------------------------------- diagnóstico
+  var DICA = {
+    nome: /\b(nome|cliente|raz[aã]o social|contato|respons[aá]vel|funcion[aá]rio)\b/i,
+    email: /e-?mail/i, tel: /(telefone|fone|celular|whats|tel\b)/i, doc: /\b(cpf|cnpj|documento)\b/i,
+    cep: /\bcep\b/i, valor: /(valor|pre[cç]o|total|r\$|montante|sal[aá]rio|custo|receita|despesa)/i,
+    data: /(data|vencimento|emiss[aã]o|pagamento|nascimento|admiss[aã]o|dt\b)/i
+  };
+  function analyze(grid, maxRows) {
+    var headers = grid.headers.map(S), rows = grid.rows.slice(0, maxRows || 20000), total = grid.rows.length;
+    var cols = [], sugest = [], seenSug = Object.create(null), pontos = 0;
+    function sugerir(type, p, motivo, n) {
+      var key = type + '|' + JSON.stringify(p);
+      if (seenSug[key]) return;
+      seenSug[key] = 1; sugest.push({ type: type, p: p, motivo: motivo, n: n || 0 });
+    }
+    var emptyRows = 0, rowKeys = Object.create(null), dupRows = 0, espacosTot = 0;
+    rows.forEach(function (r) {
+      if (r.every(isEmpty)) { emptyRows++; return; }
+      var k = r.map(function (v) { return K(v); }).join('\u0001');
+      if (rowKeys[k]) dupRows++; else rowKeys[k] = 1;
+    });
+    headers.forEach(function (h, ci) {
+      var vals = [], esp = 0;
+      rows.forEach(function (r) {
+        var v = S(r[ci]);
+        if (isEmpty(v)) return;
+        vals.push(v);
+        if (v !== v.replace(INVIS, '').replace(/ /g, ' ').replace(/[ \t]{2,}/g, ' ').trim()) esp++;
+      });
+      espacosTot += esp;
+      var n = vals.length, info = { nome: h, tipo: n ? 'texto' : 'vazia', preenchidas: n, vazias: rows.length - n, problemas: [] };
+      cols.push(info);
+      if (!n) { sugerir('removeEmptyCols', {}, 'Há colunas totalmente vazias.'); return; }
+      var cnt = function (fn) { var c = 0; for (var j = 0; j < n; j++) if (fn(vals[j])) c++; return c; };
+      var dig = function (v) { return S(v).replace(/\D/g, ''); };
+      var nEmail = cnt(function (v) { return /@/.test(v); });
+      var nData = cnt(function (v) { return !!parseDate(v) && !/^\d{1,4}$/.test(v.trim()); });
+      var nNum = cnt(function (v) { return parseNum(v, 'auto') != null; });
+      var nDoc = cnt(function (v) { return /^[\d.\-\/\s]+$/.test(v.trim()) && (dig(v).length === 11 || dig(v).length === 14); });
+      var nCep = cnt(function (v) { return /^\d{5}-?\d{3}$/.test(v.trim()); });
+      var nTel = cnt(function (v) { return /^[\d()+\-\s.]+$/.test(v.trim()) && !!fmtPhone(v); });
+      var tipo = 'texto';
+      if (/ válido\?$/.test(h)) tipo = 'verificacao';
+      else if (nEmail >= n * 0.6 || (DICA.email.test(h) && nEmail >= n * 0.3)) tipo = 'email';
+      else if ((DICA.doc.test(h) && nDoc >= n * 0.3) || nDoc >= n * 0.8) tipo = 'documento';
+      else if ((DICA.cep.test(h) && cnt(function (v) { return /^[\d.\-\s]+$/.test(v.trim()); }) >= n * 0.5) || nCep >= n * 0.9) tipo = 'cep';
+      else if ((DICA.tel.test(h) && cnt(function (v) { return /\d{4}/.test(v); }) >= n * 0.5) || (nTel >= n * 0.8 && nDoc < n * 0.5 && !DICA.valor.test(h))) tipo = 'telefone';
+      else if ((DICA.data.test(h) && nData >= n * 0.5) || (nData >= n * 0.8 && !DICA.valor.test(h))) tipo = 'data';
+      else if (nNum >= n * 0.8) tipo = (DICA.valor.test(h) || cnt(function (v) { return /R\$/.test(v); })) ? 'moeda' : 'numero';
+      else if (DICA.nome.test(h)) tipo = 'nome';
+      info.tipo = tipo;
+      var prob = function (qtd, texto, type, p) {
+        if (!qtd) return;
+        info.problemas.push({ qtd: qtd, texto: texto });
+        pontos += qtd;
+        if (type) sugerir(type, p, h + ': ' + texto, qtd);
+      };
+      if (esp) prob(esp, esp + ' com espaços sobrando ou caracteres invisíveis', 'trim', { cols: [], collapse: true });
+      if (tipo === 'email') {
+        prob(cnt(function (v) { return !EMAIL.test(v.trim()); }), 'e-mail(s) inválido(s)', 'validate', { col: h, kind: 'email', action: 'mark', format: true, dropEmpty: false });
+        prob(cnt(function (v) { return v !== v.toLowerCase(); }), 'e-mail(s) com letras maiúsculas', 'case', { cols: [h], mode: 'lower' });
+      } else if (tipo === 'documento') {
+        var inval = cnt(function (v) { var d = dig(v); if (d.length >= 8 && d.length < 11) d = ('00000000000' + d).slice(-11); return !(cpfOk(d) || cnpjOk(d.length === 14 ? d : ('00000000000000' + d).slice(-14))); });
+        prob(inval, 'CPF/CNPJ inválido(s)', 'validate', { col: h, kind: 'doc', action: 'mark', format: true, dropEmpty: false });
+        prob(cnt(function (v) { var d = v.trim(); return /^\d+$/.test(d) && (cpfOk(('00000000000' + d).slice(-11)) || cnpjOk(('00000000000000' + d).slice(-14))); }), 'documento(s) sem pontuação', 'validate', { col: h, kind: 'doc', action: 'mark', format: true, dropEmpty: false });
+      } else if (tipo === 'cep') {
+        prob(cnt(function (v) { var f = fmtCep(v); return f !== v.trim(); }), 'CEP(s) fora do padrão 00000-000', 'cep', { cols: [h] });
+      } else if (tipo === 'telefone') {
+        prob(cnt(function (v) { var f = fmtPhone(v); return f && f !== v.trim(); }), 'telefone(s) fora do padrão (11) 98765-4321', 'phone', { cols: [h], ddi: false });
+        prob(cnt(function (v) { return !fmtPhone(v); }), 'telefone(s) incompleto(s)', null);
+      } else if (tipo === 'data') {
+        prob(cnt(function (v) { var d = parseDate(v); return d && fmtDate(d, 'br') !== v.trim(); }), 'data(s) em formatos diferentes', 'date', { cols: [h], to: 'br' });
+        prob(n - nData, 'data(s) não reconhecida(s)', null);
+      } else if (tipo === 'moeda' || tipo === 'numero') {
+        prob(cnt(function (v) { var x = parseNum(v, 'auto'); return x != null && fmtNum(x, 'br', '2') !== v.trim(); }), 'valor(es) em formatos diferentes', 'number', { cols: [h], from: 'auto', to: 'br', decimals: '2' });
+      } else if (tipo === 'nome') {
+        prob(cnt(function (v) { return /\p{L}/u.test(v) && (v === v.toLocaleUpperCase('pt-BR') || v === v.toLocaleLowerCase('pt-BR')); }), 'nome(s) todo em maiúsculas ou minúsculas', 'case', { cols: [h], mode: 'title' });
+      }
+    });
+    if (emptyRows) sugerir('removeEmptyRows', {}, emptyRows + ' linha(s) totalmente vazia(s).', emptyRows);
+    if (dupRows) sugerir('dedupe', { cols: [], keep: 'first', ignoreCase: true }, dupRows + ' linha(s) repetida(s).', dupRows);
+    var celulas = Math.max(1, rows.length * Math.max(1, headers.length));
+    var problemas = pontos + (emptyRows + dupRows) * Math.max(1, headers.length);
+    var nota = Math.max(0, Math.min(100, Math.round(100 - (problemas / celulas) * 120)));
+    if (problemas && nota === 100) nota = 99;
+    var cabecalho = headers.filter(function (h) { return /^Coluna \d+$/.test(h); }).length;
+    return { nota: nota, linhas: total, analisadas: rows.length, colunas: cols, linhasVazias: emptyRows, linhasRepetidas: dupRows, cabecalhosSemNome: cabecalho, sugestoes: sugest };
+  }
+
   function run(input, steps) {
     var headers = input.headers.map(function (h) { return S(h).trim(); });
     var rows = input.rows.map(function (r, o) { return { v: headers.map(function (_, i) { return S(r[i]); }), o: o, ch: dict() }; });
@@ -392,5 +622,5 @@ function PlanilhaEngine() {
   }
   function toGrid(res) { return { headers: res.headers.slice(), rows: res.rows.map(function (r) { return r.v.slice(); }) }; }
 
-  return { run: run, toGrid: toGrid, parseNum: parseNum, parseDate: parseDate, fmtPhone: fmtPhone, cpfOk: cpfOk, cnpjOk: cnpjOk, titleCase: titleCase, STEP_TYPES: Object.keys(STEPS) };
+  return { run: run, toGrid: toGrid, analyze: analyze, parseNum: parseNum, parseDate: parseDate, fmtPhone: fmtPhone, fmtCep: fmtCep, cpfOk: cpfOk, cnpjOk: cnpjOk, titleCase: titleCase, semAcento: semAcento, STEP_TYPES: Object.keys(STEPS) };
 }

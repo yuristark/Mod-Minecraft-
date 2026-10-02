@@ -28,7 +28,8 @@ insert into public.configuracao (id) values (true) on conflict (id) do nothing;
 
 create table if not exists public.compras (
   id             uuid primary key default gen_random_uuid(),
-  user_id        uuid not null references auth.users (id) on delete cascade,
+  user_id        uuid references auth.users (id) on delete set null,
+  email_comprador text,
   valor_centavos integer not null check (valor_centavos > 0),
   status         text not null default 'pendente'
                  check (status in ('pendente', 'aprovada', 'recusada', 'cancelada', 'reembolsada', 'contestada', 'divergente')),
@@ -37,6 +38,12 @@ create table if not exists public.compras (
   atualizado_em  timestamptz not null default now()
 );
 create index if not exists compras_user_idx on public.compras (user_id, criado_em desc);
+-- Atualização de instalações antigas: a compra fica registrada (obrigação fiscal) mesmo se a conta for excluída.
+alter table public.compras add column if not exists email_comprador text;
+alter table public.compras alter column user_id drop not null;
+alter table public.compras drop constraint if exists compras_user_id_fkey;
+alter table public.compras add constraint compras_user_id_fkey foreign key (user_id) references auth.users (id) on delete set null;
+update public.compras c set email_comprador = u.email from auth.users u where u.id = c.user_id and c.email_comprador is null;
 
 create table if not exists public.acessos (
   user_id       uuid primary key references auth.users (id) on delete cascade,
@@ -190,6 +197,14 @@ begin
     'acessos_ativos',   (select count(*) from public.acessos where ativo),
     'pendencias',       (select count(*) from public.compras where status in ('divergente', 'contestada'))
                       + (select count(*) from public.eventos where tipo = 'pagamento_duplicado' and quando > now() - interval '30 days'),
+    'usuarios',         (select count(*) from auth.users),
+    'novos_7d',         (select count(*) from auth.users where created_at > now() - interval '7 days'),
+    'online_agora',     (select count(*) from public.perfis where visto_em > now() - interval '2 minutes'),
+    'logados',          public._qtd_logados(),
+    'vendas_30d', (select coalesce(jsonb_agg(jsonb_build_object('dia', d.dia, 'vendas', coalesce(x.n, 0), 'centavos', coalesce(x.c, 0)) order by d.dia), '[]'::jsonb)
+                     from generate_series((now() at time zone 'America/Sao_Paulo')::date - 29, (now() at time zone 'America/Sao_Paulo')::date, interval '1 day') as d(dia)
+                     left join (select (criado_em at time zone 'America/Sao_Paulo')::date as dia, count(*) n, sum(valor_centavos) c
+                                  from public.compras where status = 'aprovada' group by 1) x on x.dia = d.dia::date),
     'config', (select jsonb_build_object(
                  'nome_produto', c.nome_produto, 'descricao', c.descricao, 'preco_centavos', c.preco_centavos,
                  'vendas_abertas', c.vendas_abertas, 'email_suporte', c.email_suporte,
@@ -207,8 +222,8 @@ language plpgsql stable security definer set search_path = '' as $$
 begin
   perform public._exigir_dono();
   return query
-    select c.id, u.email::text, c.valor_centavos, c.status, c.mp_payment_id, c.criado_em
-      from public.compras c join auth.users u on u.id = c.user_id
+    select c.id, coalesce(u.email::text, c.email_comprador || ' (conta excluída)'), c.valor_centavos, c.status, c.mp_payment_id, c.criado_em
+      from public.compras c left join auth.users u on u.id = c.user_id
      where c.status <> 'pendente' or c.criado_em > now() - interval '2 days'
      order by c.criado_em desc
      limit least(greatest(coalesce(p_limite, 200), 1), 1000);
@@ -329,7 +344,7 @@ begin
        where user_id = p_user and criado_em > now() - interval '1 hour') >= 10 then
     raise exception 'muitas_tentativas';
   end if;
-  insert into public.compras (user_id, valor_centavos) values (p_user, v_conf.preco_centavos)
+  insert into public.compras (user_id, email_comprador, valor_centavos) values (p_user, public._email_de(p_user), v_conf.preco_centavos)
   returning id into v_compra;
   return jsonb_build_object('compra_id', v_compra, 'valor_centavos', v_conf.preco_centavos,
                             'nome_produto', v_conf.nome_produto, 'email', public._email_de(p_user));
@@ -374,7 +389,9 @@ begin
      set status = v_status, mp_payment_id = p_payment_id, atualizado_em = now()
    where id = p_compra;
 
-  if v_status = 'aprovada' then
+  if v_compra.user_id is null then
+    null; -- conta excluída: só registra a situação da compra
+  elsif v_status = 'aprovada' then
     insert into public.acessos (user_id, ativo, origem, compra_id)
     values (v_compra.user_id, true, 'compra', p_compra)
     on conflict (user_id) do update
@@ -406,6 +423,257 @@ begin
 end;
 $$;
 
+
+-- ---------------------------------------------------------------- perfis, presença e acessos
+
+create table if not exists public.perfis (
+  user_id       uuid primary key references auth.users (id) on delete cascade,
+  nome          text check (char_length(nome) <= 120),
+  empresa       text check (char_length(empresa) <= 120),
+  cargo         text check (char_length(cargo) <= 80),
+  telefone      text check (char_length(telefone) <= 30),
+  documento     text check (char_length(documento) <= 20),
+  cidade        text check (char_length(cidade) <= 80),
+  criado_em     timestamptz not null default now(),
+  atualizado_em timestamptz not null default now(),
+  visto_em      timestamptz,
+  visto_ip      text,
+  visto_navegador text
+);
+create index if not exists perfis_visto_idx on public.perfis (visto_em desc);
+
+-- Registro de acessos (Marco Civil da Internet, art. 15: guardar data, hora e IP por 6 meses).
+-- Se a conta for excluída, o registro fica sem vínculo com a pessoa.
+create table if not exists public.acessos_log (
+  id        bigserial primary key,
+  user_id   uuid references auth.users (id) on delete set null,
+  quando    timestamptz not null default now(),
+  tipo      text not null check (tipo in ('login', 'app', 'perfil', 'senha', 'saida')),
+  ip        text,
+  navegador text
+);
+create index if not exists acessos_log_user_idx on public.acessos_log (user_id, quando desc);
+create index if not exists acessos_log_quando_idx on public.acessos_log (quando);
+
+alter table public.perfis      enable row level security;
+alter table public.acessos_log enable row level security;
+revoke all on public.perfis, public.acessos_log from anon, authenticated;
+grant select on public.perfis, public.acessos_log to authenticated;
+drop policy if exists "ver o próprio perfil" on public.perfis;
+create policy "ver o próprio perfil" on public.perfis for select to authenticated using (user_id = (select auth.uid()));
+drop policy if exists "ver os próprios acessos" on public.acessos_log;
+create policy "ver os próprios acessos" on public.acessos_log for select to authenticated using (user_id = (select auth.uid()));
+
+-- Cabeçalhos da requisição (o Supabase repassa IP e navegador de quem chamou).
+create or replace function public._cabecalho(p_nome text)
+returns text language sql stable security definer set search_path = '' as $$
+  select nullif(left(coalesce(current_setting('request.headers', true), '{}')::jsonb ->> p_nome, 400), '');
+$$;
+create or replace function public._ip()
+returns text language sql stable security definer set search_path = '' as $$
+  select left(trim(coalesce(public._cabecalho('cf-connecting-ip'), split_part(public._cabecalho('x-forwarded-for'), ',', 1), public._cabecalho('x-real-ip'))), 64);
+$$;
+
+-- Sessões abertas de um usuário (aparelhos logados). Lidas da tabela interna do Supabase Auth.
+create or replace function public._sessoes(p_user uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v jsonb;
+begin
+  select coalesce(jsonb_agg(jsonb_build_object(
+           'id', x.j ->> 'id',
+           'criada_em', x.j ->> 'created_at',
+           'ultimo_uso', coalesce(x.j ->> 'refreshed_at', x.j ->> 'updated_at', x.j ->> 'created_at'),
+           'ip', x.j ->> 'ip',
+           'navegador', left(x.j ->> 'user_agent', 400))
+         order by coalesce(x.j ->> 'refreshed_at', x.j ->> 'updated_at', x.j ->> 'created_at') desc), '[]'::jsonb)
+    into v
+    from (select to_jsonb(s) as j from auth.sessions s
+           where s.user_id = p_user and (s.not_after is null or s.not_after > now())) x;
+  return v;
+exception when others then
+  return '[]'::jsonb;
+end;
+$$;
+create or replace function public._qtd_logados()
+returns integer language plpgsql stable security definer set search_path = '' as $$
+declare n integer;
+begin
+  select count(distinct s.user_id) into n from auth.sessions s where s.not_after is null or s.not_after > now();
+  return n;
+exception when others then
+  return null;
+end;
+$$;
+
+-- Chamada pelo site a cada minuto enquanto a página está aberta: alimenta o "online agora".
+create or replace function public.registrar_presenca()
+returns void language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null then return; end if;
+  insert into public.perfis (user_id, nome, visto_em, visto_ip, visto_navegador)
+  select v_uid, left(nullif(trim(u.raw_user_meta_data ->> 'nome'), ''), 120), now(), public._ip(), public._cabecalho('user-agent')
+    from auth.users u where u.id = v_uid
+  on conflict (user_id) do update
+    set visto_em = now(), visto_ip = excluded.visto_ip, visto_navegador = excluded.visto_navegador
+    where public.perfis.visto_em is null or public.perfis.visto_em < now() - interval '20 seconds';
+end;
+$$;
+
+-- Registra um acesso (login, abertura do aplicativo, alteração de perfil ou senha).
+create or replace function public.registrar_acesso(p_tipo text)
+returns void language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null or p_tipo not in ('login', 'app', 'perfil', 'senha', 'saida') then return; end if;
+  perform public.registrar_presenca();
+  if exists (select 1 from public.acessos_log where user_id = v_uid and tipo = p_tipo and quando > now() - interval '2 minutes') then return; end if;
+  insert into public.acessos_log (user_id, tipo, ip, navegador) values (v_uid, p_tipo, public._ip(), public._cabecalho('user-agent'));
+  -- limpeza ocasional: guarda 13 meses (o mínimo legal é 6)
+  if random() < 0.01 then delete from public.acessos_log where quando < now() - interval '13 months'; end if;
+end;
+$$;
+
+create or replace function public._perfil_completo(p_user uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare
+  v_user auth.users;
+  v_perf public.perfis;
+  v_ac   public.acessos;
+  v_conf public.configuracao;
+begin
+  select * into v_user from auth.users where id = p_user;
+  if not found then return null; end if;
+  select * into v_perf from public.perfis where user_id = p_user;
+  select * into v_ac from public.acessos where user_id = p_user;
+  select * into v_conf from public.configuracao;
+  return jsonb_build_object(
+    'id', v_user.id,
+    'email', v_user.email,
+    'email_confirmado', v_user.email_confirmed_at is not null,
+    'conta_criada_em', v_user.created_at,
+    'ultimo_login', v_user.last_sign_in_at,
+    'nome', coalesce(v_perf.nome, nullif(trim(v_user.raw_user_meta_data ->> 'nome'), '')),
+    'empresa', v_perf.empresa, 'cargo', v_perf.cargo, 'telefone', v_perf.telefone,
+    'documento', v_perf.documento, 'cidade', v_perf.cidade,
+    'visto_em', v_perf.visto_em, 'online', coalesce(v_perf.visto_em > now() - interval '2 minutes', false),
+    'eh_dono', v_conf.dono_id = p_user,
+    'acesso', case when v_conf.dono_id = p_user then jsonb_build_object('ativo', true, 'origem', 'dono')
+                   when v_ac.user_id is not null then jsonb_build_object('ativo', v_ac.ativo, 'origem', v_ac.origem, 'desde', v_ac.atualizado_em)
+                   else jsonb_build_object('ativo', false) end,
+    'compras', (select coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'valor_centavos', c.valor_centavos, 'status', c.status,
+                  'mp_payment_id', c.mp_payment_id, 'criado_em', c.criado_em) order by c.criado_em desc), '[]'::jsonb)
+                from public.compras c where c.user_id = p_user and (c.status <> 'pendente' or c.criado_em > now() - interval '2 days')),
+    'sessoes', public._sessoes(p_user),
+    'acessos', (select coalesce(jsonb_agg(jsonb_build_object('quando', a.quando, 'tipo', a.tipo, 'ip', a.ip, 'navegador', a.navegador) order by a.quando desc), '[]'::jsonb)
+                from (select * from public.acessos_log where user_id = p_user order by quando desc limit 30) a)
+  );
+end;
+$$;
+
+create or replace function public.meu_perfil()
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+begin
+  if auth.uid() is null then raise exception 'Entre na sua conta primeiro.' using errcode = '42501'; end if;
+  return public._perfil_completo(auth.uid());
+end;
+$$;
+
+create or replace function public.salvar_meu_perfil(
+  p_nome text, p_empresa text, p_cargo text, p_telefone text, p_documento text, p_cidade text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  v_uid uuid := auth.uid();
+  v_tel text := regexp_replace(coalesce(p_telefone, ''), '\D', '', 'g');
+  v_doc text := regexp_replace(coalesce(p_documento, ''), '\D', '', 'g');
+begin
+  if v_uid is null then raise exception 'Entre na sua conta primeiro.' using errcode = '42501'; end if;
+  if char_length(trim(coalesce(p_nome, ''))) < 2 then raise exception 'Informe seu nome.'; end if;
+  if v_tel <> '' and char_length(v_tel) not between 10 and 13 then raise exception 'Telefone inválido. Use DDD + número.'; end if;
+  if v_doc <> '' and char_length(v_doc) not in (11, 14) then raise exception 'CPF ou CNPJ inválido.'; end if;
+  insert into public.perfis (user_id, nome, empresa, cargo, telefone, documento, cidade, atualizado_em)
+  values (v_uid, left(trim(p_nome), 120), nullif(left(trim(coalesce(p_empresa, '')), 120), ''), nullif(left(trim(coalesce(p_cargo, '')), 80), ''),
+          nullif(left(trim(coalesce(p_telefone, '')), 30), ''), nullif(left(trim(coalesce(p_documento, '')), 20), ''), nullif(left(trim(coalesce(p_cidade, '')), 80), ''), now())
+  on conflict (user_id) do update
+    set nome = excluded.nome, empresa = excluded.empresa, cargo = excluded.cargo, telefone = excluded.telefone,
+        documento = excluded.documento, cidade = excluded.cidade, atualizado_em = now();
+  perform public.registrar_acesso('perfil');
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- Exclusão da conta pela própria pessoa (LGPD, art. 18). As compras ficam guardadas sem vínculo (obrigação fiscal).
+create or replace function public.excluir_minha_conta(p_confirmacao text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null then raise exception 'Entre na sua conta primeiro.' using errcode = '42501'; end if;
+  if p_confirmacao is distinct from 'EXCLUIR' then raise exception 'Digite EXCLUIR para confirmar.'; end if;
+  if exists (select 1 from public.configuracao where dono_id = v_uid) then
+    raise exception 'O dono da loja não pode excluir a conta. Passe a loja para outra pessoa primeiro.';
+  end if;
+  perform public._registrar_evento('conta_excluida', v_uid, '{}'::jsonb);
+  delete from auth.users where id = v_uid;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- Painel do dono: todos os usuários, quem está online e quem está logado.
+create or replace function public.admin_listar_usuarios(p_busca text default null, p_limite integer default 500)
+returns table (user_id uuid, email text, nome text, empresa text, telefone text, criado_em timestamptz, ultimo_login timestamptz,
+               visto_em timestamptz, online boolean, sessoes integer, tem_acesso boolean, origem text, eh_dono boolean)
+language plpgsql stable security definer set search_path = '' as $$
+declare v_busca text := lower(trim(coalesce(p_busca, '')));
+begin
+  perform public._exigir_dono();
+  return query
+    select u.id, u.email::text, coalesce(p.nome, nullif(trim(u.raw_user_meta_data ->> 'nome'), '')), p.empresa, p.telefone,
+           u.created_at, u.last_sign_in_at, p.visto_em, coalesce(p.visto_em > now() - interval '2 minutes', false),
+           jsonb_array_length(public._sessoes(u.id)),
+           public.tem_acesso(u.id),
+           case when c.dono_id = u.id then 'dono' else a.origem end,
+           coalesce(c.dono_id = u.id, false)
+      from auth.users u
+      left join public.perfis p on p.user_id = u.id
+      left join public.acessos a on a.user_id = u.id
+      cross join public.configuracao c
+     where v_busca = '' or lower(u.email) like '%' || v_busca || '%' or lower(coalesce(p.nome, '')) like '%' || v_busca || '%'
+           or lower(coalesce(p.empresa, '')) like '%' || v_busca || '%'
+     order by coalesce(p.visto_em, u.last_sign_in_at, u.created_at) desc nulls last
+     limit least(greatest(coalesce(p_limite, 500), 1), 2000);
+end;
+$$;
+
+create or replace function public.admin_detalhe_usuario(p_user uuid)
+returns jsonb language plpgsql stable security definer set search_path = '' as $$
+declare v jsonb;
+begin
+  perform public._exigir_dono();
+  v := public._perfil_completo(p_user);
+  if v is null then raise exception 'Usuário não encontrado.'; end if;
+  return v || jsonb_build_object('eventos', (select coalesce(jsonb_agg(jsonb_build_object('quando', e.quando, 'tipo', e.tipo, 'detalhe', e.detalhe) order by e.quando desc), '[]'::jsonb)
+                                             from (select * from public.eventos where user_id = p_user order by id desc limit 50) e));
+end;
+$$;
+
+-- Desconecta todos os aparelhos de um usuário (vale a partir da próxima renovação da sessão, em até 1 hora).
+create or replace function public.admin_encerrar_sessoes(p_user uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare n integer;
+begin
+  perform public._exigir_dono();
+  if p_user = auth.uid() then raise exception 'Para sair dos seus aparelhos, use “Sair de todos os aparelhos” no seu perfil.'; end if;
+  begin
+    delete from auth.sessions where user_id = p_user;
+    get diagnostics n = row_count;
+  exception when others then
+    raise exception 'O banco não permitiu encerrar as sessões. No Supabase, use Authentication > Users > (usuário) > Sign out.';
+  end;
+  perform public._registrar_evento('sessoes_encerradas', p_user, jsonb_build_object('por', public._email_de(auth.uid()), 'quantidade', n));
+  return jsonb_build_object('ok', true, 'encerradas', n);
+end;
+$$;
+
 -- ---------------------------------------------------------------- permissões das funções
 
 revoke execute on all functions in schema public from public, anon, authenticated, service_role;
@@ -423,6 +691,14 @@ grant execute on function public.admin_definir_acesso(text, boolean) to authenti
 grant execute on function public.admin_salvar_config(text, text, integer, boolean, text) to authenticated;
 grant execute on function public.admin_transferir_propriedade(text) to authenticated;
 grant execute on function public.admin_cancelar_transferencia()  to authenticated;
+grant execute on function public.registrar_presenca()             to authenticated;
+grant execute on function public.registrar_acesso(text)           to authenticated;
+grant execute on function public.meu_perfil()                     to authenticated;
+grant execute on function public.salvar_meu_perfil(text, text, text, text, text, text) to authenticated;
+grant execute on function public.excluir_minha_conta(text)        to authenticated;
+grant execute on function public.admin_listar_usuarios(text, integer) to authenticated;
+grant execute on function public.admin_detalhe_usuario(uuid)      to authenticated;
+grant execute on function public.admin_encerrar_sessoes(uuid)     to authenticated;
 grant execute on function public.criar_compra(uuid)              to service_role;
 grant execute on function public.registrar_pagamento(uuid, text, text, integer, text) to service_role;
 

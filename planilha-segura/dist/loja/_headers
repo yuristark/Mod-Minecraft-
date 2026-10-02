@@ -1,5 +1,5 @@
 /*
-  Content-Security-Policy: default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-H6p6JZY8aR6xrtLQjWRFekxtHEzadhqVv4Mp9mP00sg=' 'sha256-y7fJ/RGvk05LZA7r4hwMx51rs/A/2laZ1T4D8/L20oU=' 'sha256-h0RMn3+V0aulsoH0Zn7nvPTE0mdtdwz/85Brl2EpN1Y='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-N8RjKW3in6Xbn6yhDy02us0nZKPbxV9NeV1whCPJHw0=' 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-K5vsBCZkXpx5XH4ppf3gtCLbFD7oV2kLYcwUvaW6vt4='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer

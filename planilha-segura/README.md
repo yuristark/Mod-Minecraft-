@@ -2,7 +2,7 @@
 
 Aplicação web de uma página para limpar, padronizar e automatizar planilhas. Todo o processamento acontece no navegador de quem usa, sem servidor recebendo arquivos e sem conta para criar.
 
-Versão atual: **1.0.0**
+Versão atual: **1.1.0**
 
 ## Duas formas de usar
 
@@ -15,13 +15,14 @@ Versão atual: **1.0.0**
 | --- | --- |
 | `src/layout.html` | Estrutura e estilo do aplicativo |
 | `src/engine.js` | Motor de limpeza (`PlanilhaEngine`), sem dependência da página. É o mesmo código embutido no Apps Script gerado. |
-| `src/app.js` | Interface do aplicativo, leitura e exportação de arquivos, geração do Apps Script |
-| `loja/` | Site da loja: login, compra, painel do dono (`layout.html`, `loja.js`, `config.json`) |
-| `supabase/migrations/` | Banco de dados: tabelas, regras de acesso (RLS) e funções |
+| `src/app.js` | Interface do aplicativo, diagnóstico, receitas, leitura e exportação de arquivos, geração do Apps Script |
+| `src/xlsx.js` | Gerador próprio de Excel formatado |
+| `loja/` | Site da loja: login, compra, perfil e painel do dono (`layout.html`, `loja.js`, `config.json`) |
+| `supabase/migrations/` | Banco de dados: tabelas, regras de acesso (RLS) e funções. Um único arquivo, que pode rodar de novo para atualizar |
 | `supabase/functions/` | Edge Functions `criar-pagamento` e `webhook-mp` |
 | `vendor/` | SheetJS CE 0.18.5 (Apache 2.0) e supabase-js 2.117.2 (MIT), com as licenças |
 | `build.py` | Gera `dist/` |
-| `tests/` | Testes do motor, do banco (Postgres real via PGlite) e das funções |
+| `tests/` | Testes do motor e do diagnóstico, do gerador de Excel, do banco (Postgres real via PGlite) e das funções |
 
 Comandos:
 - `python3 build.py` gera:
@@ -56,25 +57,48 @@ Comandos:
 ## Recursos do aplicativo
 
 - **Importação:** XLSX, XLSM, XLS, ODS, CSV (UTF-8 ou Windows-1252), TSV, TXT e JSON. Também aceita colar direto do Excel com Ctrl+V ou arrastar o arquivo para a página.
-- **Receita de limpeza:** etapas que rodam em ordem e podem ser ligadas, desligadas e reordenadas:
-  - limpar espaços;
-  - remover linhas ou colunas vazias;
+- **Diagnóstico automático com nota de saúde (0 a 100):** reconhece o tipo de cada coluna e aponta o que precisa ser corrigido. Os tipos reconhecidos são:
+  - nome, e-mail, telefone, CPF/CNPJ e CEP;
+  - data, moeda e número.
+  - Os problemas apontados são espaços sobrando, linhas vazias ou repetidas, formatos misturados e documentos ou e-mails inválidos.
+  - Cada problema vira uma sugestão. "Corrigir tudo" monta a receita sozinho.
+- **Receita de limpeza:** etapas em ordem, que podem ser ligadas, desligadas, reordenadas, desfeitas e refeitas (Ctrl+Z / Ctrl+Shift+Z):
+  - limpar espaços, remover acentos e símbolos, linhas ou colunas vazias, duplicadas;
   - preencher vazios com o valor de cima;
-  - remover duplicadas;
-  - maiúsculas e minúsculas;
-  - localizar e substituir;
-  - filtrar linhas;
-  - padronizar valores (R$), datas e telefones;
+  - maiúsculas e minúsculas, localizar e substituir, filtrar linhas;
+  - padronizar valores (R$), datas, telefones e CEP;
   - validar e-mail, CPF e CNPJ;
-  - manter, remover, renomear ou ordenar colunas.
-- **Receitas prontas:** "Limpeza básica", "Lista de contatos" e "Lançamentos financeiros". Elas não trazem nomes de colunas fixos: cada etapa reconhece a coluna certa (nome, e-mail, telefone, CPF/CNPJ, valor, data) pelo cabeçalho da planilha aberta.
-- **Prévia:** as células alteradas aparecem marcadas. A visão "Original" mostra cada linha removida e a etapa que a removeu.
-- **Exportação:** XLSX, CSV, JSON ou cópia para colar no Excel.
-- **Lote:** aplica a mesma receita a até 40 arquivos, juntando tudo numa aba ou gerando uma aba por arquivo, com uma aba de resumo.
-- **Agendamento:** gera um Google Apps Script com a própria receita. O script roda a cada hora, todo dia, toda semana ou depois de edições.
-- **Receitas salvas:** podem ser salvas no navegador ou exportadas e importadas em `.json`.
+  - manter, remover, renomear, ordenar, dividir e juntar colunas;
+  - coluna calculada (soma, subtração, multiplicação, divisão, percentual, dias entre datas);
+  - resumir/agrupar (contagem, soma, média, mínimo, máximo por grupo).
+- **8 modelos de receita:** limpeza básica, contatos, cadastro com endereço, financeiro, vendas por vendedor, estoque, funcionários e contagem por categoria. As colunas são reconhecidas pelo cabeçalho da planilha aberta; nenhum nome de coluna vem fixo.
+- **Excel formatado (.xlsx):** gerador próprio (`src/xlsx.js`) que entrega:
+  - cabeçalho destacado e fixo, filtros e larguras ajustadas;
+  - números, moeda e datas como valores de verdade;
+  - códigos com zero à esquerda (CPF, CEP) mantidos como texto.
+- **Outras exportações:** CSV com proteção contra fórmulas, JSON, ou cópia para colar no Excel.
+- **Lote:** a mesma receita em até 40 arquivos, num único Excel com aba de resumo.
+- **Google Sheets no piloto automático:** gera um Apps Script com a receita, que roda a cada hora, todo dia, toda semana ou depois de edições. O resultado sai formatado:
+  - cabeçalho, filtros, faixas alternadas;
+  - números, moeda e datas como valores;
+  - texto puro para códigos.
+- **Guia e boas práticas:** as 10 regras de uma planilha bem feita, como automatizar, referência das etapas, perguntas frequentes e atalhos de teclado.
+- **Visual:** tema claro e escuro, layout para celular e computador.
 
-O produto não inclui dados de exemplo: a página abre vazia e só mostra o que o usuário carregar.
+## Loja: perfil e painel do dono
+
+- **Meu perfil** (cada cliente):
+  - dados pessoais (nome, empresa, cargo, telefone, CPF/CNPJ, cidade);
+  - situação do acesso;
+  - troca de senha e de e-mail;
+  - aparelhos conectados, com navegador, IP e último uso, mais "sair de todos os outros aparelhos";
+  - últimos acessos e compras;
+  - baixar os próprios dados (.json) e excluir a conta (LGPD).
+- **Painel do dono:**
+  - **Visão geral:** usuários cadastrados, online agora, contas logadas, vendas, receita, pendências, gráfico de 30 dias e lista de quem está online;
+  - **Usuários:** busca e filtros (online, logados, com e sem acesso) e o detalhe de cada pessoa: perfil, aparelhos e IPs, acessos, compras e histórico. Daqui o dono libera, bloqueia ou desconecta aparelhos;
+  - **Vendas**, **Loja e preço** (inclui liberação manual), **Histórico** e **Propriedade**.
+- "Online agora" vem de um sinal enviado a cada minuto enquanto o site está aberto. "Logados" vem das sessões do Supabase Auth. IP e navegador vêm dos cabeçalhos da requisição, registrados no servidor.
 
 ## Segurança
 

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-H6p6JZY8aR6xrtLQjWRFekxtHEzadhqVv4Mp9mP00sg=' 'sha256-y7fJ/RGvk05LZA7r4hwMx51rs/A/2laZ1T4D8/L20oU=' 'sha256-h0RMn3+V0aulsoH0Zn7nvPTE0mdtdwz/85Brl2EpN1Y='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-N8RjKW3in6Xbn6yhDy02us0nZKPbxV9NeV1whCPJHw0=' 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-K5vsBCZkXpx5XH4ppf3gtCLbFD7oV2kLYcwUvaW6vt4='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Acesso vitalício à Planilha Segura: limpe e automatize planilhas sem enviar seus dados.">
 <meta name="color-scheme" content="light dark">
@@ -12,118 +12,200 @@
 <style>
 [hidden]{display:none!important}
 :root{
-  --bg:#f5f8f7; --card:#ffffff; --ink:#1c2926; --muted:#6a7671; --line:#e2e8e5; --soft:#f0f4f2;
-  --primary:#1a674b; --primary-ink:#ffffff; --primary-soft:#e9f3ee;
-  --side:#112b26; --side-ink:#c2d0cb; --lime:#c4ec88; --lime-ink:#173c27;
-  --ok:#2f7d4f; --warn:#9a6409; --warn-soft:#fdf4e2; --danger:#b23a32; --danger-soft:#fbeceb;
-  --font:Arial,Helvetica,sans-serif;
+  --bg:#f3f6f4; --card:#ffffff; --ink:#14221e; --ink2:#334540; --muted:#66756f; --line:#e1e8e4; --soft:#f2f6f3; --hover:#eef4f0;
+  --primary:#167a57; --primary-2:#0f5f43; --primary-ink:#ffffff; --primary-soft:#e5f3ec; --ring:rgba(22,122,87,.28);
+  --side:#0d2620; --side-2:#123128; --side-ink:#c9d8d1; --lime:#c4ec88; --lime-ink:#173c27;
+  --ok:#21835a; --ok-soft:#e3f4ea; --warn:#a1640a; --warn-soft:#fdf3e1; --danger:#c0392f; --danger-soft:#fdecea; --info:#2563a8; --info-soft:#e7f0fa;
+  --shadow:0 1px 2px rgba(16,32,26,.05),0 2px 6px rgba(16,32,26,.05); --shadow-lg:0 12px 32px rgba(16,32,26,.14),0 2px 6px rgba(16,32,26,.06);
+  --r:14px;
+  --font:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
-  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
-  --side:#0b1a16; --side-ink:#c2d0cb; --lime:#b9e27c; --lime-ink:#173c27;
-  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73; --danger-soft:rgba(255,110,100,.10);
+  --bg:#0b1210; --card:#131d1a; --ink:#e4eeea; --ink2:#c3d1cb; --muted:#93a59e; --line:#22302b; --soft:#18231f; --hover:#1b2824;
+  --primary:#4cc08f; --primary-2:#6fd3a7; --primary-ink:#06140e; --primary-soft:#163027; --ring:rgba(76,192,143,.35);
+  --side:#08130f; --side-2:#0c1a15; --lime:#b9e27c;
+  --ok:#5fd39a; --ok-soft:rgba(95,211,154,.12); --warn:#e8b55c; --warn-soft:rgba(232,181,92,.12); --danger:#ff7d73; --danger-soft:rgba(255,125,115,.12); --info:#7fb2ef; --info-soft:rgba(127,178,239,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 16px 40px rgba(0,0,0,.5);
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
-  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
-  --side:#0b1a16; --side-ink:#c2d0cb; --lime:#b9e27c; --lime-ink:#173c27;
-  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73; --danger-soft:rgba(255,110,100,.10);
+  --bg:#0b1210; --card:#131d1a; --ink:#e4eeea; --ink2:#c3d1cb; --muted:#93a59e; --line:#22302b; --soft:#18231f; --hover:#1b2824;
+  --primary:#4cc08f; --primary-2:#6fd3a7; --primary-ink:#06140e; --primary-soft:#163027; --ring:rgba(76,192,143,.35);
+  --side:#08130f; --side-2:#0c1a15; --lime:#b9e27c;
+  --ok:#5fd39a; --ok-soft:rgba(95,211,154,.12); --warn:#e8b55c; --warn-soft:rgba(232,181,92,.12); --danger:#ff7d73; --danger-soft:rgba(255,125,115,.12); --info:#7fb2ef; --info-soft:rgba(127,178,239,.12);
+  --shadow:0 1px 2px rgba(0,0,0,.3); --shadow-lg:0 16px 40px rgba(0,0,0,.5);
   color-scheme:dark}
 *{box-sizing:border-box}
 html,body{margin:0}
-body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
-h1,h2,p{margin:0}
-h1{font-size:24px;font-weight:600;letter-spacing:-.5px;line-height:1.25}
-h2{font-size:16px;font-weight:600}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+h1{font-size:26px;font-weight:700;letter-spacing:-.7px;line-height:1.2}
+h2{font-size:15px;font-weight:650;letter-spacing:-.2px}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid #75ab91;outline-offset:2px}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 .muted{color:var(--muted)}
+svg{flex:none}
 
-.centro{min-height:100vh;display:grid;place-items:center;align-content:center;gap:16px;padding:32px 16px}
-.caixa{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;display:grid;gap:16px}
-.marca{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;letter-spacing:-.3px}
-.marca span.logo{width:34px;height:34px;border-radius:8px;background:var(--side);color:var(--lime);display:grid;place-items:center;flex:none}
-.rodape{max-width:420px;text-align:center;color:var(--muted);font-size:12px}
-
-.abas{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:8px;padding:3px}
-.abas button{border:0;background:none;border-radius:6px;padding:8px;color:var(--muted)}
-.abas button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-form{display:grid;gap:14px}
-.field{display:grid;gap:6px}
-.field>span{font-size:12px;color:var(--muted)}
-.input{width:100%;border:1px solid var(--line);background:var(--card);border-radius:7px;padding:10px 12px;min-height:40px}
-textarea.input{min-height:70px;resize:vertical}
-.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
-.check input{margin-top:3px;accent-color:var(--primary)}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:9px 16px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
-.btn:hover{background:var(--soft)}
-.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
-.btn.primary:hover{filter:brightness(1.07)}
+/* ---------- peças ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:9px 15px;min-height:40px;font-size:13.5px;font-weight:550;white-space:nowrap;text-decoration:none;transition:background .15s,border-color .15s}
+.btn:hover{background:var(--hover)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.btn.lime{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
 .btn.danger{color:var(--danger)}
+.btn.danger.solid{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.small{min-height:32px;padding:5px 11px;font-size:12.5px;border-radius:8px}
 .btn.largo{width:100%}
-.btn:disabled{opacity:.6;cursor:default}
-.link{border:0;background:none;color:var(--primary);padding:0;text-decoration:underline;text-underline-offset:2px;justify-self:start}
-.msg{font-size:13px;min-height:0}
+.btn:disabled{opacity:.5;cursor:default}
+.link{border:0;background:none;color:var(--primary);padding:0;font-weight:550;text-underline-offset:2px}
+.link:hover{text-decoration:underline}
+.field{display:grid;gap:6px}
+.field>span{font-size:12px;color:var(--muted);font-weight:500}
+.input{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px;min-height:42px;transition:border-color .15s,box-shadow .15s}
+.input:focus{outline:0;border-color:var(--primary);box-shadow:0 0 0 3px var(--ring)}
+textarea.input{min-height:76px;resize:vertical}
+.check{display:flex;gap:9px;align-items:flex-start;font-size:13px}
+.check input{margin-top:3px;accent-color:var(--primary);width:15px;height:15px}
+.msg{font-size:13px}
 .msg:empty{display:none}
 .msg.erro{color:var(--danger)}
 .msg.ok{color:var(--ok)}
-.aviso{border-radius:8px;padding:10px 12px;font-size:13px;background:var(--warn-soft);color:var(--warn)}
+.aviso{border-radius:10px;padding:11px 13px;font-size:13px;background:var(--warn-soft);color:var(--warn)}
 .aviso.ok{background:var(--primary-soft);color:var(--primary)}
-
-.preco{display:grid;gap:4px;padding:16px;border-radius:10px;background:var(--primary-soft)}
-.preco b{font-size:30px;letter-spacing:-.8px;color:var(--primary)}
-.preco small{color:var(--muted)}
-.lista{margin:0;padding:0;list-style:none;display:grid;gap:8px}
-.lista li{display:flex;gap:8px;align-items:flex-start}
-.lista li::before{content:"";width:16px;height:16px;flex:none;margin-top:2px;border-radius:50%;background:var(--primary-soft) no-repeat center/10px;box-shadow:inset 0 0 0 5px var(--primary)}
-.quem{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
-
-.spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--primary);animation:gira 0.9s linear infinite}
-@keyframes gira{to{transform:rotate(360deg)}}
-@media (prefers-reduced-motion: reduce){.spinner{animation:none}}
-
-#appFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
-.conta{position:fixed;right:16px;bottom:16px;z-index:20}
-.conta>button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:13px}
-.conta-pop{position:absolute;right:0;bottom:46px;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px;display:grid}
-.conta-pop small{padding:8px 10px;color:var(--muted);overflow-wrap:anywhere;border-bottom:1px solid var(--line);margin-bottom:4px}
-.conta-pop button{border:0;background:none;text-align:left;padding:9px 10px;border-radius:6px}
-.conta-pop button:hover{background:var(--soft)}
-
-.convite{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:30;max-width:calc(100% - 32px);background:var(--side);color:var(--side-ink);border-radius:10px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.25)}
-.convite .btn{min-height:34px;padding:6px 12px;background:var(--lime);color:var(--lime-ink);border:0;font-weight:600}
-
-.painel{max-width:1100px;margin:0 auto;padding:28px 16px 64px;display:grid;gap:18px}
-.painel-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
-.painel-topo p{color:var(--muted);margin-top:4px}
-.acoes{display:flex;gap:8px;flex-wrap:wrap}
-.metricas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.metrica{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:4px}
-.metrica span{font-size:12px;color:var(--muted)}
-.metrica b{font-size:22px;letter-spacing:-.4px}
-.metrica.alerta b{color:var(--warn)}
-.grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
-.card-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}
-.card-h p{font-size:12px;color:var(--muted);margin-top:2px}
-.card-b{padding:16px 18px;display:grid;gap:14px}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.ok,.tag.aprovada{background:var(--ok-soft);color:var(--ok)}
+.tag.warn,.tag.divergente,.tag.contestada{background:var(--warn-soft);color:var(--warn)}
+.tag.bad,.tag.reembolsada,.tag.recusada,.tag.cancelada{background:var(--danger-soft);color:var(--danger)}
+.tag.info{background:var(--info-soft);color:var(--info)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block;flex:none}
+.dot.on{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--lime-ink);background:var(--lime);flex:none}
+.avatar.g{width:72px;height:72px;font-size:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 20px;border-bottom:1px solid var(--line)}
+.card-h p{font-size:12.5px;color:var(--muted);margin-top:2px}
+.card-b{padding:18px 20px;display:grid;gap:14px}
 .linha2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.tabela-w{overflow:auto;max-height:420px}
+.spinner{width:30px;height:30px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--primary);animation:gira .9s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:#10261f;color:#fff;padding:11px 16px;border-radius:12px;font-size:13px;z-index:80;max-width:calc(100% - 32px);box-shadow:var(--shadow-lg)}
+.centro{min-height:100vh;display:grid;place-items:center;align-content:center;gap:14px;padding:32px 16px}
+
+/* ---------- entrar / comprar ---------- */
+.split{min-height:100vh;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+.pitch{position:relative;overflow:hidden;background:radial-gradient(900px 400px at 0% 0%,rgba(196,236,136,.18),transparent 60%),linear-gradient(140deg,#0f2f26,#0b211b 60%,#103529);color:#dce9e2;padding:48px clamp(24px,5vw,64px);display:flex;flex-direction:column;gap:28px}
+.marca{display:flex;align-items:center;gap:11px;color:#fff;font-weight:700;font-size:17px;letter-spacing:-.3px}
+.marca .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--lime),#7fcf95);display:grid;place-items:center;color:var(--lime-ink)}
+.pitch h1{color:#fff;font-size:clamp(28px,3.4vw,40px);letter-spacing:-1.2px;max-width:16ch;margin-top:auto}
+.pitch .sub{color:#b5c9bf;font-size:16px;line-height:1.6;max-width:46ch}
+.feats{list-style:none;margin:0;padding:0;display:grid;gap:12px;max-width:52ch}
+.feats li{display:flex;gap:12px;align-items:flex-start;color:#cfe0d6}
+.feats li span.i{width:28px;height:28px;border-radius:8px;background:rgba(196,236,136,.14);color:var(--lime);display:grid;place-items:center;flex:none}
+.feats b{color:#fff;display:block;font-weight:600}
+.pitch .foot{margin-top:auto;font-size:12px;color:#8fab9d;display:flex;gap:8px;align-items:center}
+.lado{display:grid;place-items:center;padding:40px 20px}
+.caixa{width:100%;max-width:420px;display:grid;gap:18px}
+.caixa h2{font-size:22px;letter-spacing:-.5px}
+.caixa .sub{color:var(--muted);margin-top:4px}
+.abas{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:12px;padding:4px;border:1px solid var(--line)}
+.abas button{border:0;background:none;border-radius:9px;padding:9px;color:var(--muted);font-weight:550}
+.abas button[aria-pressed="true"]{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+form{display:grid;gap:14px}
+.senha{position:relative}
+.senha .input{padding-right:44px}
+.senha button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);width:34px;height:34px;border-radius:8px}
+.forca{height:4px;border-radius:4px;background:var(--line);overflow:hidden}
+.forca i{display:block;height:100%;width:0;background:var(--danger);transition:width .2s,background .2s}
+.preco{display:grid;gap:4px;padding:20px;border-radius:16px;background:linear-gradient(135deg,var(--primary-soft),var(--card));border:1px solid var(--line)}
+.preco b{font-size:38px;letter-spacing:-1.4px;color:var(--primary);line-height:1.1}
+.preco small{color:var(--muted)}
+.garantias{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.garantias div{display:grid;gap:4px;justify-items:center;text-align:center;font-size:11.5px;color:var(--muted);padding:10px 6px;border-radius:12px;background:var(--soft)}
+.garantias svg{color:var(--primary)}
+.quem{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+@media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}.pitch{padding:28px 20px;gap:18px}.pitch h1{margin-top:8px;font-size:26px}.pitch .feats,.pitch .foot{display:none}.lado{padding:24px 16px 40px;place-items:start center}}
+
+/* ---------- aplicativo ---------- */
+#appFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+
+/* ---------- páginas da conta (perfil e painel) ---------- */
+.shell{min-height:100vh;display:flex;flex-direction:column}
+.barra{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:12px clamp(16px,3vw,32px);background:color-mix(in srgb,var(--card) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.barra .marca{color:var(--ink)}
+.barra .sp{flex:1}
+.wrap{width:100%;max-width:1240px;margin:0 auto;padding:26px clamp(16px,3vw,32px) 64px;display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+.topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.topo p{color:var(--muted);margin-top:4px}
+.perfil-head{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:22px}
+.perfil-head .who{flex:1;min-width:200px}
+.perfil-head .who b{font-size:20px;letter-spacing:-.4px;display:block}
+.perfil-head .tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.grade{grid-template-columns:minmax(0,1fr)}}
+.lista-dev{list-style:none;margin:0;padding:0}
+.lista-dev li{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid var(--line)}
+.lista-dev li:last-child{border-bottom:0}
+.lista-dev .ic{width:36px;height:36px;border-radius:10px;background:var(--soft);display:grid;place-items:center;color:var(--ink2)}
+.lista-dev .t{flex:1;min-width:0}
+.lista-dev .t b{display:block;font-size:13.5px}
+.lista-dev .t small{color:var(--muted);font-size:12px}
+.tabela-w{overflow:auto;max-height:520px}
 table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{text-align:left;padding:9px 18px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-size:12px;font-weight:500;color:var(--muted);position:sticky;top:0;background:var(--card)}
+th,td{text-align:left;padding:10px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:11.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;position:sticky;top:0;background:var(--card);z-index:1}
 td.n,th.n{text-align:right}
-.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:var(--soft);color:var(--muted)}
-.tag.aprovada{background:var(--primary-soft);color:var(--primary)}
-.tag.divergente,.tag.contestada{background:var(--warn-soft);color:var(--warn)}
-.tag.reembolsada,.tag.recusada,.tag.cancelada{background:var(--danger-soft);color:var(--danger)}
-.vazio td{color:var(--muted);text-align:center;padding:22px}
-.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--side);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
-@media (max-width:860px){.metricas{grid-template-columns:1fr 1fr}.grade{grid-template-columns:1fr}}
-@media (max-width:480px){.caixa{padding:20px}.linha2{grid-template-columns:1fr}th,td{padding:8px 12px}}
+tbody tr.clic{cursor:pointer}
+tbody tr.clic:hover td{background:var(--hover)}
+.vazio td{color:var(--muted);text-align:center;padding:26px;white-space:normal}
+.pessoa{display:flex;align-items:center;gap:10px;min-width:0}
+.pessoa .avatar{width:32px;height:32px;font-size:12px}
+.pessoa b{display:block;font-weight:600;font-size:13px}
+.pessoa small{display:block;color:var(--muted);font-size:12px}
+.zona{border:1px solid color-mix(in srgb,var(--danger) 35%,var(--line));border-radius:var(--r);background:var(--danger-soft)}
+.zona .card-h{border-color:color-mix(in srgb,var(--danger) 25%,var(--line))}
+
+/* painel */
+.painel-grid{display:grid;grid-template-columns:220px minmax(0,1fr);gap:22px;align-items:start}
+.pnav{position:sticky;top:76px;display:grid;gap:2px}
+.pnav button{display:flex;align-items:center;gap:10px;border:0;background:none;border-radius:10px;padding:9px 12px;text-align:left;color:var(--ink2);font-weight:550}
+.pnav button:hover{background:var(--hover)}
+.pnav button[aria-current="page"]{background:var(--primary-soft);color:var(--primary)}
+.pnav .count{margin-left:auto;font-size:11px;background:var(--soft);border-radius:999px;padding:1px 7px}
+@media (max-width:900px){.painel-grid{grid-template-columns:minmax(0,1fr)}.pnav{position:static;display:flex;overflow-x:auto;gap:4px}.pnav button{white-space:nowrap}}
+.metricas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.metrica{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);display:grid;gap:4px}
+.metrica span{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.metrica b{font-size:26px;letter-spacing:-.8px;font-weight:700}
+.metrica small{font-size:12px;color:var(--muted)}
+.metrica.alerta b{color:var(--warn)}
+@media (max-width:900px){.metricas{grid-template-columns:1fr 1fr}}
+.grafico{padding:16px 20px 12px}
+.grafico svg{width:100%;height:170px;display:block}
+.filtros{display:flex;gap:6px;flex-wrap:wrap}
+.filtros button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:550;color:var(--ink2)}
+.filtros button[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.online-list{display:flex;flex-wrap:wrap;gap:8px;padding:16px 20px}
+.online-list span{display:inline-flex;align-items:center;gap:8px;background:var(--soft);border-radius:999px;padding:5px 12px 5px 6px;font-size:12.5px}
+.online-list .avatar{width:24px;height:24px;font-size:10px}
+
+/* gaveta de detalhe */
+.veu{position:fixed;inset:0;background:rgba(5,15,12,.45);z-index:60;animation:surge .15s ease}
+.gaveta{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);z-index:61;box-shadow:var(--shadow-lg);overflow:auto;animation:desliza .2s ease}
+.gaveta .cab{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:12px;z-index:2}
+.gaveta .corpo{padding:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.gaveta .card{min-width:0}
+.kv{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+@keyframes surge{from{opacity:0}}
+@keyframes desliza{from{transform:translateX(30px);opacity:0}}
+
+.convite{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:70;max-width:calc(100% - 32px);background:#10261f;color:#d7e6de;border-radius:14px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:var(--shadow-lg)}
+.convite .btn{min-height:34px;padding:6px 12px;background:var(--lime);color:var(--lime-ink);border:0;font-weight:650}
+@media (max-width:700px){.barra{flex-wrap:wrap;gap:8px}.barra .marca{font-size:15px}#painelAtualizado{display:none}.perfil-head>div:last-child{text-align:left!important}}
+@media (max-width:480px){.linha2{grid-template-columns:1fr}.kv{grid-template-columns:1fr}.garantias{grid-template-columns:1fr}th,td{padding:9px 12px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
@@ -135,140 +217,266 @@ td.n,th.n{text-align:right}
 
 <!-- erro de configuração -->
 <div id="t-erro" class="tela centro" hidden>
-  <div class="caixa">
-    <h1>Não foi possível abrir</h1>
-    <p id="erroMsg"></p>
-    <button class="btn" data-act="recarregar">Tentar de novo</button>
-  </div>
+  <div class="card" style="max-width:460px;width:100%"><div class="card-b">
+    <h2 style="font-size:20px">Não foi possível abrir</h2>
+    <p id="erroMsg" class="muted"></p>
+    <div><button class="btn primary" data-act="recarregar">Tentar de novo</button></div>
+  </div></div>
 </div>
 
-<!-- entrar / criar conta -->
-<main id="t-entrar" class="tela centro" hidden>
-  <div class="caixa">
-    <div class="marca"><span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span><span class="nomeProduto">Planilha Segura</span></div>
-    <div class="abas" role="group" aria-label="Escolha">
-      <button type="button" data-modo="entrar" aria-pressed="true">Entrar</button>
-      <button type="button" data-modo="criar" aria-pressed="false">Criar conta</button>
-    </div>
-    <form id="formEntrar" novalidate>
-      <label class="field"><span>E-mail</span><input class="input" id="email" type="email" autocomplete="email" maxlength="254" required></label>
-      <label class="field"><span>Senha</span><input class="input" id="senha" type="password" autocomplete="current-password" minlength="8" maxlength="72" required></label>
-      <label class="field" id="campoSenha2" hidden><span>Repita a senha</span><input class="input" id="senha2" type="password" autocomplete="new-password" minlength="8" maxlength="72"></label>
-      <p class="msg" id="msgEntrar" role="alert"></p>
-      <button class="btn primary largo" type="submit" id="btnEntrar">Entrar</button>
-      <button class="link" type="button" data-act="esqueci" id="btnEsqueci">Esqueci minha senha</button>
-    </form>
-    <p class="muted" id="semDono" hidden style="font-size:12px">Loja ainda sem dono. Se você é o dono, siga o passo “Assumir a loja” do manual.</p>
-  </div>
-  <p class="rodape">Suas planilhas nunca são enviadas para a internet. A conta serve apenas para liberar o seu acesso.</p>
-</main>
-
-<!-- nova senha -->
-<main id="t-nova-senha" class="tela centro" hidden>
-  <div class="caixa">
-    <h1>Criar nova senha</h1>
-    <form id="formNovaSenha" novalidate>
-      <label class="field"><span>Nova senha (mínimo 8 caracteres)</span><input class="input" id="novaSenha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required></label>
-      <p class="msg" id="msgNovaSenha" role="alert"></p>
-      <button class="btn primary largo" type="submit">Salvar senha</button>
-    </form>
-  </div>
-</main>
-
-<!-- comprar -->
-<main id="t-comprar" class="tela centro" hidden>
-  <div class="caixa">
-    <div class="marca"><span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span><span class="nomeProduto">Planilha Segura</span></div>
-    <p class="muted" id="descricaoProduto" hidden></p>
-    <div id="blocoVenda">
-      <div class="preco"><small>Acesso vitalício</small><b class="num" id="precoProduto">—</b><small>Pagamento único. Sem mensalidade.</small></div>
-    </div>
-    <ul class="lista">
-      <li>Limpeza e padronização de planilhas Excel, CSV e Google Sheets</li>
-      <li>Automação agendada no Google Sheets</li>
-      <li>Suas planilhas são processadas só no seu computador</li>
+<!-- entrar / criar conta / nova senha / comprar -->
+<div id="t-porta" class="tela split" hidden>
+  <section class="pitch" aria-label="Sobre o produto">
+    <div class="marca"><span class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="3"/><path d="M3.5 9.5h17M9.5 3.5v17"/><path d="m13 15 1.6 1.6L18 13" stroke-width="2.4"/></svg></span><span class="nomeProduto">Planilha Segura</span></div>
+    <h1>Suas planilhas limpas, padronizadas e no piloto automático.</h1>
+    <p class="sub" id="pitchDescricao">Diagnóstico automático, correção em um clique, Excel bem formatado e automação no Google Sheets. Tudo no seu navegador: suas planilhas nunca saem do computador.</p>
+    <ul class="feats">
+      <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span><span><b>Diagnóstico com nota de saúde</b>Espaços, duplicadas, datas, valores, e-mails, telefones, CPF/CNPJ e CEP.</span></li>
+      <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14l-4-2-4 2-4-2-4 2z"/></svg></span><span><b>Modelos prontos</b>Contatos, financeiro, vendas, estoque, RH e cadastros.</span></li>
+      <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span><b>Automação no Google Sheets</b>A limpeza roda sozinha todo dia, mesmo com o computador desligado.</span></li>
+      <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span><b>Privacidade de verdade</b>Os dados das planilhas são processados só no seu navegador.</span></li>
     </ul>
-    <div class="aviso" id="avisoCompra" hidden></div>
-    <button class="btn primary largo" data-act="comprar" id="btnComprar">Comprar acesso</button>
-    <p class="muted" id="vendasFechadas" hidden></p>
-    <p class="muted" style="font-size:12px">Pagamento processado pelo Mercado Pago (Pix ou cartão). Você tem 7 dias para desistir e receber o valor de volta.</p>
-    <div class="quem"><span id="quemCompra"></span><button class="link" data-act="sair">Sair</button></div>
-  </div>
-</main>
+    <p class="foot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Pagamento único · acesso vitalício · sem mensalidade</p>
+  </section>
+
+  <section class="lado">
+    <!-- entrar -->
+    <div class="caixa" id="p-entrar">
+      <div><h2 id="tituloEntrar">Entrar na sua conta</h2><p class="sub" id="subEntrar">Bem-vindo de volta.</p></div>
+      <div class="abas" role="group" aria-label="Escolha">
+        <button type="button" data-modo="entrar" aria-pressed="true">Entrar</button>
+        <button type="button" data-modo="criar" aria-pressed="false">Criar conta</button>
+      </div>
+      <form id="formEntrar" novalidate>
+        <label class="field" id="campoNome" hidden><span>Seu nome</span><input class="input" id="nome" autocomplete="name" maxlength="120"></label>
+        <label class="field"><span>E-mail</span><input class="input" id="email" type="email" autocomplete="email" maxlength="254" required></label>
+        <label class="field"><span>Senha</span><span class="senha"><input class="input" id="senha" type="password" autocomplete="current-password" minlength="8" maxlength="72" required><button type="button" data-act="ver-senha" data-alvo="senha" aria-label="Mostrar senha"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button></span></label>
+        <div id="campoForca" hidden><div class="forca"><i id="forcaBarra"></i></div><small class="muted" id="forcaTexto" style="font-size:12px">Use 8 ou mais caracteres, misturando letras, números e símbolos.</small></div>
+        <label class="field" id="campoSenha2" hidden><span>Repita a senha</span><input class="input" id="senha2" type="password" autocomplete="new-password" minlength="8" maxlength="72"></label>
+        <p class="msg" id="msgEntrar" role="alert"></p>
+        <button class="btn primary largo" type="submit" id="btnEntrar">Entrar</button>
+        <button class="link" type="button" data-act="esqueci" id="btnEsqueci" style="justify-self:center">Esqueci minha senha</button>
+      </form>
+      <p class="muted" id="semDono" hidden style="font-size:12px">Loja ainda sem dono. Se você é o dono, siga o passo “Assumir a loja” do manual.</p>
+    </div>
+
+    <!-- nova senha -->
+    <div class="caixa" id="p-nova-senha" hidden>
+      <div><h2>Criar nova senha</h2><p class="sub">Escolha uma senha que você não usa em outros sites.</p></div>
+      <form id="formNovaSenha" novalidate>
+        <label class="field"><span>Nova senha (mínimo 8 caracteres)</span><input class="input" id="novaSenha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required></label>
+        <p class="msg" id="msgNovaSenha" role="alert"></p>
+        <button class="btn primary largo" type="submit">Salvar senha</button>
+      </form>
+    </div>
+
+    <!-- comprar -->
+    <div class="caixa" id="p-comprar" hidden>
+      <div><h2>Libere seu acesso</h2><p class="sub" id="descricaoProduto">Pague uma vez e use para sempre.</p></div>
+      <div id="blocoVenda" class="preco"><small>Acesso vitalício</small><b class="num" id="precoProduto">—</b><small>Pagamento único · sem mensalidade</small></div>
+      <div class="garantias">
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Pagamento pelo Mercado Pago</div>
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>7 dias para desistir</div>
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Liberação automática</div>
+      </div>
+      <div class="aviso" id="avisoCompra" hidden></div>
+      <button class="btn primary largo" data-act="comprar" id="btnComprar" style="min-height:48px;font-size:15px">Comprar acesso</button>
+      <p class="muted" id="vendasFechadas" hidden></p>
+      <p class="muted" style="font-size:12px;text-align:center">Pix ou cartão. O acesso é liberado assim que o pagamento é confirmado.</p>
+      <div class="quem"><span id="quemCompra"></span><span style="display:flex;gap:14px"><button class="link" data-act="perfil">Meu perfil</button><button class="link" data-act="sair">Sair</button></span></div>
+    </div>
+  </section>
+</div>
 
 <!-- aplicativo -->
 <div id="t-app" class="tela" hidden>
   <iframe id="appFrame" title="Planilha Segura" allow="clipboard-write"></iframe>
-  <div class="conta">
-    <div class="conta-pop" id="contaPop" hidden>
-      <small id="contaEmail"></small>
-      <button data-act="painel" id="btnPainel" hidden>Painel do dono</button>
-      <button data-act="sair">Sair</button>
+</div>
+
+<!-- perfil -->
+<div id="t-perfil" class="tela shell" hidden>
+  <header class="barra">
+    <button class="btn small" data-act="voltar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>
+    <span class="marca"><span class="nomeProduto">Planilha Segura</span></span>
+    <span class="sp"></span>
+    <button class="btn small" data-act="painel" id="btnPainelPerfil" hidden>Painel do dono</button>
+    <button class="btn small" data-act="sair">Sair</button>
+  </header>
+  <main class="wrap">
+    <div class="topo"><div><h1>Meu perfil</h1><p>Seus dados, sua segurança e seu histórico.</p></div></div>
+    <div class="card perfil-head" id="perfilCab"></div>
+    <div class="grade">
+      <section class="card" aria-labelledby="h-dados">
+        <div class="card-h"><div><h2 id="h-dados">Dados pessoais</h2><p>Usados no seu atendimento e nas notas fiscais.</p></div></div>
+        <form class="card-b" id="formPerfil" novalidate>
+          <label class="field"><span>Nome completo</span><input class="input" id="pfNome" autocomplete="name" maxlength="120" required></label>
+          <div class="linha2">
+            <label class="field"><span>Empresa (opcional)</span><input class="input" id="pfEmpresa" autocomplete="organization" maxlength="120"></label>
+            <label class="field"><span>Cargo (opcional)</span><input class="input" id="pfCargo" autocomplete="organization-title" maxlength="80"></label>
+          </div>
+          <div class="linha2">
+            <label class="field"><span>Telefone / WhatsApp</span><input class="input" id="pfTelefone" autocomplete="tel" inputmode="tel" maxlength="30"></label>
+            <label class="field"><span>CPF ou CNPJ (para nota fiscal)</span><input class="input" id="pfDocumento" inputmode="numeric" maxlength="20"></label>
+          </div>
+          <label class="field"><span>Cidade</span><input class="input" id="pfCidade" autocomplete="address-level2" maxlength="80"></label>
+          <p class="msg" id="msgPerfil" role="alert"></p>
+          <div><button class="btn primary" type="submit">Salvar dados</button></div>
+        </form>
+      </section>
+      <div style="display:grid;gap:18px">
+        <section class="card" aria-labelledby="h-conta">
+          <div class="card-h"><div><h2 id="h-conta">Conta e acesso</h2><p>Informações da sua conta.</p></div></div>
+          <div class="card-b"><dl class="kv" id="perfilConta"></dl></div>
+        </section>
+        <section class="card" aria-labelledby="h-senha">
+          <div class="card-h"><div><h2 id="h-senha">Segurança</h2><p>Troque a senha ou o e-mail de acesso.</p></div></div>
+          <div class="card-b">
+            <form id="formSenha" novalidate>
+              <div class="linha2">
+                <label class="field"><span>Nova senha</span><input class="input" id="pfSenha" type="password" autocomplete="new-password" minlength="8" maxlength="72"></label>
+                <label class="field"><span>Repita a nova senha</span><input class="input" id="pfSenha2" type="password" autocomplete="new-password" minlength="8" maxlength="72"></label>
+              </div>
+              <p class="msg" id="msgSenha" role="alert"></p>
+              <div><button class="btn" type="submit">Alterar senha</button></div>
+            </form>
+            <form id="formEmail" novalidate>
+              <label class="field"><span>Novo e-mail</span><input class="input" id="pfEmail" type="email" autocomplete="email" maxlength="254"></label>
+              <p class="msg" id="msgEmail" role="alert"></p>
+              <div><button class="btn" type="submit">Alterar e-mail</button></div>
+            </form>
+          </div>
+        </section>
+      </div>
     </div>
-    <button id="contaBtn" data-act="conta" aria-expanded="false" aria-controls="contaPop">Conta</button>
-  </div>
+    <section class="card" aria-labelledby="h-dev">
+      <div class="card-h"><div><h2 id="h-dev">Aparelhos conectados</h2><p>Onde sua conta está logada agora.</p></div><button class="btn small" data-act="sair-outros">Sair de todos os outros aparelhos</button></div>
+      <ul class="lista-dev" id="perfilSessoes"></ul>
+    </section>
+    <div class="grade">
+      <section class="card" aria-labelledby="h-acessos">
+        <div class="card-h"><div><h2 id="h-acessos">Últimos acessos</h2><p>Data, hora, IP e navegador de cada acesso.</p></div></div>
+        <div class="tabela-w" style="max-height:360px"><table><thead><tr><th>Quando</th><th>O quê</th><th>IP</th><th>Aparelho</th></tr></thead><tbody id="perfilAcessos"></tbody></table></div>
+      </section>
+      <section class="card" aria-labelledby="h-compras">
+        <div class="card-h"><div><h2 id="h-compras">Minhas compras</h2><p>Comprovantes de pagamento.</p></div></div>
+        <div class="tabela-w" style="max-height:360px"><table><thead><tr><th>Data</th><th class="n">Valor</th><th>Situação</th><th>Mercado Pago</th></tr></thead><tbody id="perfilCompras"></tbody></table></div>
+      </section>
+    </div>
+    <section class="zona" aria-labelledby="h-priv">
+      <div class="card-h"><div><h2 id="h-priv">Privacidade</h2><p>Seus direitos pela LGPD.</p></div></div>
+      <div class="card-b">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" data-act="baixar-dados">Baixar meus dados (.json)</button><span class="muted" style="font-size:12.5px">Tudo o que está guardado sobre você.</span></div>
+        <form id="formExcluir" novalidate style="display:grid;gap:10px;max-width:520px">
+          <p style="font-size:13px">Excluir a conta apaga seus dados pessoais e encerra o acesso. As compras continuam registradas sem vínculo com você, por obrigação fiscal. <b>Não dá para desfazer.</b></p>
+          <label class="field"><span>Digite EXCLUIR para confirmar</span><input class="input" id="confirmaExcluir" autocomplete="off" maxlength="10"></label>
+          <p class="msg" id="msgExcluir" role="alert"></p>
+          <div><button class="btn danger solid" type="submit">Excluir minha conta</button></div>
+        </form>
+      </div>
+    </section>
+  </main>
 </div>
 
 <!-- painel do dono -->
-<div id="t-painel" class="tela" hidden>
-  <div class="painel">
-    <div class="painel-topo">
-      <div><h1>Painel do dono</h1><p id="painelDono"></p></div>
-      <div class="acoes"><button class="btn" data-act="atualizar-painel">Atualizar</button><button class="btn primary" data-act="voltar-app">Voltar ao aplicativo</button></div>
-    </div>
-    <div class="metricas" id="metricas"></div>
-
-    <div class="grade">
-      <section class="card" aria-labelledby="h-loja">
-        <div class="card-h"><div><h2 id="h-loja">Loja</h2><p>Como o produto aparece para quem vai comprar.</p></div></div>
-        <form class="card-b" id="formLoja" novalidate>
-          <label class="field"><span>Nome do produto</span><input class="input" id="cfgNome" maxlength="80" required></label>
-          <label class="field"><span>Descrição (opcional)</span><textarea class="input" id="cfgDescricao" maxlength="500"></textarea></label>
-          <div class="linha2">
-            <label class="field"><span>Preço (R$)</span><input class="input num" id="cfgPreco" inputmode="decimal" placeholder="0,00" maxlength="12"></label>
-            <label class="field"><span>E-mail de suporte</span><input class="input" id="cfgSuporte" type="email" maxlength="254"></label>
+<div id="t-painel" class="tela shell" hidden>
+  <header class="barra">
+    <button class="btn small" data-act="voltar"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>Voltar</button>
+    <span class="marca"><span>Painel do dono</span></span>
+    <span class="sp"></span>
+    <span class="muted" id="painelAtualizado" style="font-size:12px"></span>
+    <button class="btn small" data-act="atualizar-painel">Atualizar</button>
+    <button class="btn small" data-act="perfil">Meu perfil</button>
+  </header>
+  <main class="wrap">
+    <div class="painel-grid">
+      <nav class="pnav" aria-label="Seções do painel">
+        <button data-psec="geral" aria-current="page"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Visão geral</button>
+        <button data-psec="usuarios"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0M17 3.5a4 4 0 0 1 0 8M22 21a7 7 0 0 0-4-6.3"/></svg>Usuários<span class="count" id="cUsuarios"></span></button>
+        <button data-psec="vendas"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Vendas</button>
+        <button data-psec="loja"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 20v-6h6v6"/></svg>Loja e preço</button>
+        <button data-psec="historico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Histórico<span class="count" id="cPend" hidden></span></button>
+        <button data-psec="propriedade"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M15 7a4 4 0 1 1-3.9 5H3v3h3v3h3v-3h2.1"/></svg>Propriedade</button>
+      </nav>
+      <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:18px;min-width:0">
+        <!-- geral -->
+        <section data-sec="geral" style="display:grid;grid-template-columns:minmax(0,1fr);gap:18px">
+          <div class="metricas" id="metricas"></div>
+          <div class="card"><div class="card-h"><div><h2>Vendas dos últimos 30 dias</h2><p id="graficoLeg">Receita por dia.</p></div></div><div class="grafico" id="grafico"></div></div>
+          <div class="card"><div class="card-h"><div><h2><span class="dot on" style="margin-right:8px"></span>Online agora</h2><p>Quem está com o site aberto neste momento (atualiza a cada 30 segundos).</p></div><button class="link" data-psec="usuarios">Ver todos os usuários ›</button></div><div class="online-list" id="onlineList"></div></div>
+        </section>
+        <!-- usuários -->
+        <section data-sec="usuarios" hidden class="card">
+          <div class="card-h" style="align-items:flex-end">
+            <div><h2>Usuários</h2><p>Todos os cadastros, quem está online e quantos aparelhos cada um tem logados. Clique numa linha para ver tudo.</p></div>
+            <input class="input" id="buscaUsuarios" type="search" placeholder="Buscar por nome, e-mail ou empresa" style="max-width:300px;min-height:38px">
           </div>
-          <label class="check"><input type="checkbox" id="cfgVendas"> Vendas abertas (desmarque para que só você e quem você liberar possam entrar)</label>
-          <p class="msg" id="msgLoja" role="alert"></p>
-          <div><button class="btn primary" type="submit">Salvar</button></div>
-        </form>
-      </section>
-
-      <section class="card" aria-labelledby="h-acesso">
-        <div class="card-h"><div><h2 id="h-acesso">Liberar acesso</h2><p>Para quem pagou por fora ou para cortesias. A pessoa precisa ter criado a conta.</p></div></div>
-        <form class="card-b" id="formAcesso" novalidate>
-          <label class="field"><span>E-mail da pessoa</span><input class="input" id="acessoEmail" type="email" maxlength="254" required></label>
-          <p class="msg" id="msgAcesso" role="alert"></p>
-          <div class="acoes"><button class="btn primary" type="submit" data-ativo="1">Liberar</button><button class="btn danger" type="submit" data-ativo="0">Bloquear</button></div>
-        </form>
-        <div class="tabela-w"><table><thead><tr><th>E-mail</th><th>Situação</th><th>Origem</th><th>Atualizado</th></tr></thead><tbody id="tabAcessos"></tbody></table></div>
-      </section>
-    </div>
-
-    <section class="card" aria-labelledby="h-vendas">
-      <div class="card-h"><div><h2 id="h-vendas">Vendas</h2><p>Reembolsos são feitos no painel do Mercado Pago; o acesso é retirado automaticamente.</p></div><button class="btn" data-act="baixar-vendas">Baixar .csv</button></div>
-      <div class="tabela-w"><table><thead><tr><th>Data</th><th>E-mail</th><th class="n">Valor</th><th>Situação</th><th>Pagamento no Mercado Pago</th></tr></thead><tbody id="tabVendas"></tbody></table></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-hist">
-      <div class="card-h"><div><h2 id="h-hist">Histórico</h2><p>Tudo o que aconteceu na loja: vendas, reembolsos, alertas e mudanças.</p></div></div>
-      <div class="tabela-w"><table><thead><tr><th>Quando</th><th>O que aconteceu</th><th>Conta</th><th>Detalhe</th></tr></thead><tbody id="tabEventos"></tbody></table></div>
-    </section>
-
-    <section class="card" aria-labelledby="h-dono">
-      <div class="card-h"><div><h2 id="h-dono">Propriedade da loja</h2><p>Passe a loja para outra pessoa. Ela vira a dona quando entrar com o e-mail indicado e aceitar.</p></div></div>
-      <div class="card-b">
-        <div class="aviso" id="transferenciaPendente" hidden></div>
-        <form id="formTransferir" novalidate style="display:grid;gap:14px">
-          <label class="field"><span>E-mail do novo dono</span><input class="input" id="novoDono" type="email" maxlength="254" required></label>
-          <label class="check"><input type="checkbox" id="confirmaTransferir"> Entendo que, quando o novo dono aceitar, perco o acesso a este painel.</label>
-          <p class="msg" id="msgTransferir" role="alert"></p>
-          <div><button class="btn primary" type="submit">Indicar novo dono</button></div>
-        </form>
-        <p class="muted" style="font-size:12px">A troca de dono neste painel não transfere as contas do Supabase, do Mercado Pago, da hospedagem e do domínio. Veja o passo a passo completo no manual.</p>
+          <div class="card-b" style="padding-bottom:0"><div class="filtros" role="group" aria-label="Filtrar usuários">
+            <button data-filtro="todos" aria-pressed="true">Todos</button><button data-filtro="online" aria-pressed="false">Online agora</button><button data-filtro="logados" aria-pressed="false">Logados</button><button data-filtro="acesso" aria-pressed="false">Com acesso</button><button data-filtro="sem" aria-pressed="false">Sem acesso</button>
+          </div></div>
+          <div class="tabela-w" style="max-height:640px"><table><thead><tr><th>Pessoa</th><th>Situação</th><th>Acesso</th><th class="n">Aparelhos</th><th>Último login</th><th>Cadastro</th></tr></thead><tbody id="tabUsuarios"></tbody></table></div>
+        </section>
+        <!-- vendas -->
+        <section data-sec="vendas" hidden class="card">
+          <div class="card-h"><div><h2>Vendas</h2><p>Reembolsos são feitos no painel do Mercado Pago; o acesso é retirado automaticamente.</p></div><button class="btn small" data-act="baixar-vendas">Baixar .csv</button></div>
+          <div class="tabela-w" style="max-height:640px"><table><thead><tr><th>Data</th><th>E-mail</th><th class="n">Valor</th><th>Situação</th><th>Pagamento no Mercado Pago</th></tr></thead><tbody id="tabVendas"></tbody></table></div>
+        </section>
+        <!-- loja -->
+        <section data-sec="loja" hidden class="grade">
+          <div class="card">
+            <div class="card-h"><div><h2>Loja e preço</h2><p>Como o produto aparece para quem vai comprar.</p></div></div>
+            <form class="card-b" id="formLoja" novalidate>
+              <label class="field"><span>Nome do produto</span><input class="input" id="cfgNome" maxlength="80" required></label>
+              <label class="field"><span>Descrição (opcional)</span><textarea class="input" id="cfgDescricao" maxlength="500"></textarea></label>
+              <div class="linha2">
+                <label class="field"><span>Preço (R$)</span><input class="input num" id="cfgPreco" inputmode="decimal" placeholder="0,00" maxlength="12"></label>
+                <label class="field"><span>E-mail de suporte</span><input class="input" id="cfgSuporte" type="email" maxlength="254"></label>
+              </div>
+              <label class="check"><input type="checkbox" id="cfgVendas"> Vendas abertas (desmarque para que só você e quem você liberar possam entrar)</label>
+              <p class="msg" id="msgLoja" role="alert"></p>
+              <div><button class="btn primary" type="submit">Salvar</button></div>
+            </form>
+          </div>
+          <div class="card">
+            <div class="card-h"><div><h2>Liberar acesso manualmente</h2><p>Para quem pagou por fora ou para cortesias. A pessoa precisa ter criado a conta.</p></div></div>
+            <form class="card-b" id="formAcesso" novalidate>
+              <label class="field"><span>E-mail da pessoa</span><input class="input" id="acessoEmail" type="email" maxlength="254" required></label>
+              <p class="msg" id="msgAcesso" role="alert"></p>
+              <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn primary" type="submit" data-ativo="1">Liberar</button><button class="btn danger" type="submit" data-ativo="0">Bloquear</button></div>
+            </form>
+          </div>
+        </section>
+        <!-- histórico -->
+        <section data-sec="historico" hidden class="card">
+          <div class="card-h"><div><h2>Histórico</h2><p>Tudo o que aconteceu na loja: vendas, reembolsos, alertas e mudanças.</p></div></div>
+          <div class="tabela-w" style="max-height:640px"><table><thead><tr><th>Quando</th><th>O que aconteceu</th><th>Conta</th><th>Detalhe</th></tr></thead><tbody id="tabEventos"></tbody></table></div>
+        </section>
+        <!-- propriedade -->
+        <section data-sec="propriedade" hidden class="card">
+          <div class="card-h"><div><h2>Propriedade da loja</h2><p id="painelDono"></p></div></div>
+          <div class="card-b">
+            <div class="aviso" id="transferenciaPendente" hidden></div>
+            <form id="formTransferir" novalidate style="display:grid;gap:14px;max-width:560px">
+              <p style="font-size:13px">Passe a loja para outra pessoa. Ela vira a dona quando entrar com o e-mail indicado e aceitar, em até 7 dias.</p>
+              <label class="field"><span>E-mail do novo dono</span><input class="input" id="novoDono" type="email" maxlength="254" required></label>
+              <label class="check"><input type="checkbox" id="confirmaTransferir"> Entendo que, quando o novo dono aceitar, perco o acesso a este painel.</label>
+              <p class="msg" id="msgTransferir" role="alert"></p>
+              <div><button class="btn primary" type="submit">Indicar novo dono</button></div>
+            </form>
+            <p class="muted" style="font-size:12px">A troca de dono neste painel não transfere as contas do Supabase, do Mercado Pago, da hospedagem e do domínio. Veja o passo a passo completo no manual.</p>
+          </div>
+        </section>
       </div>
-    </section>
-  </div>
+    </div>
+  </main>
+</div>
+
+<!-- detalhe do usuário -->
+<div id="detalhe" hidden>
+  <div class="veu" data-act="fechar-detalhe"></div>
+  <aside class="gaveta" role="dialog" aria-modal="true" aria-labelledby="detNome">
+    <div class="cab"><span class="avatar" id="detAvatar"></span><div style="flex:1;min-width:0"><b id="detNome" style="display:block"></b><small class="muted" id="detEmail"></small></div><button class="btn small" data-act="fechar-detalhe" aria-label="Fechar">Fechar</button></div>
+    <div class="corpo" id="detCorpo"></div>
+  </aside>
 </div>
 
 <div class="convite" id="convite" hidden role="region" aria-label="Convite">
@@ -318,24 +526,55 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 (function () {
 'use strict';
 const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const brl = c => (Number(c) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-const data = d => d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+const data = d => d ? new Date(d).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+const dia = d => d ? new Date(d).toLocaleDateString('pt-BR') : '—';
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const MP_URL = /^https:\/\/([a-z0-9-]+\.)*mercadopago\.com(\.[a-z]{2})?\//i;
 const SITE = location.origin + location.pathname;
 
-let sb = null, conf = null, vitrine = null, status = null;
-let modo = 'entrar', recuperando = false, appAberto = false, retornoPagamento = null, espera = null;
+let sb = null, conf = null, vitrine = null, status = null, perfil = null;
+let modo = 'entrar', recuperando = false, appAberto = false, retornoPagamento = null, espera = null, telaAnterior = 'app';
 
 /* ---------- utilidades ---------- */
-const TELAS = ['carregando', 'erro', 'entrar', 'nova-senha', 'comprar', 'app', 'painel'];
-function mostrar(t) { TELAS.forEach(x => { $('#t-' + x).hidden = x !== t; }); }
+const TELAS = ['carregando', 'erro', 'porta', 'app', 'perfil', 'painel'];
+function mostrar(t) {
+  TELAS.forEach(x => { $('#t-' + x).hidden = x !== t; });
+  if (t === 'perfil' || t === 'painel') window.scrollTo(0, 0);
+  if (t !== 'painel') pararAuto();
+}
+function porta(p) { ['entrar', 'nova-senha', 'comprar'].forEach(x => { $('#p-' + x).hidden = x !== p; }); mostrar('porta'); }
 function carregando(msg) { $('#carregandoMsg').textContent = msg || 'Carregando…'; mostrar('carregando'); }
 function falhaGeral(msg) { $('#erroMsg').textContent = msg; mostrar('erro'); }
 let toastT;
 function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 5000); }
 function msg(id, texto, tipo) { const el = $(id); el.textContent = texto || ''; el.className = 'msg' + (tipo ? ' ' + tipo : ''); }
+function iniciais(nome, email) {
+  const base = String(nome || '').trim() || String(email || '').split('@')[0];
+  const p = base.split(/[\s._-]+/).filter(Boolean);
+  return ((p[0] || '?')[0] + (p.length > 1 ? p[p.length - 1][0] : '')).toUpperCase();
+}
+function haQuanto(d) {
+  if (!d) return 'nunca';
+  const s = (Date.now() - new Date(d).getTime()) / 1000;
+  if (s < 60) return 'agora';
+  if (s < 3600) return 'há ' + Math.floor(s / 60) + ' min';
+  if (s < 86400) return 'há ' + Math.floor(s / 3600) + ' h';
+  if (s < 86400 * 30) return 'há ' + Math.floor(s / 86400) + (Math.floor(s / 86400) === 1 ? ' dia' : ' dias');
+  return dia(d);
+}
+// "Chrome no Windows" a partir do user-agent
+function aparelho(ua) {
+  ua = String(ua || '');
+  if (!ua) return { nome: 'Aparelho desconhecido', movel: false };
+  const nav = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /SamsungBrowser/.test(ua) ? 'Samsung Internet' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : 'Navegador';
+  const so = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android' : /Windows/.test(ua) ? 'Windows' : /Mac OS X|Macintosh/.test(ua) ? 'Mac' : /CrOS/.test(ua) ? 'Chromebook' : /Linux/.test(ua) ? 'Linux' : '';
+  return { nome: nav + (so ? ' no ' + so : ''), movel: /iPhone|Android|Mobile/.test(ua) };
+}
+const ICO_PC = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>';
+const ICO_CEL = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>';
 
 const TRADUCOES = [
   [/Invalid login credentials/i, 'E-mail ou senha incorretos.'],
@@ -345,6 +584,7 @@ const TRADUCOES = [
   [/rate limit|too many/i, 'Muitas tentativas seguidas. Aguarde alguns minutos.'],
   [/New password should be different/i, 'A nova senha precisa ser diferente da anterior.'],
   [/weak|pwned|leaked/i, 'Senha fraca ou já vazada na internet. Escolha outra.'],
+  [/already been registered|email address.*(taken|exists)/i, 'Este e-mail já é usado por outra conta.'],
   [/Failed to fetch|NetworkError|Load failed/i, 'Sem conexão. Verifique a internet e tente de novo.'],
   [/Could not find the function|does not exist|schema cache/i, 'O banco de dados não está atualizado. O dono precisa rodar o arquivo SQL do manual.'],
   [/permission denied/i, 'Sem permissão para fazer isso.']
@@ -352,7 +592,6 @@ const TRADUCOES = [
 function traduzir(e) {
   const m = String(e && e.message || e || '');
   for (const [re, t] of TRADUCOES) if (re.test(m)) return t;
-  // Mensagens escritas por nós (funções do banco e do servidor) já estão em português.
   return e && e.amigavel && m.length < 300 ? m : 'Algo deu errado. Tente de novo.';
 }
 function amigavel(texto) { const e = new Error(texto); e.amigavel = true; return e; }
@@ -361,6 +600,17 @@ async function rpc(nome, args) {
   if (error) throw (error.code === 'P0001' || error.code === '42501') ? amigavel(error.message) : new Error(error.message);
   return d;
 }
+const silencioso = (nome, args) => { if (sb) sb.rpc(nome, args || {}).then(() => {}, () => {}); };
+function baixar(nome, conteudo, tipo) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+  a.download = nome; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+/* ---------- tema (o mesmo do aplicativo) ---------- */
+function lerTema() { try { return JSON.parse(localStorage.getItem('ps.tema')); } catch (e) { return null; } }
+function aplicarTema(t) { if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; else delete document.documentElement.dataset.theme; }
 
 /* ---------- configuração ---------- */
 function chaveSecreta(k) {
@@ -389,68 +639,90 @@ async function lerConfig() {
 
 /* ---------- fluxo principal ---------- */
 async function iniciar() {
+  aplicarTema(lerTema());
   carregando();
-  const q = new URLSearchParams(location.search);
-  retornoPagamento = q.get('pagamento');
-  try {
-    conf = await lerConfig();
-  } catch (e) { falhaGeral(e.message); return; }
+  retornoPagamento = new URLSearchParams(location.search).get('pagamento');
+  try { conf = await lerConfig(); } catch (e) { falhaGeral(e.message); return; }
   sb = supabase.createClient(conf.url, conf.chave, {
     auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
-  sb.auth.onAuthStateChange(ev => {
-    if (ev === 'PASSWORD_RECOVERY') { recuperando = true; mostrar('nova-senha'); }
-  });
+  sb.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') { recuperando = true; porta('nova-senha'); } });
   try { vitrine = await rpc('config_publica'); }
   catch (e) { falhaGeral('Não foi possível falar com o servidor. ' + traduzir(e)); return; }
   preencherVitrine();
-  // limpa ?code= e ?pagamento= da barra de endereço
   if (location.search) { try { history.replaceState(null, '', location.pathname); } catch (e) {} }
   await rotear();
+  iniciarPresenca();
 }
 
 function preencherVitrine() {
-  document.querySelectorAll('.nomeProduto').forEach(el => { el.textContent = vitrine.nome_produto; });
+  $$('.nomeProduto').forEach(el => { el.textContent = vitrine.nome_produto; });
   document.title = vitrine.nome_produto;
-  $('#descricaoProduto').textContent = vitrine.descricao || '';
-  $('#descricaoProduto').hidden = !vitrine.descricao;
+  if (vitrine.descricao) { $('#descricaoProduto').textContent = vitrine.descricao; $('#pitchDescricao').textContent = vitrine.descricao; }
   $('#precoProduto').textContent = vitrine.preco_centavos ? brl(vitrine.preco_centavos) : '—';
   $('#semDono').hidden = !!vitrine.tem_dono;
 }
 
 async function rotear() {
-  if (recuperando) { mostrar('nova-senha'); return; }
+  if (recuperando) { porta('nova-senha'); return; }
   const { data: { session } } = await sb.auth.getSession();
-  if (!session) { appAberto = false; $('#convite').hidden = true; mostrar('entrar'); return; }
+  if (!session) { appAberto = false; $('#convite').hidden = true; porta('entrar'); return; }
   try { status = await rpc('meu_status'); }
   catch (e) { falhaGeral('Não foi possível conferir seu acesso. ' + traduzir(e)); return; }
   $('#convite').hidden = !status.convite_propriedade;
-  $('#contaEmail').textContent = status.email || '';
-  $('#btnPainel').hidden = !status.eh_dono;
+  $('#btnPainelPerfil').hidden = !status.eh_dono;
   if (status.tem_acesso) { pararEspera(); await abrirApp(); }
   else mostrarCompra();
+}
+
+/* ---------- presença ("online agora") ---------- */
+let presencaT = null;
+function iniciarPresenca() {
+  const pulso = async () => {
+    if (document.visibilityState !== 'visible') return;
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) silencioso('registrar_presenca');
+  };
+  pulso();
+  clearInterval(presencaT);
+  presencaT = setInterval(pulso, 60000);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pulso(); });
 }
 
 /* ---------- entrar ---------- */
 function definirModo(m) {
   modo = m;
-  document.querySelectorAll('[data-modo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modo === m)));
-  $('#campoSenha2').hidden = m !== 'criar';
-  $('#btnEntrar').textContent = m === 'criar' ? 'Criar conta' : 'Entrar';
-  $('#btnEsqueci').hidden = m === 'criar';
-  $('#senha').autocomplete = m === 'criar' ? 'new-password' : 'current-password';
+  $$('[data-modo]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.modo === m)));
+  const criar = m === 'criar';
+  $('#campoNome').hidden = !criar; $('#campoSenha2').hidden = !criar; $('#campoForca').hidden = !criar;
+  $('#btnEntrar').textContent = criar ? 'Criar conta' : 'Entrar';
+  $('#btnEsqueci').hidden = criar;
+  $('#tituloEntrar').textContent = criar ? 'Criar sua conta' : 'Entrar na sua conta';
+  $('#subEntrar').textContent = criar ? 'Leva menos de um minuto.' : 'Bem-vindo de volta.';
+  $('#senha').autocomplete = criar ? 'new-password' : 'current-password';
   msg('#msgEntrar', '');
+}
+function forcaSenha(s) {
+  let p = 0;
+  if (s.length >= 8) p++;
+  if (s.length >= 12) p++;
+  if (/[a-z]/.test(s) && /[A-Z]/.test(s)) p++;
+  if (/\d/.test(s)) p++;
+  if (/[^\w\s]/.test(s)) p++;
+  return Math.min(4, p);
 }
 async function enviarEntrar(e) {
   e.preventDefault();
-  const email = $('#email').value.trim().toLowerCase(), senha = $('#senha').value;
+  const email = $('#email').value.trim().toLowerCase(), senha = $('#senha').value, nome = $('#nome').value.trim();
+  if (modo === 'criar' && nome.length < 2) return msg('#msgEntrar', 'Digite seu nome.', 'erro');
   if (!EMAIL.test(email)) return msg('#msgEntrar', 'Digite um e-mail válido.', 'erro');
   if (senha.length < 8) return msg('#msgEntrar', 'A senha precisa ter pelo menos 8 caracteres.', 'erro');
   const btn = $('#btnEntrar'); btn.disabled = true;
   try {
     if (modo === 'criar') {
       if (senha !== $('#senha2').value) { msg('#msgEntrar', 'As senhas não são iguais.', 'erro'); return; }
-      const { data: d, error } = await sb.auth.signUp({ email, password: senha, options: { emailRedirectTo: SITE } });
+      if (forcaSenha(senha) < 2) { msg('#msgEntrar', 'Senha muito fraca. Misture letras, números e símbolos.', 'erro'); return; }
+      const { data: d, error } = await sb.auth.signUp({ email, password: senha, options: { emailRedirectTo: SITE, data: { nome: nome.slice(0, 120) } } });
       if (error) throw error;
       if (!d.session) { msg('#msgEntrar', 'Conta criada. Enviamos um link de confirmação para ' + email + '. Abra o e-mail e clique no link para continuar.', 'ok'); return; }
     } else {
@@ -458,6 +730,7 @@ async function enviarEntrar(e) {
       if (error) throw error;
     }
     $('#senha').value = ''; $('#senha2').value = '';
+    silencioso('registrar_acesso', { p_tipo: 'login' });
     carregando('Entrando…');
     await rotear();
   } catch (err) { msg('#msgEntrar', traduzir(err), 'erro'); }
@@ -480,11 +753,13 @@ async function salvarNovaSenha(e) {
     const { error } = await sb.auth.updateUser({ password: senha });
     if (error) throw error;
     $('#novaSenha').value = ''; recuperando = false;
+    silencioso('registrar_acesso', { p_tipo: 'senha' });
     toast('Senha alterada.');
     carregando(); await rotear();
   } catch (err) { msg('#msgNovaSenha', traduzir(err), 'erro'); }
 }
 async function sair() {
+  try { await rpc('registrar_acesso', { p_tipo: 'saida' }); } catch (e) {}
   try { await sb.auth.signOut(); } catch (e) {}
   location.replace(location.pathname); // descarta o aplicativo da memória
 }
@@ -509,7 +784,7 @@ function mostrarCompra() {
     av.className = 'aviso'; av.hidden = false;
     av.textContent = 'O pagamento não foi concluído. Nada foi cobrado. Você pode tentar de novo.';
   } else av.hidden = true;
-  mostrar('comprar');
+  porta('comprar');
 }
 function esperarLiberacao() {
   if (espera) return;
@@ -562,11 +837,169 @@ async function abrirApp() {
   if (!/PlanilhaEngine/.test(html)) { falhaGeral('O arquivo do aplicativo no servidor está danificado. Avise o suporte.'); return; }
   $('#appFrame').srcdoc = html;
   appAberto = true;
+  silencioso('registrar_acesso', { p_tipo: 'app' });
   mostrar('app');
+}
+async function enviarSessao() {
+  const f = $('#appFrame').contentWindow;
+  if (!f || !status) return;
+  let nome = '';
+  try { const p = perfil || await rpc('meu_perfil'); perfil = p; nome = p.nome || ''; } catch (e) {}
+  f.postMessage({ tipo: 'ps-sessao', nome, email: status.email || '', dono: !!status.eh_dono }, location.origin);
+}
+window.addEventListener('message', e => {
+  const f = $('#appFrame').contentWindow;
+  if (!f || e.source !== f) return; // só aceita mensagens do próprio aplicativo
+  const d = e.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.tipo === 'ps-pronto') enviarSessao();
+  else if (d.tipo === 'ps-tema' && (d.tema === 'light' || d.tema === 'dark')) aplicarTema(d.tema);
+  else if (d.tipo === 'ps-conta') {
+    if (d.acao === 'perfil') abrirPerfil();
+    else if (d.acao === 'painel' && status && status.eh_dono) abrirPainel();
+    else if (d.acao === 'sair') sair();
+  }
+});
+function voltar() {
+  if (appAberto && status && status.tem_acesso) mostrar('app');
+  else rotear();
+}
+
+/* ---------- meu perfil ---------- */
+const TIPO_ACESSO = { login: 'Entrou', app: 'Abriu o aplicativo', perfil: 'Alterou o perfil', senha: 'Alterou a senha', saida: 'Saiu' };
+const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente' };
+async function idSessaoAtual() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+  try { return JSON.parse(atob(session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).session_id || null; } catch (e) { return null; }
+}
+function htmlSessoes(lista, atual) {
+  return lista.length ? lista.map(s => {
+    const a = aparelho(s.navegador);
+    const este = atual && s.id === atual;
+    return `<li><span class="ic">${a.movel ? ICO_CEL : ICO_PC}</span><div class="t"><b>${esc(a.nome)} ${este ? '<span class="tag ok">Este aparelho</span>' : ''}</b><small>IP ${esc(s.ip || 'desconhecido')} · último uso ${esc(haQuanto(s.ultimo_uso))} · conectado em ${esc(data(s.criada_em))}</small></div></li>`;
+  }).join('') : '<li class="muted">Nenhum aparelho conectado no momento.</li>';
+}
+function htmlAcessos(lista) {
+  return lista.length ? lista.map(a => `<tr><td class="num">${esc(data(a.quando))}</td><td>${esc(TIPO_ACESSO[a.tipo] || a.tipo)}</td><td class="num">${esc(a.ip || '—')}</td><td>${esc(aparelho(a.navegador).nome)}</td></tr>`).join('')
+    : '<tr class="vazio"><td colspan="4">Nenhum acesso registrado ainda.</td></tr>';
+}
+function htmlCompras(lista) {
+  return lista.length ? lista.map(c => `<tr><td class="num">${esc(data(c.criado_em))}</td><td class="n num">${esc(brl(c.valor_centavos))}</td><td><span class="tag ${esc(c.status)}">${esc(SITUACAO[c.status] || c.status)}</span></td><td class="num">${esc(c.mp_payment_id || '—')}</td></tr>`).join('')
+    : '<tr class="vazio"><td colspan="4">Nenhuma compra.</td></tr>';
+}
+function tagAcesso(p) {
+  const a = p.acesso || {};
+  if (a.origem === 'dono') return '<span class="tag info">Dono da loja</span>';
+  if (a.ativo) return `<span class="tag ok">Acesso vitalício${a.origem === 'manual' ? ' (liberado pelo dono)' : ''}</span>`;
+  return '<span class="tag bad">Sem acesso</span>';
+}
+async function abrirPerfil() {
+  telaAnterior = 'perfil';
+  carregando('Carregando seu perfil…');
+  try { perfil = await rpc('meu_perfil'); }
+  catch (e) { toast(traduzir(e)); voltar(); return; }
+  const p = perfil, atual = await idSessaoAtual();
+  $('#perfilCab').innerHTML = `<span class="avatar g">${esc(iniciais(p.nome, p.email))}</span>
+    <div class="who"><b>${esc(p.nome || 'Sem nome')}</b><span class="muted">${esc(p.email)}</span>
+    <div class="tags">${tagAcesso(p)}${p.email_confirmado ? '<span class="tag">E-mail confirmado</span>' : '<span class="tag warn">E-mail não confirmado</span>'}<span class="tag"><span class="dot on"></span>Online</span></div></div>
+    <div class="muted" style="font-size:12.5px;text-align:right">Cliente desde ${esc(dia(p.conta_criada_em))}</div>`;
+  $('#pfNome').value = p.nome || ''; $('#pfEmpresa').value = p.empresa || ''; $('#pfCargo').value = p.cargo || '';
+  $('#pfTelefone').value = p.telefone || ''; $('#pfDocumento').value = p.documento || ''; $('#pfCidade').value = p.cidade || '';
+  $('#pfEmail').value = '';
+  const sessoes = p.sessoes || [];
+  $('#perfilConta').innerHTML = [
+    ['E-mail', esc(p.email)],
+    ['Acesso', tagAcesso(p)],
+    ['Desde', p.acesso && p.acesso.desde ? esc(data(p.acesso.desde)) : '—'],
+    ['Conta criada em', esc(data(p.conta_criada_em))],
+    ['Último login', esc(data(p.ultimo_login))],
+    ['Aparelhos logados', esc(sessoes.length)],
+    ['Identificador', `<span class="num" style="font-size:12px">${esc(p.id)}</span>`]
+  ].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  $('#perfilSessoes').innerHTML = htmlSessoes(sessoes, atual);
+  $('#perfilAcessos').innerHTML = htmlAcessos(p.acessos || []);
+  $('#perfilCompras').innerHTML = htmlCompras(p.compras || []);
+  $('#btnPainelPerfil').hidden = !p.eh_dono;
+  ['#msgPerfil', '#msgSenha', '#msgEmail', '#msgExcluir'].forEach(id => msg(id, ''));
+  mostrar('perfil');
+}
+function cpfOk(d) {
+  if (/^(\d)\1{10}$/.test(d)) return false;
+  for (let t = 9; t < 11; t++) { let s = 0; for (let i = 0; i < t; i++) s += +d[i] * (t + 1 - i); if ((s * 10) % 11 % 10 !== +d[t]) return false; }
+  return true;
+}
+function cnpjOk(d) {
+  if (/^(\d)\1{13}$/.test(d)) return false;
+  const w = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+  for (let t = 12; t < 14; t++) { let s = 0; for (let i = 0; i < t; i++) s += +d[i] * w[i + 13 - t]; let r = s % 11; r = r < 2 ? 0 : 11 - r; if (r !== +d[t]) return false; }
+  return true;
+}
+async function salvarPerfil(e) {
+  e.preventDefault();
+  const nome = $('#pfNome').value.trim(), tel = $('#pfTelefone').value.trim(), doc = $('#pfDocumento').value.trim();
+  if (nome.length < 2) return msg('#msgPerfil', 'Informe seu nome.', 'erro');
+  const dTel = tel.replace(/\D/g, ''), dDoc = doc.replace(/\D/g, '');
+  if (dTel && (dTel.length < 10 || dTel.length > 13)) return msg('#msgPerfil', 'Telefone inválido. Use DDD + número.', 'erro');
+  if (dDoc && !(dDoc.length === 11 ? cpfOk(dDoc) : dDoc.length === 14 ? cnpjOk(dDoc) : false)) return msg('#msgPerfil', 'CPF ou CNPJ inválido. Confira os números.', 'erro');
+  try {
+    await rpc('salvar_meu_perfil', { p_nome: nome, p_empresa: $('#pfEmpresa').value, p_cargo: $('#pfCargo').value, p_telefone: tel, p_documento: doc, p_cidade: $('#pfCidade').value });
+    perfil = null;
+    msg('#msgPerfil', 'Dados salvos.', 'ok');
+    enviarSessao();
+  } catch (err) { msg('#msgPerfil', traduzir(err), 'erro'); }
+}
+async function trocarSenha(e) {
+  e.preventDefault();
+  const s1 = $('#pfSenha').value, s2 = $('#pfSenha2').value;
+  if (s1.length < 8) return msg('#msgSenha', 'A senha precisa ter pelo menos 8 caracteres.', 'erro');
+  if (s1 !== s2) return msg('#msgSenha', 'As senhas não são iguais.', 'erro');
+  if (forcaSenha(s1) < 2) return msg('#msgSenha', 'Senha muito fraca. Misture letras, números e símbolos.', 'erro');
+  try {
+    const { error } = await sb.auth.updateUser({ password: s1 });
+    if (error) throw error;
+    $('#pfSenha').value = ''; $('#pfSenha2').value = '';
+    silencioso('registrar_acesso', { p_tipo: 'senha' });
+    msg('#msgSenha', 'Senha alterada.', 'ok');
+  } catch (err) { msg('#msgSenha', traduzir(err), 'erro'); }
+}
+async function trocarEmail(e) {
+  e.preventDefault();
+  const email = $('#pfEmail').value.trim().toLowerCase();
+  if (!EMAIL.test(email)) return msg('#msgEmail', 'Digite um e-mail válido.', 'erro');
+  try {
+    const { error } = await sb.auth.updateUser({ email }, { emailRedirectTo: SITE });
+    if (error) throw error;
+    msg('#msgEmail', 'Enviamos um link de confirmação para ' + email + '. A troca só vale depois de confirmar.', 'ok');
+  } catch (err) { msg('#msgEmail', traduzir(err), 'erro'); }
+}
+async function sairOutros() {
+  try {
+    const { error } = await sb.auth.signOut({ scope: 'others' });
+    if (error) throw error;
+    toast('Os outros aparelhos foram desconectados.');
+    abrirPerfil();
+  } catch (err) { toast(traduzir(err)); }
+}
+async function baixarMeusDados() {
+  try {
+    const p = await rpc('meu_perfil');
+    baixar('meus-dados.json', JSON.stringify(p, null, 2), 'application/json');
+  } catch (err) { toast(traduzir(err)); }
+}
+async function excluirConta(e) {
+  e.preventDefault();
+  const confirmacao = $('#confirmaExcluir').value.trim();
+  if (confirmacao !== 'EXCLUIR') return msg('#msgExcluir', 'Digite EXCLUIR, em letras maiúsculas, para confirmar.', 'erro');
+  try {
+    await rpc('excluir_minha_conta', { p_confirmacao: confirmacao });
+    try { await sb.auth.signOut({ scope: 'local' }); } catch (err) {}
+    alert('Sua conta foi excluída.');
+    location.replace(location.pathname);
+  } catch (err) { msg('#msgExcluir', traduzir(err), 'erro'); }
 }
 
 /* ---------- painel do dono ---------- */
-const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente' };
 const EVENTO = {
   compra_aprovada: ['Venda aprovada', 'aprovada'], compra_recusada: ['Pagamento recusado', ''], compra_cancelada: ['Pagamento cancelado', ''],
   compra_reembolsada: ['Reembolso: acesso retirado', 'reembolsada'], compra_contestada: ['Contestação no cartão: acesso retirado', 'contestada'],
@@ -575,37 +1008,56 @@ const EVENTO = {
   acesso_liberado: ['Acesso liberado manualmente', 'aprovada'], acesso_bloqueado: ['Acesso bloqueado manualmente', 'cancelada'],
   config_alterada: ['Configuração da loja alterada', ''], transferencia_iniciada: ['Transferência de dono iniciada', ''],
   transferencia_cancelada: ['Transferência cancelada', ''], propriedade_transferida: ['Novo dono assumiu a loja', 'aprovada'],
-  dono_indicado_pelo_sql: ['Dono indicado pelo SQL Editor', '']
+  dono_indicado_pelo_sql: ['Dono indicado pelo SQL Editor', ''], sessoes_encerradas: ['Aparelhos desconectados pelo dono', 'warn'],
+  conta_excluida: ['Conta excluída pelo usuário', 'bad']
 };
-let vendas = [];
-async function abrirPainel() {
+let vendas = [], usuarios = [], secao = 'geral', filtro = 'todos', autoT = null;
+function abrirPainel() {
+  telaAnterior = 'painel';
   mostrar('painel');
-  window.scrollTo(0, 0);
-  await carregarPainel();
+  mudarSecao(secao);
+  carregarPainel();
+  pararAuto();
+  autoT = setInterval(() => { if (document.visibilityState === 'visible' && (secao === 'geral' || secao === 'usuarios')) carregarPainel(true); }, 30000);
 }
-async function carregarPainel() {
+function pararAuto() { clearInterval(autoT); autoT = null; }
+function mudarSecao(s) {
+  secao = s;
+  $$('.pnav [data-psec]').forEach(b => { if (b.dataset.psec === s) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  $$('[data-sec]').forEach(el => { el.hidden = el.dataset.sec !== s; });
+}
+function metrica(rot, val, sub, cls) { return `<div class="metrica${cls ? ' ' + cls : ''}"><span>${rot}</span><b class="num">${val}</b><small>${sub}</small></div>`; }
+function grafico(dias) {
+  const W = 720, H = 170, pad = 22, n = dias.length || 1, max = Math.max(1, ...dias.map(d => d.centavos));
+  const bw = (W - pad * 2) / n;
+  const barras = dias.map((d, i) => {
+    const h = Math.round((H - 40) * d.centavos / max), x = pad + i * bw + 2, y = H - 22 - h;
+    return `<rect x="${x.toFixed(1)}" y="${y}" width="${Math.max(2, bw - 4).toFixed(1)}" height="${Math.max(h, d.centavos ? 2 : 0)}" rx="3" fill="var(--primary)"><title>${esc(dia(d.dia + 'T12:00:00'))}: ${esc(d.vendas)} venda(s), ${esc(brl(d.centavos))}</title></rect>`;
+  }).join('');
+  const rot = [0, Math.floor(n / 2), n - 1].map(i => dias[i] ? `<text x="${(pad + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" font-size="11" text-anchor="middle" fill="var(--muted)">${esc(new Date(dias[i].dia + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }))}</text>` : '').join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Receita por dia nos últimos 30 dias"><line x1="${pad}" x2="${W - pad}" y1="${H - 22}" y2="${H - 22}" stroke="var(--line)"/>${barras}${rot}</svg>`;
+}
+async function carregarPainel(silencio) {
   try {
-    const [res, comp, aces, evs] = await Promise.all([rpc('admin_resumo'), rpc('admin_listar_compras', { p_limite: 500 }), rpc('admin_listar_acessos'), rpc('admin_listar_eventos', { p_limite: 100 })]);
-    vendas = comp || [];
+    const [res, comp, us, evs] = await Promise.all([rpc('admin_resumo'), rpc('admin_listar_compras', { p_limite: 500 }), rpc('admin_listar_usuarios', { p_busca: null, p_limite: 2000 }), rpc('admin_listar_eventos', { p_limite: 200 })]);
+    vendas = comp || []; usuarios = us || [];
     const c = res.config;
     $('#painelDono').textContent = 'Dono atual: ' + (c.dono_email || '');
-    $('#metricas').innerHTML = `
-      <div class="metrica"><span>Vendas aprovadas</span><b class="num">${esc(Number(res.vendas_aprovadas).toLocaleString('pt-BR'))}</b></div>
-      <div class="metrica"><span>Receita bruta</span><b class="num">${esc(brl(res.receita_centavos))}</b></div>
-      <div class="metrica"><span>Acessos ativos</span><b class="num">${esc(Number(res.acessos_ativos).toLocaleString('pt-BR'))}</b></div>
-      <div class="metrica${res.pendencias ? ' alerta' : ''}"><span>Para conferir</span><b class="num">${esc(res.pendencias)}</b></div>`;
-    $('#cfgNome').value = c.nome_produto || '';
-    $('#cfgDescricao').value = c.descricao || '';
-    $('#cfgPreco').value = c.preco_centavos ? (c.preco_centavos / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
-    $('#cfgSuporte').value = c.email_suporte || '';
-    $('#cfgVendas').checked = !!c.vendas_abertas;
-    const pend = $('#transferenciaPendente');
-    if (c.dono_pendente_email) {
-      pend.hidden = false;
-      pend.innerHTML = `Aguardando <b>${esc(c.dono_pendente_email)}</b> aceitar até ${esc(data(c.dono_pendente_expira))}. <button class="link" data-act="cancelar-transferencia">Cancelar</button>`;
-    } else pend.hidden = true;
-    $('#tabAcessos').innerHTML = (aces || []).length ? aces.map(a => `<tr><td>${esc(a.email)}</td><td><span class="tag ${a.ativo ? 'aprovada' : 'cancelada'}">${a.ativo ? 'Liberado' : 'Bloqueado'}</span></td><td>${a.origem === 'compra' ? 'Compra' : 'Manual'}</td><td class="num">${esc(data(a.atualizado_em))}</td></tr>`).join('')
-      : '<tr class="vazio"><td colspan="4">Ninguém com acesso ainda.</td></tr>';
+    $('#painelAtualizado').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const total30 = (res.vendas_30d || []).reduce((s, d) => s + d.centavos, 0);
+    $('#metricas').innerHTML =
+      metrica('Usuários cadastrados', Number(res.usuarios).toLocaleString('pt-BR'), `${res.novos_7d} novo(s) nos últimos 7 dias`)
+      + metrica('<span class="dot on"></span>Online agora', res.online_agora, 'Com o site aberto neste momento')
+      + metrica('Contas logadas', res.logados == null ? '—' : res.logados, 'Com pelo menos um aparelho conectado')
+      + metrica('Vendas aprovadas', Number(res.vendas_aprovadas).toLocaleString('pt-BR'), `${res.acessos_ativos} acesso(s) ativo(s)`)
+      + metrica('Receita bruta', brl(res.receita_centavos), `${brl(total30)} nos últimos 30 dias`)
+      + metrica('Para conferir', res.pendencias, res.pendencias ? 'Veja o histórico' : 'Nenhuma pendência', res.pendencias ? 'alerta' : '');
+    $('#grafico').innerHTML = total30 ? grafico(res.vendas_30d || []) : '<p class="muted" style="padding:30px 0;text-align:center">Nenhuma venda nos últimos 30 dias.</p>';
+    const on = usuarios.filter(u => u.online);
+    $('#onlineList').innerHTML = on.length ? on.map(u => `<span><span class="avatar">${esc(iniciais(u.nome, u.email))}</span>${esc(u.nome || u.email)}</span>`).join('') : '<p class="muted">Ninguém online agora.</p>';
+    $('#cUsuarios').textContent = usuarios.length;
+    $('#cPend').hidden = !res.pendencias; $('#cPend').textContent = res.pendencias;
+    renderUsuarios();
     $('#tabVendas').innerHTML = vendas.length ? vendas.map(v => `<tr><td class="num">${esc(data(v.criado_em))}</td><td>${esc(v.email)}</td><td class="n num">${esc(brl(v.valor_centavos))}</td><td><span class="tag ${esc(v.status)}">${esc(SITUACAO[v.status] || v.status)}</span></td><td class="num">${esc(v.mp_payment_id || '')}</td></tr>`).join('')
       : '<tr class="vazio"><td colspan="5">Nenhuma venda ainda.</td></tr>';
     $('#tabEventos').innerHTML = (evs || []).length ? evs.map(ev => {
@@ -614,11 +1066,66 @@ async function carregarPainel() {
       const extra = d.para ? 'Para ' + d.para : d.payment_id ? 'Pagamento ' + d.payment_id : d.preco_centavos != null ? 'Preço ' + brl(d.preco_centavos) + (d.vendas_abertas ? ', vendas abertas' : ', vendas fechadas') : d.por ? 'Por ' + d.por : '';
       return `<tr><td class="num">${esc(data(ev.quando))}</td><td>${t[1] ? `<span class="tag ${esc(t[1])}">${esc(t[0])}</span>` : esc(t[0])}</td><td>${esc(ev.email || '')}</td><td>${esc(extra)}</td></tr>`;
     }).join('') : '<tr class="vazio"><td colspan="4">Nada registrado ainda.</td></tr>';
+    if (!silencio) {
+      $('#cfgNome').value = c.nome_produto || '';
+      $('#cfgDescricao').value = c.descricao || '';
+      $('#cfgPreco').value = c.preco_centavos ? (c.preco_centavos / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
+      $('#cfgSuporte').value = c.email_suporte || '';
+      $('#cfgVendas').checked = !!c.vendas_abertas;
+    }
+    const pend = $('#transferenciaPendente');
+    if (c.dono_pendente_email) {
+      pend.hidden = false;
+      pend.innerHTML = `Aguardando <b>${esc(c.dono_pendente_email)}</b> aceitar até ${esc(data(c.dono_pendente_expira))}. <button class="link" data-act="cancelar-transferencia">Cancelar</button>`;
+    } else pend.hidden = true;
   } catch (e) {
-    toast(traduzir(e));
-    if (/Apenas o dono/.test(String(e.message))) { appAberto ? mostrar('app') : rotear(); }
+    if (!silencio) toast(traduzir(e));
+    if (/Apenas o dono/.test(String(e.message))) { pararAuto(); voltar(); }
   }
 }
+function renderUsuarios() {
+  const q = $('#buscaUsuarios').value.trim().toLowerCase();
+  let lista = usuarios.filter(u => !q || [u.email, u.nome, u.empresa].some(x => String(x || '').toLowerCase().includes(q)));
+  if (filtro === 'online') lista = lista.filter(u => u.online);
+  else if (filtro === 'logados') lista = lista.filter(u => u.sessoes > 0);
+  else if (filtro === 'acesso') lista = lista.filter(u => u.tem_acesso);
+  else if (filtro === 'sem') lista = lista.filter(u => !u.tem_acesso);
+  $('#tabUsuarios').innerHTML = lista.length ? lista.map(u => `<tr class="clic" data-act="ver-usuario" data-uid="${esc(u.user_id)}" tabindex="0">
+      <td><div class="pessoa"><span class="avatar">${esc(iniciais(u.nome, u.email))}</span><div style="min-width:0"><b>${esc(u.nome || '—')}${u.eh_dono ? ' <span class="tag info">Dono</span>' : ''}</b><small>${esc(u.email)}${u.empresa ? ' · ' + esc(u.empresa) : ''}</small></div></div></td>
+      <td>${u.online ? '<span class="tag ok"><span class="dot on"></span>Online</span>' : `<span class="muted">Visto ${esc(haQuanto(u.visto_em))}</span>`}</td>
+      <td>${u.tem_acesso ? `<span class="tag ok">${u.origem === 'dono' ? 'Dono' : u.origem === 'manual' ? 'Liberado' : 'Comprou'}</span>` : '<span class="tag">Sem acesso</span>'}</td>
+      <td class="n num">${esc(u.sessoes)}</td>
+      <td class="num">${esc(data(u.ultimo_login))}</td>
+      <td class="num">${esc(dia(u.criado_em))}</td></tr>`).join('')
+    : '<tr class="vazio"><td colspan="6">Nenhum usuário encontrado.</td></tr>';
+}
+let detalheUid = null;
+async function verUsuario(uid) {
+  detalheUid = uid;
+  $('#detalhe').hidden = false;
+  $('#detCorpo').innerHTML = '<div class="spinner" style="margin:30px auto"></div>';
+  try {
+    const p = await rpc('admin_detalhe_usuario', { p_user: uid });
+    $('#detAvatar').textContent = iniciais(p.nome, p.email);
+    $('#detNome').textContent = p.nome || 'Sem nome';
+    $('#detEmail').textContent = p.email;
+    const kv = [
+      ['Situação', p.online ? '<span class="tag ok"><span class="dot on"></span>Online agora</span>' : 'Visto ' + esc(haQuanto(p.visto_em))],
+      ['Acesso', tagAcesso(p)], ['Empresa', esc(p.empresa || '—')], ['Cargo', esc(p.cargo || '—')], ['Telefone', esc(p.telefone || '—')],
+      ['CPF/CNPJ', esc(p.documento || '—')], ['Cidade', esc(p.cidade || '—')], ['E-mail confirmado', p.email_confirmado ? 'Sim' : 'Não'],
+      ['Conta criada em', esc(data(p.conta_criada_em))], ['Último login', esc(data(p.ultimo_login))]
+    ];
+    $('#detCorpo').innerHTML = `
+      <div class="card"><div class="card-b"><dl class="kv">${kv.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+        ${p.eh_dono ? '' : `<div style="display:flex;gap:8px;flex-wrap:wrap">${p.acesso && p.acesso.ativo ? '<button class="btn small danger" data-act="det-acesso" data-ativo="0">Bloquear acesso</button>' : '<button class="btn small primary" data-act="det-acesso" data-ativo="1">Liberar acesso</button>'}<button class="btn small" data-act="det-sessoes">Desconectar aparelhos</button></div>`}
+      </div></div>
+      <div class="card"><div class="card-h"><h2>Aparelhos logados (${(p.sessoes || []).length})</h2></div><ul class="lista-dev">${htmlSessoes(p.sessoes || [])}</ul></div>
+      <div class="card"><div class="card-h"><h2>Últimos acessos</h2></div><div class="tabela-w" style="max-height:300px"><table><thead><tr><th>Quando</th><th>O quê</th><th>IP</th><th>Aparelho</th></tr></thead><tbody>${htmlAcessos(p.acessos || [])}</tbody></table></div></div>
+      <div class="card"><div class="card-h"><h2>Compras</h2></div><div class="tabela-w"><table><thead><tr><th>Data</th><th class="n">Valor</th><th>Situação</th><th>Mercado Pago</th></tr></thead><tbody>${htmlCompras(p.compras || [])}</tbody></table></div></div>
+      <div class="card"><div class="card-h"><h2>Histórico</h2></div><div class="tabela-w" style="max-height:260px"><table><tbody>${(p.eventos || []).length ? p.eventos.map(ev => `<tr><td class="num">${esc(data(ev.quando))}</td><td>${esc((EVENTO[ev.tipo] || [ev.tipo])[0])}</td></tr>`).join('') : '<tr class="vazio"><td>Nada registrado.</td></tr>'}</tbody></table></div></div>`;
+  } catch (e) { $('#detCorpo').innerHTML = `<p class="msg erro">${esc(traduzir(e))}</p>`; }
+}
+function fecharDetalhe() { $('#detalhe').hidden = true; detalheUid = null; }
 function lerPreco(s) {
   s = String(s || '').replace(/[R$\s]/g, '');
   if (!s) return null;
@@ -637,20 +1144,24 @@ async function salvarLoja(e) {
     await rpc('admin_salvar_config', { p_nome_produto: $('#cfgNome').value.trim(), p_descricao: $('#cfgDescricao').value.trim(), p_preco_centavos: preco, p_vendas_abertas: $('#cfgVendas').checked, p_email_suporte: suporte || null });
     msg('#msgLoja', 'Salvo.', 'ok');
     vitrine = await rpc('config_publica'); preencherVitrine();
-    await carregarPainel();
+    await carregarPainel(true);
   } catch (err) { msg('#msgLoja', traduzir(err), 'erro'); }
 }
-async function definirAcesso(e) {
+async function definirAcesso(email, ativo, onde) {
+  try {
+    await rpc('admin_definir_acesso', { p_email: email, p_ativo: ativo });
+    if (onde) msg(onde, ativo ? 'Acesso liberado para ' + email + '.' : 'Acesso bloqueado para ' + email + '.', 'ok');
+    else toast(ativo ? 'Acesso liberado.' : 'Acesso bloqueado.');
+    await carregarPainel(true);
+    return true;
+  } catch (err) { if (onde) msg(onde, traduzir(err), 'erro'); else toast(traduzir(err)); return false; }
+}
+async function enviarAcesso(e) {
   e.preventDefault();
   const ativo = e.submitter ? e.submitter.dataset.ativo === '1' : true;
   const email = $('#acessoEmail').value.trim().toLowerCase();
   if (!EMAIL.test(email)) return msg('#msgAcesso', 'Digite um e-mail válido.', 'erro');
-  try {
-    await rpc('admin_definir_acesso', { p_email: email, p_ativo: ativo });
-    msg('#msgAcesso', ativo ? 'Acesso liberado para ' + email + '.' : 'Acesso bloqueado para ' + email + '.', 'ok');
-    $('#acessoEmail').value = '';
-    await carregarPainel();
-  } catch (err) { msg('#msgAcesso', traduzir(err), 'erro'); }
+  if (await definirAcesso(email, ativo, '#msgAcesso')) $('#acessoEmail').value = '';
 }
 async function transferir(e) {
   e.preventDefault();
@@ -661,25 +1172,23 @@ async function transferir(e) {
     await rpc('admin_transferir_propriedade', { p_email: email });
     msg('#msgTransferir', 'Pronto. Peça para ' + email + ' criar a conta (se ainda não tiver), entrar no site e clicar em “Assumir a loja” em até 7 dias.', 'ok');
     $('#novoDono').value = ''; $('#confirmaTransferir').checked = false;
-    await carregarPainel();
+    await carregarPainel(true);
   } catch (err) { msg('#msgTransferir', traduzir(err), 'erro'); }
 }
+function csvSeguro(v) { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function baixarVendas() {
-  const seguro = v => { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
   const linhas = [['Data', 'E-mail', 'Valor', 'Situação', 'Pagamento Mercado Pago']].concat(vendas.map(v => [data(v.criado_em), v.email, (v.valor_centavos / 100).toFixed(2).replace('.', ','), SITUACAO[v.status] || v.status, v.mp_payment_id || '']));
-  const blob = new Blob(['﻿' + linhas.map(l => l.map(seguro).join(';')).join('\r\n')], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob); a.download = 'vendas.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  baixar('vendas.csv', '\uFEFF' + linhas.map(l => l.map(csvSeguro).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', async e => {
-  const pop = $('#contaPop');
-  if (!e.target.closest('.conta') && !pop.hidden) { pop.hidden = true; $('#contaBtn').setAttribute('aria-expanded', 'false'); }
   const modoBtn = e.target.closest('[data-modo]');
   if (modoBtn) { definirModo(modoBtn.dataset.modo); return; }
+  const sec = e.target.closest('[data-psec]');
+  if (sec) { mudarSecao(sec.dataset.psec); return; }
+  const fil = e.target.closest('[data-filtro]');
+  if (fil) { filtro = fil.dataset.filtro; $$('[data-filtro]').forEach(b => b.setAttribute('aria-pressed', String(b === fil))); renderUsuarios(); return; }
   const el = e.target.closest('[data-act]');
   if (!el) return;
   switch (el.dataset.act) {
@@ -687,28 +1196,57 @@ document.addEventListener('click', async e => {
     case 'esqueci': esqueci(); break;
     case 'sair': sair(); break;
     case 'comprar': comprar(); break;
-    case 'conta': pop.hidden = !pop.hidden; el.setAttribute('aria-expanded', String(!pop.hidden)); break;
-    case 'painel': pop.hidden = true; abrirPainel(); break;
-    case 'voltar-app': appAberto ? mostrar('app') : rotear(); break;
+    case 'perfil': abrirPerfil(); break;
+    case 'painel': abrirPainel(); break;
+    case 'voltar': voltar(); break;
+    case 'ver-senha': { const i = $('#' + el.dataset.alvo); i.type = i.type === 'password' ? 'text' : 'password'; el.setAttribute('aria-label', i.type === 'password' ? 'Mostrar senha' : 'Esconder senha'); break; }
+    case 'sair-outros': sairOutros(); break;
+    case 'baixar-dados': baixarMeusDados(); break;
     case 'atualizar-painel': carregarPainel(); break;
     case 'baixar-vendas': baixarVendas(); break;
+    case 'ver-usuario': verUsuario(el.dataset.uid); break;
+    case 'fechar-detalhe': fecharDetalhe(); break;
+    case 'det-acesso': {
+      const u = usuarios.find(x => x.user_id === detalheUid);
+      if (u && await definirAcesso(u.email, el.dataset.ativo === '1')) verUsuario(detalheUid);
+      break;
+    }
+    case 'det-sessoes':
+      if (!confirm('Desconectar todos os aparelhos desta pessoa? Ela precisará entrar de novo (vale em até 1 hora).')) break;
+      try { const r = await rpc('admin_encerrar_sessoes', { p_user: detalheUid }); toast(r.encerradas + ' aparelho(s) desconectado(s).'); verUsuario(detalheUid); carregarPainel(true); }
+      catch (err) { toast(traduzir(err)); }
+      break;
     case 'cancelar-transferencia':
-      try { await rpc('admin_cancelar_transferencia'); toast('Transferência cancelada.'); carregarPainel(); } catch (err) { toast(traduzir(err)); }
+      try { await rpc('admin_cancelar_transferencia'); toast('Transferência cancelada.'); carregarPainel(true); } catch (err) { toast(traduzir(err)); }
       break;
     case 'aceitar-propriedade':
       el.disabled = true;
-      try { await rpc('aceitar_propriedade'); toast('Agora você é o dono desta loja.'); $('#convite').hidden = true; appAberto = false; await rotear(); }
+      try { await rpc('aceitar_propriedade'); toast('Agora você é o dono desta loja.'); $('#convite').hidden = true; appAberto = false; perfil = null; await rotear(); }
       catch (err) { toast(traduzir(err)); }
       finally { el.disabled = false; }
       break;
   }
 });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$('#detalhe').hidden) fecharDetalhe();
+  if (e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-act="ver-usuario"]')) verUsuario(e.target.dataset.uid);
+});
+$('#senha').addEventListener('input', () => {
+  if (modo !== 'criar') return;
+  const f = forcaSenha($('#senha').value), cores = ['var(--danger)', 'var(--danger)', 'var(--warn)', 'var(--ok)', 'var(--ok)'];
+  $('#forcaBarra').style.width = (f * 25) + '%'; $('#forcaBarra').style.background = cores[f];
+  $('#forcaTexto').textContent = ['Senha muito fraca', 'Senha fraca', 'Senha razoável', 'Senha boa', 'Senha forte'][f];
+});
+$('#buscaUsuarios').addEventListener('input', renderUsuarios);
 $('#formEntrar').addEventListener('submit', enviarEntrar);
 $('#formNovaSenha').addEventListener('submit', salvarNovaSenha);
+$('#formPerfil').addEventListener('submit', salvarPerfil);
+$('#formSenha').addEventListener('submit', trocarSenha);
+$('#formEmail').addEventListener('submit', trocarEmail);
+$('#formExcluir').addEventListener('submit', excluirConta);
 $('#formLoja').addEventListener('submit', salvarLoja);
-$('#formAcesso').addEventListener('submit', definirAcesso);
+$('#formAcesso').addEventListener('submit', enviarAcesso);
 $('#formTransferir').addEventListener('submit', transferir);
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('#contaPop').hidden = true; $('#contaBtn').setAttribute('aria-expanded', 'false'); } });
 
 iniciar();
 })();

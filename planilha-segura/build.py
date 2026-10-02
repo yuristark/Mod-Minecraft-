@@ -16,7 +16,7 @@ import re
 import shutil
 import sys
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC, LOJA, DIST = ROOT / "src", ROOT / "loja", ROOT / "dist"
 XLSX_FILE = ROOT / "vendor" / "xlsx-0.18.5.full.min.js"
@@ -73,24 +73,27 @@ def main():
     layout = read(SRC / "layout.html")
     engine = read(SRC / "engine.js").strip()
     app = read(SRC / "app.js").replace("{{VERSION}}", VERSION).strip()
+    xlsxw = read(SRC / "xlsx.js").strip()
     xlsx = read(XLSX_FILE)
     # As tabelas de codificação da SheetJS têm o caractere U+FFFD dentro de strings.
     # O escape � é equivalente em JavaScript e evita o caractere literal no HTML.
     xlsx = xlsx.replace("�", "\\uFFFD")
-    for n, t in (("engine.js", engine), ("app.js", app), ("xlsx", xlsx)):
+    for n, t in (("engine.js", engine), ("app.js", app), ("xlsx", xlsx), ("xlsx.js", xlsxw)):
         check_inline(n, t)
 
     engine_js = "\n" + engine + "\n"
     app_js = "\n" + app + "\n"
+    xlsxw_js = "\n" + xlsxw + "\n"
     body = (layout
             .replace("{{VERSION}}", VERSION)
             .replace("{{XLSX}}", xlsx)
             .replace("{{ENGINE}}", '<script id="engine">' + engine_js + "</script>")
+            .replace("{{XLSXW}}", "<script>" + xlsxw_js + "</script>")
             .replace("{{APP}}", "<script>" + app_js + "</script>"))
-    if re.search(r"\{\{(VERSION|XLSX|ENGINE|APP)\}\}", body.replace(xlsx, "")):
+    if re.search(r"\{\{(VERSION|XLSX|XLSXW|ENGINE|APP)\}\}", body.replace(xlsx, "")):
         sys.exit("ERRO: marcador {{...}} sem substituição no layout do aplicativo.")
 
-    app_hashes = f"{sha(engine_js)} {sha(app_js)}"
+    app_hashes = f"{sha(engine_js)} {sha(xlsxw_js)} {sha(app_js)}"
     csp_app = "; ".join([
         "default-src 'none'", f"script-src {app_hashes}", "worker-src blob:", "style-src 'unsafe-inline'",
         "img-src data:", "connect-src 'none'", "base-uri 'none'", "form-action 'none'", "object-src 'none'",
