@@ -1,0 +1,10 @@
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'sha256-y7fJ/RGvk05LZA7r4hwMx51rs/A/2laZ1T4D8/L20oU=' 'sha256-h0RMn3+V0aulsoH0Zn7nvPTE0mdtdwz/85Brl2EpN1Y='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; manifest-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), serial=(), bluetooth=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Cache-Control: no-cache

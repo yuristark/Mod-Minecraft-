@@ -1,0 +1,12 @@
+const fs=require('fs');
+const src=fs.readFileSync(require('path').join(__dirname, '..', 'src', 'engine.js'),'utf8');
+const PlanilhaEngine=new Function(src+'\nreturn PlanilhaEngine;')();
+const E=PlanilhaEngine(); const assert=require('assert');
+const inp={headers:['__proto__','constructor','Nome','Valor'],rows:[[' a ','x','joão de souza','R$ 1.234,5'],[' a ','x','joão de souza','R$ 1.234,5'],['','', '', ''],['b','y','CONSTRUCTOR toString','10']]};
+const r=E.run(inp,[{type:'trim',on:true,p:{cols:[],collapse:true}},{type:'removeEmptyRows',on:true,p:{}},{type:'dedupe',on:true,p:{cols:[],keep:'first',ignoreCase:true}},{type:'case',on:true,p:{cols:['Nome'],mode:'title'}},{type:'number',on:true,p:{cols:['Valor'],from:'auto',to:'br',decimals:'2'}},{type:'sort',on:true,p:{col:'__proto__',dir:'desc'}}]);
+assert.strictEqual(r.rows.length,2); assert.strictEqual(({}).polluted,undefined);
+assert.strictEqual(E.titleCase('joão de souza'),'João de Souza');
+assert.strictEqual(typeof E.titleCase('constructor'),'string');
+assert.ok(E.cpfOk('52998224725')); assert.ok(!E.cpfOk('11111111111'));
+assert.strictEqual(Object.prototype.x,undefined);
+console.log('engine OK', r.report.map(x=>x.warn).flat());
