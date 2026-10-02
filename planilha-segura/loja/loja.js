@@ -136,6 +136,7 @@ function preencherVitrine() {
   if (vitrine.descricao) { $('#descricaoProduto').textContent = vitrine.descricao; $('#pitchDescricao').textContent = vitrine.descricao; }
   $('#precoProduto').textContent = vitrine.preco_centavos ? brl(vitrine.preco_centavos) : '—';
   $('#semDono').hidden = !!vitrine.tem_dono;
+  $('#privContato').textContent = vitrine.email_suporte ? 'Dúvidas ou pedidos sobre seus dados: ' + vitrine.email_suporte + '.' : '';
 }
 
 async function rotear() {
@@ -261,11 +262,40 @@ function mostrarCompra() {
   } else av.hidden = true;
   porta('comprar');
 }
+// Pede ao servidor para conferir no Mercado Pago os pagamentos deste usuário (caso o aviso automático atrase ou falhe).
+async function verificarPagamento() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+  const r = await fetch(conf.url + '/functions/v1/criar-pagamento', {
+    method: 'POST', credentials: 'omit',
+    headers: { Authorization: 'Bearer ' + session.access_token, apikey: conf.chave, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ acao: 'verificar' })
+  });
+  return r.ok ? r.json().catch(() => null) : null;
+}
+let ultimaVerificacao = 0;
+async function jaPaguei(el) {
+  if (Date.now() - ultimaVerificacao < 15000) { toast('Aguarde alguns segundos antes de conferir de novo.'); return; }
+  ultimaVerificacao = Date.now();
+  if (el) el.disabled = true;
+  const av = $('#avisoCompra');
+  av.className = 'aviso ok'; av.hidden = false; av.textContent = 'Conferindo seu pagamento no Mercado Pago…';
+  try {
+    await verificarPagamento();
+    const s = await rpc('meu_status');
+    if (s.tem_acesso) { status = s; toast('Pagamento confirmado. Acesso liberado!'); await rotear(); return; }
+    av.className = 'aviso';
+    av.textContent = 'Ainda não encontramos um pagamento aprovado na sua conta. Pix e cartão costumam confirmar em poucos minutos; boleto, em até 3 dias úteis.' + (vitrine.email_suporte ? ' Se já foi descontado, fale com ' + vitrine.email_suporte + ' e informe o número do pagamento que está no comprovante do Mercado Pago.' : '');
+  } catch (e) { av.className = 'aviso'; av.textContent = traduzir(e); }
+  finally { if (el) el.disabled = false; }
+}
 function esperarLiberacao() {
   if (espera) return;
   let tentativas = 0;
+  verificarPagamento().catch(() => {});
   const passo = async () => {
     tentativas++;
+    if (tentativas % 8 === 0) await verificarPagamento().catch(() => {});
     try {
       const s = await rpc('meu_status');
       if (s.tem_acesso) { status = s; retornoPagamento = null; pararEspera(); toast('Acesso liberado. Bom trabalho!'); await rotear(); return; }
@@ -342,7 +372,7 @@ function voltar() {
 
 /* ---------- meu perfil ---------- */
 const TIPO_ACESSO = { login: 'Entrou', app: 'Abriu o aplicativo', perfil: 'Alterou o perfil', senha: 'Alterou a senha', saida: 'Saiu' };
-const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente' };
+const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente (devolvido)', duplicada: 'Em dobro (devolvida)' };
 async function idSessaoAtual() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
@@ -478,8 +508,8 @@ async function excluirConta(e) {
 const EVENTO = {
   compra_aprovada: ['Venda aprovada', 'aprovada'], compra_recusada: ['Pagamento recusado', ''], compra_cancelada: ['Pagamento cancelado', ''],
   compra_reembolsada: ['Reembolso: acesso retirado', 'reembolsada'], compra_contestada: ['Contestação no cartão: acesso retirado', 'contestada'],
-  compra_divergente: ['Valor pago diferente do preço: confira', 'divergente'], compra_pendente: ['Pagamento aguardando', ''],
-  pagamento_duplicado: ['Cobrança em dobro: reembolse uma no Mercado Pago', 'divergente'],
+  compra_divergente: ['Valor pago diferente do preço: devolução automática solicitada', 'divergente'], compra_pendente: ['Pagamento aguardando', ''],
+  pagamento_duplicado: ['Cobrança em dobro: devolução automática solicitada (confira no Mercado Pago)', 'divergente'],
   acesso_liberado: ['Acesso liberado manualmente', 'aprovada'], acesso_bloqueado: ['Acesso bloqueado manualmente', 'cancelada'],
   config_alterada: ['Configuração da loja alterada', ''], transferencia_iniciada: ['Transferência de dono iniciada', ''],
   transferencia_cancelada: ['Transferência cancelada', ''], propriedade_transferida: ['Novo dono assumiu a loja', 'aprovada'],
@@ -671,6 +701,9 @@ document.addEventListener('click', async e => {
     case 'esqueci': esqueci(); break;
     case 'sair': sair(); break;
     case 'comprar': comprar(); break;
+    case 'ja-paguei': jaPaguei(el); break;
+    case 'privacidade': $('#privacidade').hidden = false; break;
+    case 'fechar-privacidade': $('#privacidade').hidden = true; break;
     case 'perfil': abrirPerfil(); break;
     case 'painel': abrirPainel(); break;
     case 'voltar': voltar(); break;
@@ -704,6 +737,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#detalhe').hidden) fecharDetalhe();
+  if (e.key === 'Escape') $('#privacidade').hidden = true;
   if (e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-act="ver-usuario"]')) verUsuario(e.target.dataset.uid);
 });
 $('#senha').addEventListener('input', () => {

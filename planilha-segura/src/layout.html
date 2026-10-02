@@ -391,6 +391,10 @@ code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6
         <button data-tab="guia"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>Guia e boas práticas</button>
         <button data-tab="seguranca"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Segurança</button>
       </nav>
+      <div class="nav-label">Conta</div>
+      <nav class="nav" aria-label="Conta">
+        <button data-tab="perfil"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Meu perfil</button>
+      </nav>
     </div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">
@@ -638,6 +642,56 @@ code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6
               <div><span>Refazer na receita</span><span><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Z</span></span></div>
               <div><span>Procurar na tabela</span><span><span class="kbd">/</span></span></div>
             </div><p class="muted" style="font-size:12.5px">No Mac, use <span class="kbd">⌘</span> no lugar de <span class="kbd">Ctrl</span>.</p></div></details>
+        </div>
+      </section>
+
+      <!-- PERFIL -->
+      <section id="view-perfil" class="view" hidden>
+        <div class="head"><div><h1>Meu perfil</h1><p id="perfilSub">Seus dados, preferências e o que fica guardado neste navegador.</p></div></div>
+        <div class="card" style="margin-bottom:18px"><div class="card-b" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <span class="avatar" id="pfAvatar" style="width:72px;height:72px;font-size:24px">?</span>
+          <div style="flex:1;min-width:200px"><b id="pfNomeV" style="font-size:20px;letter-spacing:-.4px;display:block">Seu nome</b><span class="muted" id="pfEmailV"></span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" id="pfTags"></div></div>
+        </div></div>
+        <div class="contaLoja card" id="pfConta" hidden style="margin-bottom:18px"><div class="card-b" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <span class="ico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg></span>
+          <div style="flex:1;min-width:220px"><b>Conta, senha, aparelhos conectados e compras</b><p class="muted" style="font-size:12.5px">Seus dados de cadastro, troca de senha e e-mail, aparelhos logados, histórico de acessos e comprovantes.</p></div>
+          <button class="btn primary" data-act="conta" data-acao="perfil">Abrir minha conta</button>
+        </div></div>
+        <div class="two">
+          <div class="card" id="pfLocalCard">
+            <div class="card-h"><div><h2>Seus dados</h2><p>Aparecem na saudação e no menu. Ficam só neste navegador.</p></div></div>
+            <form class="card-b" id="formPerfilLocal" novalidate>
+              <label class="field"><span>Nome</span><input class="input" id="plNome" maxlength="80" autocomplete="name"></label>
+              <div class="formrow">
+                <label class="field"><span>Empresa (opcional)</span><input class="input" id="plEmpresa" maxlength="80" autocomplete="organization"></label>
+                <label class="field"><span>Cargo (opcional)</span><input class="input" id="plCargo" maxlength="60" autocomplete="organization-title"></label>
+              </div>
+              <label class="field"><span>E-mail (opcional)</span><input class="input" id="plEmail" type="email" maxlength="254" autocomplete="email"></label>
+              <div><button class="btn primary" type="submit">Salvar</button></div>
+            </form>
+          </div>
+          <div style="display:grid;gap:22px">
+            <div class="card">
+              <div class="card-h"><div><h2>Preferências</h2><p>Valem para este navegador.</p></div></div>
+              <div class="card-b">
+                <div class="formrow">
+                  <label class="field"><span>Tema</span><select class="input" id="prefTema"><option value="">Igual ao sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+                  <label class="field"><span>Separador do CSV</span><select class="input" id="prefCsv"><option value=";">Ponto e vírgula (Excel em português)</option><option value=",">Vírgula (padrão internacional)</option></select></label>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h"><div><h2>Guardado neste navegador</h2><p>Nenhuma planilha fica guardada: só receitas e preferências.</p></div></div>
+              <div class="card-b">
+                <ul class="hlist" id="pfReceitas"></ul>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn small" data-act="exportar-receitas">Exportar todas as receitas</button>
+                  <button class="btn small" data-act="apagar-local" style="color:var(--danger)">Apagar tudo deste navegador</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

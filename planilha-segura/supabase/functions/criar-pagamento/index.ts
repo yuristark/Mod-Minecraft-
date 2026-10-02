@@ -54,6 +54,9 @@ export async function tratar(req: Request, env: Ambiente, buscar: typeof fetch =
   if (!usuario || typeof usuario.id !== 'string') return responder(401, { erro: 'Sua sessão expirou. Entre de novo.' });
   if (!usuario.email_confirmed_at) return responder(403, { erro: 'Confirme seu e-mail antes de comprar.' });
 
+  const corpo = await req.json().catch(() => ({}));
+  if (corpo && corpo.acao === 'verificar') return responder(200, await verificarPagamentos(usuario.id, env, buscar));
+
   // 2. Registra a compra pendente com o preço atual (o banco confere vendas abertas e acesso existente).
   const rc = await buscar(`${env.SUPABASE_URL}/rest/v1/rpc/criar_compra`, {
     method: 'POST',
@@ -105,6 +108,32 @@ export async function tratar(req: Request, env: Ambiente, buscar: typeof fetch =
   const resposta = await rp.json();
   if (!resposta || typeof resposta.init_point !== 'string') return responder(502, { erro: 'Resposta inesperada do Mercado Pago.' });
   return responder(200, { url: resposta.init_point });
+}
+
+// "Já paguei": quando o aviso automático do Mercado Pago não chegou, consulta direto no Mercado Pago
+// os pagamentos das compras pendentes deste usuário e registra o que encontrar.
+export async function verificarPagamentos(userId: string, env: Ambiente, buscar: typeof fetch = fetch) {
+  const servidor = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': 'application/json' };
+  const rp = await buscar(`${env.SUPABASE_URL}/rest/v1/rpc/compras_pendentes`, { method: 'POST', headers: servidor, body: JSON.stringify({ p_user: userId }) });
+  if (!rp.ok) return { verificadas: 0 };
+  const ids = ((await rp.json()) || []).map((x: any) => typeof x === 'string' ? x : x && x.compras_pendentes).filter(Boolean).slice(0, 5);
+  let registrados = 0;
+  for (const id of ids) {
+    const rs = await buscar(`https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(id)}&sort=date_created&criteria=asc`, {
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}` },
+    });
+    if (!rs.ok) continue;
+    const lista = ((await rs.json()) || {}).results || [];
+    for (const pg of lista.slice(0, 10)) {
+      if (String(pg.external_reference) !== id) continue;
+      const rr = await buscar(`${env.SUPABASE_URL}/rest/v1/rpc/registrar_pagamento`, {
+        method: 'POST', headers: servidor,
+        body: JSON.stringify({ p_compra: id, p_payment_id: String(pg.id), p_status_mp: String(pg.status ?? ''), p_valor_centavos: Math.round(Number(pg.transaction_amount) * 100), p_moeda: String(pg.currency_id ?? '') }),
+      });
+      if (rr.ok) registrados++;
+    }
+  }
+  return { verificadas: ids.length, registrados };
 }
 
 function ambiente(): Ambiente {

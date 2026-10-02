@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-K5vsBCZkXpx5XH4ppf3gtCLbFD7oV2kLYcwUvaW6vt4='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-DdUU7AfCxQjfck25s3yW5JJVYKMiFpZD7sa6e8WmiWs='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Limpe, padronize e automatize planilhas sem enviar seus dados para nenhum servidor.">
 <meta name="color-scheme" content="light dark">
@@ -402,12 +402,16 @@ code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6
         <button data-tab="guia"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .9-1 1.7M12 17h.01"/></svg>Guia e boas práticas</button>
         <button data-tab="seguranca"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Segurança</button>
       </nav>
+      <div class="nav-label">Conta</div>
+      <nav class="nav" aria-label="Conta">
+        <button data-tab="perfil"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>Meu perfil</button>
+      </nav>
     </div>
     <div class="side-foot">
       <div class="side-note" id="sideNote">
         <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Seus dados, seu computador.</strong>
         <p>As planilhas são lidas e limpas aqui no navegador. Nada é enviado para servidores.</p>
-        <p class="ver">Versão 1.1.0</p>
+        <p class="ver">Versão 1.1.1</p>
       </div>
       <div class="umenu" id="userBox" hidden>
         <div class="pop" id="userPop" hidden role="menu">
@@ -649,6 +653,56 @@ code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6
               <div><span>Refazer na receita</span><span><span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Z</span></span></div>
               <div><span>Procurar na tabela</span><span><span class="kbd">/</span></span></div>
             </div><p class="muted" style="font-size:12.5px">No Mac, use <span class="kbd">⌘</span> no lugar de <span class="kbd">Ctrl</span>.</p></div></details>
+        </div>
+      </section>
+
+      <!-- PERFIL -->
+      <section id="view-perfil" class="view" hidden>
+        <div class="head"><div><h1>Meu perfil</h1><p id="perfilSub">Seus dados, preferências e o que fica guardado neste navegador.</p></div></div>
+        <div class="card" style="margin-bottom:18px"><div class="card-b" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <span class="avatar" id="pfAvatar" style="width:72px;height:72px;font-size:24px">?</span>
+          <div style="flex:1;min-width:200px"><b id="pfNomeV" style="font-size:20px;letter-spacing:-.4px;display:block">Seu nome</b><span class="muted" id="pfEmailV"></span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px" id="pfTags"></div></div>
+        </div></div>
+        <div class="contaLoja card" id="pfConta" hidden style="margin-bottom:18px"><div class="card-b" style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+          <span class="ico b"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg></span>
+          <div style="flex:1;min-width:220px"><b>Conta, senha, aparelhos conectados e compras</b><p class="muted" style="font-size:12.5px">Seus dados de cadastro, troca de senha e e-mail, aparelhos logados, histórico de acessos e comprovantes.</p></div>
+          <button class="btn primary" data-act="conta" data-acao="perfil">Abrir minha conta</button>
+        </div></div>
+        <div class="two">
+          <div class="card" id="pfLocalCard">
+            <div class="card-h"><div><h2>Seus dados</h2><p>Aparecem na saudação e no menu. Ficam só neste navegador.</p></div></div>
+            <form class="card-b" id="formPerfilLocal" novalidate>
+              <label class="field"><span>Nome</span><input class="input" id="plNome" maxlength="80" autocomplete="name"></label>
+              <div class="formrow">
+                <label class="field"><span>Empresa (opcional)</span><input class="input" id="plEmpresa" maxlength="80" autocomplete="organization"></label>
+                <label class="field"><span>Cargo (opcional)</span><input class="input" id="plCargo" maxlength="60" autocomplete="organization-title"></label>
+              </div>
+              <label class="field"><span>E-mail (opcional)</span><input class="input" id="plEmail" type="email" maxlength="254" autocomplete="email"></label>
+              <div><button class="btn primary" type="submit">Salvar</button></div>
+            </form>
+          </div>
+          <div style="display:grid;gap:22px">
+            <div class="card">
+              <div class="card-h"><div><h2>Preferências</h2><p>Valem para este navegador.</p></div></div>
+              <div class="card-b">
+                <div class="formrow">
+                  <label class="field"><span>Tema</span><select class="input" id="prefTema"><option value="">Igual ao sistema</option><option value="light">Claro</option><option value="dark">Escuro</option></select></label>
+                  <label class="field"><span>Separador do CSV</span><select class="input" id="prefCsv"><option value=";">Ponto e vírgula (Excel em português)</option><option value=",">Vírgula (padrão internacional)</option></select></label>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-h"><div><h2>Guardado neste navegador</h2><p>Nenhuma planilha fica guardada: só receitas e preferências.</p></div></div>
+              <div class="card-b">
+                <ul class="hlist" id="pfReceitas"></ul>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button class="btn small" data-act="exportar-receitas">Exportar todas as receitas</button>
+                  <button class="btn small" data-act="apagar-local" style="color:var(--danger)">Apagar tudo deste navegador</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1505,7 +1559,7 @@ function PlanilhaXlsx() {
 <script>
 (function () {
 'use strict';
-const VERSION = '1.1.0';
+const VERSION = '1.1.1';
 const E = PlanilhaEngine();
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2151,7 +2205,7 @@ async function exportResult(fmtName) {
   if (!state.res) { toast('Abra uma planilha primeiro.'); return; }
   const g = resultGrid();
   try {
-    if (fmtName === 'csv') return await saveFile(baseName() + '.csv', toCsv(g, ';'));
+    if (fmtName === 'csv') return await saveFile(baseName() + '.csv', toCsv(g, sepCsv()));
     if (fmtName === 'json') return await saveFile(baseName() + '.json', JSON.stringify(g.rows.map(r => { const o = {}; g.headers.forEach((h, i) => { Object.defineProperty(o, h, { value: r[i], enumerable: true, writable: true, configurable: true }); }); return o; }), null, 2));
     toast('Gerando o arquivo Excel…');
     const blob = await buildXlsx([{ name: cleanSheetName(state.src.sheets[state.src.sheet].name || 'Resultado', new Set()), aoa: [g.headers].concat(g.rows) }]);
@@ -2496,12 +2550,13 @@ function voltar(de, para) {
 function renderUndo() { $('#undoBtn').disabled = !state.hist.length; $('#redoBtn').disabled = !state.fut.length; }
 
 /* ---------- Abas ---------- */
-const TABS = { inicio: 'Visão geral', limpar: 'Limpar planilha', modelos: 'Modelos de receita', automatizar: 'Automações', guia: 'Guia e boas práticas', seguranca: 'Segurança' };
+const TABS = { inicio: 'Visão geral', limpar: 'Limpar planilha', modelos: 'Modelos de receita', automatizar: 'Automações', guia: 'Guia e boas práticas', seguranca: 'Segurança', perfil: 'Meu perfil' };
 function showTab(name) {
   if (!Object.prototype.hasOwnProperty.call(TABS, name)) name = 'inicio';
   Object.keys(TABS).forEach(t => { $('#view-' + t).hidden = t !== name; });
   document.querySelectorAll('.nav [data-tab]').forEach(b => { if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   $('#crumb').textContent = TABS[name];
+  if (name === 'perfil') renderPerfil();
   try { history.replaceState(null, '', '#' + name); } catch (e) {}
   window.scrollTo(0, 0);
 }
@@ -2595,8 +2650,30 @@ document.addEventListener('click', e => {
       break;
     }
     case 'tema': alternarTema(); break;
-    case 'user-menu': { const pop = $('#userPop'); pop.hidden = !pop.hidden; el.setAttribute('aria-expanded', String(!pop.hidden)); break; }
-    case 'conta': fecharMenuUsuario(); avisarPai({ tipo: 'ps-conta', acao: el.dataset.acao }); break;
+    case 'user-menu': { if (!EMBUTIDO) { showTab('perfil'); break; } const pop = $('#userPop'); pop.hidden = !pop.hidden; el.setAttribute('aria-expanded', String(!pop.hidden)); break; }
+    case 'conta': fecharMenuUsuario(); if (EMBUTIDO) avisarPai({ tipo: 'ps-conta', acao: el.dataset.acao }); else showTab('perfil'); break;
+    case 'apagar-receita': {
+      const list = store.get('ps.recipes', []);
+      if (Array.isArray(list) && list[Number(el.dataset.i)]) { list.splice(Number(el.dataset.i), 1); store.set('ps.recipes', list); renderRecipeList(); renderPerfil(); toast('Receita apagada deste navegador.'); }
+      break;
+    }
+    case 'exportar-receitas': {
+      const list = store.get('ps.recipes', []);
+      if (!Array.isArray(list) || !list.length) { toast('Nenhuma receita salva neste navegador.'); break; }
+      saveFile('receitas planilha segura.json', JSON.stringify({ app: 'Planilha Segura', versao: 1, receitas: list }, null, 2));
+      break;
+    }
+    case 'apagar-local': {
+      if (apagarArmado !== el) {
+        apagarArmado = el; el.textContent = 'Confirmar: apagar tudo?';
+        setTimeout(() => { if (apagarArmado === el) { apagarArmado = null; el.textContent = 'Apagar tudo deste navegador'; } }, 3500);
+        break;
+      }
+      apagarArmado = null; el.textContent = 'Apagar tudo deste navegador';
+      ['ps.recipes', 'ps.current', 'ps.tema', 'ps.perfil', 'ps.csv'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+      aplicarTema(null); renderRecipeList(); renderPerfil(); toast('Dados deste navegador apagados.');
+      break;
+    }
   }
 });
 document.addEventListener('change', e => {
@@ -2610,7 +2687,17 @@ document.addEventListener('change', e => {
       const f = el.files[0]; el.value = '';
       if (!f) break;
       if (f.size > 1024 * 1024) { toast('Arquivo de receita grande demais.'); break; }
-      f.text().then(t => { setRecipe(sanitizeRecipe(JSON.parse(t))); toast('Receita importada.'); }).catch(err => toast(err instanceof SyntaxError ? 'Arquivo de receita inválido.' : (err.message || 'Arquivo de receita inválido.')));
+      f.text().then(t => {
+        const obj = JSON.parse(t);
+        if (obj && Array.isArray(obj.receitas)) { // pacote exportado pelo perfil: guarda todas as receitas
+          const atuais = store.get('ps.recipes', []), lista = Array.isArray(atuais) ? atuais : [];
+          obj.receitas.slice(0, 50).forEach(r => { const ok = sanitizeRecipe(r), d = { name: ok.name, steps: ok.steps.map(x => { const o = { type: x.type, on: x.on, p: x.p }; if (x.g) o.g = x.g; return o; }) }; const at = lista.findIndex(x => x && x.name === d.name); if (at >= 0) lista[at] = d; else lista.push(d); });
+          store.set('ps.recipes', lista.slice(-50)); renderRecipeList(); renderPerfil();
+          toast(obj.receitas.length + ' receita(s) importada(s). Escolha uma em “Abrir receita…”.');
+          return;
+        }
+        setRecipe(sanitizeRecipe(obj)); toast('Receita importada.');
+      }).catch(err => toast(err instanceof SyntaxError ? 'Arquivo de receita inválido.' : (err.message || 'Arquivo de receita inválido.')));
       break;
     }
     case 'sheetSel': {
@@ -2750,6 +2837,7 @@ window.addEventListener('message', e => {
   const d = e.data;
   if (!d || typeof d !== 'object') return;
   if (d.tipo === 'ps-sessao') {
+    $('#pfConta').hidden = false; $('#pfLocalCard').hidden = true;
     const nome = String(d.nome || '').slice(0, 80), email = String(d.email || '').slice(0, 254);
     state.sessao = { nome, email, dono: !!d.dono };
     $('#userBox').hidden = false; $('#sideNote').hidden = true;
@@ -2757,13 +2845,67 @@ window.addEventListener('message', e => {
     $('#userName').textContent = nome || email.split('@')[0];
     $('#userEmail').textContent = email;
     $('#userPainel').hidden = !d.dono;
-    const primeiro = (nome || '').split(/\s+/)[0];
-    const h = new Date().getHours();
-    $('#hello').textContent = (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + (primeiro ? ', ' + primeiro : '') + '! Vamos deixar suas planilhas impecáveis.';
+    saudar(nome || email.split('@')[0]);
+    renderPerfil();
   } else if (d.tipo === 'ps-tema' && (d.tema === 'light' || d.tema === 'dark')) {
     aplicarTema(d.tema);
   }
 });
+
+/* ---------- Meu perfil (dados locais, preferências) ---------- */
+let apagarArmado = null;
+function sepCsv() { const v = store.get('ps.csv', ';'); return v === ',' ? ',' : ';'; }
+function perfilLocal() {
+  const p = store.get('ps.perfil', {});
+  const t = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  return p && typeof p === 'object' ? { nome: t(p.nome, 80), empresa: t(p.empresa, 80), cargo: t(p.cargo, 60), email: t(p.email, 254) } : { nome: '', empresa: '', cargo: '', email: '' };
+}
+function saudar(nome) {
+  const primeiro = String(nome || '').trim().split(/\s+/)[0];
+  const h = new Date().getHours();
+  $('#hello').textContent = primeiro
+    ? (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + primeiro + '! Vamos deixar suas planilhas impecáveis.'
+    : 'Planilhas limpas, padronizadas e prontas para usar.';
+}
+function renderPerfil() {
+  const s = state.sessao, p = perfilLocal();
+  const nome = s ? s.nome : p.nome, email = s ? s.email : p.email;
+  $('#pfAvatar').textContent = iniciais(nome, email);
+  $('#pfNomeV').textContent = nome || (s ? email.split('@')[0] : 'Seu nome');
+  $('#pfEmailV').textContent = email || (s || nome ? [p.cargo, p.empresa].filter(Boolean).join(' · ') : 'Preencha seus dados abaixo');
+  $('#pfTags').innerHTML = s
+    ? (s.dono ? '<span class="tag info">Dono da loja</span>' : '<span class="tag">Acesso vitalício</span>') + '<span class="tag gray">Conta da loja</span>'
+    : '<span class="tag gray">Dados só neste navegador</span>' + (p.empresa ? `<span class="tag info">${esc(p.empresa)}</span>` : '');
+  $('#perfilSub').textContent = s ? 'Preferências deste navegador e acesso à sua conta.' : 'Seus dados, preferências e o que fica guardado neste navegador. Nada disso é enviado para a internet.';
+  $('#plNome').value = p.nome; $('#plEmpresa').value = p.empresa; $('#plCargo').value = p.cargo; $('#plEmail').value = p.email;
+  $('#prefTema').value = store.get('ps.tema', '') || '';
+  $('#prefCsv').value = sepCsv();
+  const list = store.get('ps.recipes', []);
+  $('#pfReceitas').innerHTML = Array.isArray(list) && list.length
+    ? list.map((r, i) => `<li><span class="dot ok"></span><span>${esc(r && r.name)}</span><span class="q">${esc((r && r.steps || []).length)} etapas · <button class="link danger" data-act="apagar-receita" data-i="${i}">Apagar</button></span></li>`).join('')
+    : '<li class="muted">Nenhuma receita salva. Use “Salvar” na receita para guardar aqui.</li>';
+  if (!s) {
+    $('#userBox').hidden = false;
+    $('#userAvatar').textContent = iniciais(p.nome, p.email);
+    $('#userName').textContent = p.nome || 'Meu perfil';
+    $('#userEmail').textContent = p.email || (p.nome ? (p.empresa || 'Dados neste navegador') : 'Clique para preencher');
+    saudar(p.nome);
+  }
+}
+$('#formPerfilLocal').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = $('#plEmail').value.trim();
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('E-mail inválido.'); return; }
+  const ok = store.set('ps.perfil', { nome: $('#plNome').value.trim().slice(0, 80), empresa: $('#plEmpresa').value.trim().slice(0, 80), cargo: $('#plCargo').value.trim().slice(0, 60), email: email.slice(0, 254) });
+  renderPerfil();
+  toast(ok ? 'Perfil salvo neste navegador.' : 'Este navegador não permite salvar dados (modo privado?).');
+});
+$('#prefTema').addEventListener('change', e => {
+  const v = e.target.value === 'light' || e.target.value === 'dark' ? e.target.value : null;
+  if (v) store.set('ps.tema', v); else { try { localStorage.removeItem('ps.tema'); } catch (err) {} }
+  aplicarTema(v); avisarPai({ tipo: 'ps-tema', tema: v || temaAtual() });
+});
+$('#prefCsv').addEventListener('change', e => { store.set('ps.csv', e.target.value === ',' ? ',' : ';'); toast('O CSV exportado vai usar ' + (e.target.value === ',' ? 'vírgula.' : 'ponto e vírgula.')); });
 
 /* ---------- Atalhos de teclado ---------- */
 document.addEventListener('keydown', e => {
@@ -2782,6 +2924,7 @@ document.addEventListener('keydown', e => {
 /* ---------- Início ---------- */
 $('#gsHour').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === 6 ? 'selected' : ''}>${String(h).padStart(2, '0')}h às ${String(h + 1).padStart(2, '0')}h</option>`).join('');
 aplicarTema(store.get('ps.tema', null));
+renderPerfil();
 renderAddStep();
 renderModelos();
 renderGuia();

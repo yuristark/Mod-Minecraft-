@@ -152,7 +152,9 @@ Se o site mostrar "o config.json está com a chave SECRETA", você colou a chave
 | Ver vendas e receita | Painel do dono → Vendas (dá para baixar em .csv) |
 | Cliente pagou por Pix fora do site, ou é cortesia | Peça para criar a conta no site → Painel → Liberar acesso |
 | Pedido de reembolso (o cliente tem 7 dias pelo Código de Defesa do Consumidor) | Reembolse no painel do Mercado Pago; o acesso é retirado sozinho |
-| "Para conferir" maior que zero | Veja o Histórico: valor pago diferente do preço, contestação no cartão ou cobrança em dobro (reembolse uma das duas) |
+| Cliente pagou em dobro (abriu o pagamento duas vezes) | Nada: o sistema devolve a segunda cobrança automaticamente e o acesso continua. Confira no Histórico e no Mercado Pago se a devolução saiu |
+| Cliente pagou, mas o acesso não liberou | Peça para ele clicar em **"Já paguei e não liberou"** na tela de compra: o site confere o pagamento direto no Mercado Pago. Se ainda assim não liberar, o aviso automático (webhook) está mal configurado: veja a seção 7 e libere manualmente enquanto isso |
+| "Para conferir" maior que zero | Veja o Histórico. Pagamento com valor diferente do preço ou em dobro já é devolvido automaticamente: confirme no Mercado Pago. Contestação no cartão retira o acesso e precisa ser respondida no Mercado Pago |
 | Mudar o preço | Painel → Loja → Preço. Vale para as próximas compras; quem já comprou continua com acesso |
 | Parar de vender, ou usar só para você | Painel → desmarque **Vendas abertas**. Só você e quem você liberar entram |
 | Cliente esqueceu a senha | Ele mesmo clica em "Esqueci minha senha" na tela de login |
@@ -239,7 +241,8 @@ O que já vem protegido:
 
 - **CNPJ** para emitir nota fiscal. Pergunte a um contador qual regime serve para venda de software.
 - **Termos de Uso** no site: o que está incluído, reembolso em 7 dias, suporte, limite de responsabilidade.
-- **Política de Privacidade (LGPD):** quais dados você guarda, para quê, por quanto tempo e como o cliente pede para apagar. Neste produto são:
+- **"Acesso vitalício":** o acesso depende de a loja continuar no ar (Supabase e hospedagem pagos e ativos). Deixe isso claro nos Termos (por exemplo: "acesso por tempo indeterminado enquanto o serviço for oferecido") para não haver propaganda enganosa pelo Código de Defesa do Consumidor.
+- **Política de Privacidade (LGPD):** o site já mostra uma política (link "Privacidade" na tela de entrada e em Meu perfil), preenchida com o nome do produto e o e-mail de suporte. Ela descreve exatamente o que o sistema guarda. Peça para um advogado revisar e complete com o nome e o CNPJ do responsável. O conteúdo dela: quais dados você guarda, para quê, por quanto tempo e como o cliente pede para apagar. Neste produto são:
   - conta: e-mail, nome e dados de perfil preenchidos pelo cliente, usados para liberar o acesso, dar suporte e emitir nota;
   - compras: valor, data e situação, guardados por obrigação fiscal;
   - registro de acessos: data, hora, IP e navegador, guardados por 13 meses. O Marco Civil da Internet exige no mínimo 6 meses, e o registro serve à segurança da conta;

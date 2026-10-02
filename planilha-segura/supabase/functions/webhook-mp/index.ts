@@ -107,7 +107,30 @@ export async function tratar(req: Request, env: Ambiente, buscar: typeof fetch =
     console.error('registrar_pagamento falhou', rr.status, await rr.text().catch(() => ''));
     return responder(500, { erro: 'Falha ao registrar.' }); // o Mercado Pago tenta de novo depois
   }
-  return responder(200, { resultado: await rr.json() });
+  const resultado = await rr.json();
+  // Protege o comprador: cobrança em dobro ou valor diferente do preço é devolvida automaticamente.
+  let reembolso: string | undefined;
+  if (pg.status === 'approved' && (resultado === 'duplicado' || resultado === 'divergente')) {
+    reembolso = await reembolsar(String(pg.id ?? dataId), env, buscar);
+  }
+  return responder(200, { resultado, reembolso });
+}
+
+// Devolve o valor total de um pagamento. A chave de idempotência evita devolver duas vezes.
+export async function reembolsar(paymentId: string, env: Ambiente, buscar: typeof fetch = fetch): Promise<string> {
+  try {
+    const r = await buscar(`https://api.mercadopago.com/v1/payments/${paymentId}/refunds`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': 'reembolso-' + paymentId },
+      body: '{}',
+    });
+    if (r.ok) return 'solicitado';
+    console.error('reembolso automático falhou', paymentId, r.status, await r.text().catch(() => ''));
+    return 'falhou';
+  } catch (e) {
+    console.error('reembolso automático falhou', paymentId, e);
+    return 'falhou';
+  }
 }
 
 function ambiente(): Ambiente {

@@ -2,7 +2,7 @@
 
 Aplicação web de uma página para limpar, padronizar e automatizar planilhas. Todo o processamento acontece no navegador de quem usa, sem servidor recebendo arquivos e sem conta para criar.
 
-Versão atual: **1.1.0**
+Versão atual: **1.1.1**
 
 ## Duas formas de usar
 
@@ -35,6 +35,10 @@ Comandos:
 ## Back-end da loja
 
 - **Pagamento único:** cada compra é uma preferência do Mercado Pago Checkout Pro (Pix ou cartão). Quando o pagamento é aprovado, o acesso vitalício é liberado. Reembolso ou contestação retiram o acesso automaticamente.
+- **Proteção do comprador:**
+  - se a mesma pessoa pagar duas compras (por exemplo, abriu o pagamento em duas abas) ou pagar um valor diferente do preço, o pagamento é devolvido automaticamente pela API do Mercado Pago, com chave de idempotência;
+  - o botão "Já paguei e não liberou" confere direto no Mercado Pago os pagamentos das compras pendentes da própria pessoa, caso o aviso automático atrase ou falhe;
+  - política de privacidade embutida na loja.
 - **Webhook seguro:**
   - confere a assinatura HMAC (`x-signature`) do Mercado Pago;
   - consulta o pagamento direto na API, sem confiar no conteúdo do aviso;
@@ -83,6 +87,7 @@ Comandos:
   - números, moeda e datas como valores;
   - texto puro para códigos.
 - **Guia e boas práticas:** as 10 regras de uma planilha bem feita, como automatizar, referência das etapas, perguntas frequentes e atalhos de teclado.
+- **Meu perfil (sem login):** nome, empresa e e-mail guardados só no navegador, preferências (tema, separador do CSV), lista das receitas salvas, exportar todas as receitas e apagar todos os dados do navegador. Dentro da loja, o mesmo menu abre a conta completa.
 - **Visual:** tema claro e escuro, layout para celular e computador.
 
 ## Loja: perfil e painel do dono

@@ -646,7 +646,7 @@ async function exportResult(fmtName) {
   if (!state.res) { toast('Abra uma planilha primeiro.'); return; }
   const g = resultGrid();
   try {
-    if (fmtName === 'csv') return await saveFile(baseName() + '.csv', toCsv(g, ';'));
+    if (fmtName === 'csv') return await saveFile(baseName() + '.csv', toCsv(g, sepCsv()));
     if (fmtName === 'json') return await saveFile(baseName() + '.json', JSON.stringify(g.rows.map(r => { const o = {}; g.headers.forEach((h, i) => { Object.defineProperty(o, h, { value: r[i], enumerable: true, writable: true, configurable: true }); }); return o; }), null, 2));
     toast('Gerando o arquivo Excel…');
     const blob = await buildXlsx([{ name: cleanSheetName(state.src.sheets[state.src.sheet].name || 'Resultado', new Set()), aoa: [g.headers].concat(g.rows) }]);
@@ -991,12 +991,13 @@ function voltar(de, para) {
 function renderUndo() { $('#undoBtn').disabled = !state.hist.length; $('#redoBtn').disabled = !state.fut.length; }
 
 /* ---------- Abas ---------- */
-const TABS = { inicio: 'Visão geral', limpar: 'Limpar planilha', modelos: 'Modelos de receita', automatizar: 'Automações', guia: 'Guia e boas práticas', seguranca: 'Segurança' };
+const TABS = { inicio: 'Visão geral', limpar: 'Limpar planilha', modelos: 'Modelos de receita', automatizar: 'Automações', guia: 'Guia e boas práticas', seguranca: 'Segurança', perfil: 'Meu perfil' };
 function showTab(name) {
   if (!Object.prototype.hasOwnProperty.call(TABS, name)) name = 'inicio';
   Object.keys(TABS).forEach(t => { $('#view-' + t).hidden = t !== name; });
   document.querySelectorAll('.nav [data-tab]').forEach(b => { if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   $('#crumb').textContent = TABS[name];
+  if (name === 'perfil') renderPerfil();
   try { history.replaceState(null, '', '#' + name); } catch (e) {}
   window.scrollTo(0, 0);
 }
@@ -1090,8 +1091,30 @@ document.addEventListener('click', e => {
       break;
     }
     case 'tema': alternarTema(); break;
-    case 'user-menu': { const pop = $('#userPop'); pop.hidden = !pop.hidden; el.setAttribute('aria-expanded', String(!pop.hidden)); break; }
-    case 'conta': fecharMenuUsuario(); avisarPai({ tipo: 'ps-conta', acao: el.dataset.acao }); break;
+    case 'user-menu': { if (!EMBUTIDO) { showTab('perfil'); break; } const pop = $('#userPop'); pop.hidden = !pop.hidden; el.setAttribute('aria-expanded', String(!pop.hidden)); break; }
+    case 'conta': fecharMenuUsuario(); if (EMBUTIDO) avisarPai({ tipo: 'ps-conta', acao: el.dataset.acao }); else showTab('perfil'); break;
+    case 'apagar-receita': {
+      const list = store.get('ps.recipes', []);
+      if (Array.isArray(list) && list[Number(el.dataset.i)]) { list.splice(Number(el.dataset.i), 1); store.set('ps.recipes', list); renderRecipeList(); renderPerfil(); toast('Receita apagada deste navegador.'); }
+      break;
+    }
+    case 'exportar-receitas': {
+      const list = store.get('ps.recipes', []);
+      if (!Array.isArray(list) || !list.length) { toast('Nenhuma receita salva neste navegador.'); break; }
+      saveFile('receitas planilha segura.json', JSON.stringify({ app: 'Planilha Segura', versao: 1, receitas: list }, null, 2));
+      break;
+    }
+    case 'apagar-local': {
+      if (apagarArmado !== el) {
+        apagarArmado = el; el.textContent = 'Confirmar: apagar tudo?';
+        setTimeout(() => { if (apagarArmado === el) { apagarArmado = null; el.textContent = 'Apagar tudo deste navegador'; } }, 3500);
+        break;
+      }
+      apagarArmado = null; el.textContent = 'Apagar tudo deste navegador';
+      ['ps.recipes', 'ps.current', 'ps.tema', 'ps.perfil', 'ps.csv'].forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+      aplicarTema(null); renderRecipeList(); renderPerfil(); toast('Dados deste navegador apagados.');
+      break;
+    }
   }
 });
 document.addEventListener('change', e => {
@@ -1105,7 +1128,17 @@ document.addEventListener('change', e => {
       const f = el.files[0]; el.value = '';
       if (!f) break;
       if (f.size > 1024 * 1024) { toast('Arquivo de receita grande demais.'); break; }
-      f.text().then(t => { setRecipe(sanitizeRecipe(JSON.parse(t))); toast('Receita importada.'); }).catch(err => toast(err instanceof SyntaxError ? 'Arquivo de receita inválido.' : (err.message || 'Arquivo de receita inválido.')));
+      f.text().then(t => {
+        const obj = JSON.parse(t);
+        if (obj && Array.isArray(obj.receitas)) { // pacote exportado pelo perfil: guarda todas as receitas
+          const atuais = store.get('ps.recipes', []), lista = Array.isArray(atuais) ? atuais : [];
+          obj.receitas.slice(0, 50).forEach(r => { const ok = sanitizeRecipe(r), d = { name: ok.name, steps: ok.steps.map(x => { const o = { type: x.type, on: x.on, p: x.p }; if (x.g) o.g = x.g; return o; }) }; const at = lista.findIndex(x => x && x.name === d.name); if (at >= 0) lista[at] = d; else lista.push(d); });
+          store.set('ps.recipes', lista.slice(-50)); renderRecipeList(); renderPerfil();
+          toast(obj.receitas.length + ' receita(s) importada(s). Escolha uma em “Abrir receita…”.');
+          return;
+        }
+        setRecipe(sanitizeRecipe(obj)); toast('Receita importada.');
+      }).catch(err => toast(err instanceof SyntaxError ? 'Arquivo de receita inválido.' : (err.message || 'Arquivo de receita inválido.')));
       break;
     }
     case 'sheetSel': {
@@ -1245,6 +1278,7 @@ window.addEventListener('message', e => {
   const d = e.data;
   if (!d || typeof d !== 'object') return;
   if (d.tipo === 'ps-sessao') {
+    $('#pfConta').hidden = false; $('#pfLocalCard').hidden = true;
     const nome = String(d.nome || '').slice(0, 80), email = String(d.email || '').slice(0, 254);
     state.sessao = { nome, email, dono: !!d.dono };
     $('#userBox').hidden = false; $('#sideNote').hidden = true;
@@ -1252,13 +1286,67 @@ window.addEventListener('message', e => {
     $('#userName').textContent = nome || email.split('@')[0];
     $('#userEmail').textContent = email;
     $('#userPainel').hidden = !d.dono;
-    const primeiro = (nome || '').split(/\s+/)[0];
-    const h = new Date().getHours();
-    $('#hello').textContent = (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + (primeiro ? ', ' + primeiro : '') + '! Vamos deixar suas planilhas impecáveis.';
+    saudar(nome || email.split('@')[0]);
+    renderPerfil();
   } else if (d.tipo === 'ps-tema' && (d.tema === 'light' || d.tema === 'dark')) {
     aplicarTema(d.tema);
   }
 });
+
+/* ---------- Meu perfil (dados locais, preferências) ---------- */
+let apagarArmado = null;
+function sepCsv() { const v = store.get('ps.csv', ';'); return v === ',' ? ',' : ';'; }
+function perfilLocal() {
+  const p = store.get('ps.perfil', {});
+  const t = (v, n) => typeof v === 'string' ? v.slice(0, n) : '';
+  return p && typeof p === 'object' ? { nome: t(p.nome, 80), empresa: t(p.empresa, 80), cargo: t(p.cargo, 60), email: t(p.email, 254) } : { nome: '', empresa: '', cargo: '', email: '' };
+}
+function saudar(nome) {
+  const primeiro = String(nome || '').trim().split(/\s+/)[0];
+  const h = new Date().getHours();
+  $('#hello').textContent = primeiro
+    ? (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + primeiro + '! Vamos deixar suas planilhas impecáveis.'
+    : 'Planilhas limpas, padronizadas e prontas para usar.';
+}
+function renderPerfil() {
+  const s = state.sessao, p = perfilLocal();
+  const nome = s ? s.nome : p.nome, email = s ? s.email : p.email;
+  $('#pfAvatar').textContent = iniciais(nome, email);
+  $('#pfNomeV').textContent = nome || (s ? email.split('@')[0] : 'Seu nome');
+  $('#pfEmailV').textContent = email || (s || nome ? [p.cargo, p.empresa].filter(Boolean).join(' · ') : 'Preencha seus dados abaixo');
+  $('#pfTags').innerHTML = s
+    ? (s.dono ? '<span class="tag info">Dono da loja</span>' : '<span class="tag">Acesso vitalício</span>') + '<span class="tag gray">Conta da loja</span>'
+    : '<span class="tag gray">Dados só neste navegador</span>' + (p.empresa ? `<span class="tag info">${esc(p.empresa)}</span>` : '');
+  $('#perfilSub').textContent = s ? 'Preferências deste navegador e acesso à sua conta.' : 'Seus dados, preferências e o que fica guardado neste navegador. Nada disso é enviado para a internet.';
+  $('#plNome').value = p.nome; $('#plEmpresa').value = p.empresa; $('#plCargo').value = p.cargo; $('#plEmail').value = p.email;
+  $('#prefTema').value = store.get('ps.tema', '') || '';
+  $('#prefCsv').value = sepCsv();
+  const list = store.get('ps.recipes', []);
+  $('#pfReceitas').innerHTML = Array.isArray(list) && list.length
+    ? list.map((r, i) => `<li><span class="dot ok"></span><span>${esc(r && r.name)}</span><span class="q">${esc((r && r.steps || []).length)} etapas · <button class="link danger" data-act="apagar-receita" data-i="${i}">Apagar</button></span></li>`).join('')
+    : '<li class="muted">Nenhuma receita salva. Use “Salvar” na receita para guardar aqui.</li>';
+  if (!s) {
+    $('#userBox').hidden = false;
+    $('#userAvatar').textContent = iniciais(p.nome, p.email);
+    $('#userName').textContent = p.nome || 'Meu perfil';
+    $('#userEmail').textContent = p.email || (p.nome ? (p.empresa || 'Dados neste navegador') : 'Clique para preencher');
+    saudar(p.nome);
+  }
+}
+$('#formPerfilLocal').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = $('#plEmail').value.trim();
+  if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('E-mail inválido.'); return; }
+  const ok = store.set('ps.perfil', { nome: $('#plNome').value.trim().slice(0, 80), empresa: $('#plEmpresa').value.trim().slice(0, 80), cargo: $('#plCargo').value.trim().slice(0, 60), email: email.slice(0, 254) });
+  renderPerfil();
+  toast(ok ? 'Perfil salvo neste navegador.' : 'Este navegador não permite salvar dados (modo privado?).');
+});
+$('#prefTema').addEventListener('change', e => {
+  const v = e.target.value === 'light' || e.target.value === 'dark' ? e.target.value : null;
+  if (v) store.set('ps.tema', v); else { try { localStorage.removeItem('ps.tema'); } catch (err) {} }
+  aplicarTema(v); avisarPai({ tipo: 'ps-tema', tema: v || temaAtual() });
+});
+$('#prefCsv').addEventListener('change', e => { store.set('ps.csv', e.target.value === ',' ? ',' : ';'); toast('O CSV exportado vai usar ' + (e.target.value === ',' ? 'vírgula.' : 'ponto e vírgula.')); });
 
 /* ---------- Atalhos de teclado ---------- */
 document.addEventListener('keydown', e => {
@@ -1277,6 +1365,7 @@ document.addEventListener('keydown', e => {
 /* ---------- Início ---------- */
 $('#gsHour').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === 6 ? 'selected' : ''}>${String(h).padStart(2, '0')}h às ${String(h + 1).padStart(2, '0')}h</option>`).join('');
 aplicarTema(store.get('ps.tema', null));
+renderPerfil();
 renderAddStep();
 renderModelos();
 renderGuia();

@@ -1,6 +1,6 @@
 {
   "name": "planilha-segura",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "description": "Planilha Segura: limpeza e automação de planilhas no navegador, com loja de pagamento único",

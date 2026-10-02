@@ -95,9 +95,17 @@ assert.equal(await um('service_role', null, `select public.registrar_pagamento($
 assert.equal(await um('service_role', null, `select public.registrar_pagamento($1, 'p3', 'rejected', 4990, 'BRL')`, [c2.compra_id]), 'ignorado'); ok('tentativa recusada depois não tira o acesso');
 assert.equal(await um('service_role', null, `select public.registrar_pagamento($1, 'p4', 'approved', 4990, 'BRL')`, [c2.compra_id]), 'duplicado'); ok('cobrança em dobro vira alerta para o dono');
 await falha(como('service_role', null, 'select public.criar_compra($1)', [B]), /ja_tem_acesso/); ok('quem já comprou não paga de novo');
+// duas compras abertas ao mesmo tempo (duas abas): a segunda paga vira cobrança em dobro, sem mexer no acesso
+await db.query(`insert into public.compras (id, user_id, email_comprador, valor_centavos) values ('00000000-0000-4000-8000-000000000001', $1, 'cliente@teste.local', 4990)`, [B]);
+assert.deepEqual((await como('service_role', null, 'select * from public.compras_pendentes($1)', [B])).map(r => r.compras_pendentes), ['00000000-0000-4000-8000-000000000001']);
+await falha(como('authenticated', B, 'select * from public.compras_pendentes($1)', [B]), /permission denied/);
+assert.equal(await um('service_role', null, `select public.registrar_pagamento('00000000-0000-4000-8000-000000000001', 'p9', 'approved', 4990, 'BRL')`), 'duplicado');
+assert.equal((await db.query(`select status from public.compras where id = '00000000-0000-4000-8000-000000000001'`)).rows[0].status, 'duplicada');
+assert.equal(await um('service_role', null, `select public.registrar_pagamento('00000000-0000-4000-8000-000000000001', 'p9', 'refunded', 4990, 'BRL')`), 'reembolsada');
+assert.equal((await um('authenticated', B, 'select public.meu_status()')).tem_acesso, true); ok('segunda compra paga vira cobrança em dobro e o reembolso dela não tira o acesso');
 
 // Isolamento entre clientes
-assert.equal((await como('authenticated', B, 'select * from public.compras')).length, 2);
+assert.equal((await como('authenticated', B, 'select * from public.compras')).length, 3);
 assert.equal((await como('authenticated', C, 'select * from public.compras')).length, 0); ok('cada cliente só vê as próprias compras');
 await db.query(`insert into storage.objects (bucket_id, name) values ('app', 'planilha-segura.html')`);
 assert.equal((await como('authenticated', B, `select * from storage.objects where bucket_id = 'app'`)).length, 1);
@@ -113,8 +121,9 @@ await falha(como('authenticated', A, `select public.admin_definir_acesso('ningue
 await como('authenticated', A, `select public.admin_definir_acesso('CLIENTE@teste.local', true)`);
 assert.equal((await um('authenticated', B, 'select public.meu_status()')).tem_acesso, true); ok('dono libera acesso manual pelo e-mail');
 const resumo = await um('authenticated', A, 'select public.admin_resumo()');
-assert.equal(resumo.pendencias, 2); // valor divergente + cobrança em dobro assert.equal(resumo.config.dono_email, 'dono@teste.local');
-assert.equal((await como('authenticated', A, 'select * from public.admin_listar_compras(50)')).length, 2); ok('painel mostra resumo e vendas');
+assert.equal(resumo.pendencias, 3); // valor divergente + duas cobranças em dobro
+assert.equal(resumo.config.dono_email, 'dono@teste.local');
+assert.equal((await como('authenticated', A, 'select * from public.admin_listar_compras(50)')).length, 3); ok('painel mostra resumo e vendas');
 
 // Transferência de propriedade
 await falha(como('authenticated', A, `select public.admin_transferir_propriedade('invalido')`), /E-mail inválido/);
@@ -147,7 +156,7 @@ await falha(como('anon', null, 'select public.meu_perfil()'), /permission denied
 await db.query(`insert into auth.sessions (user_id, user_agent, ip, refreshed_at) values ($1, 'Chrome no Windows', '200.1.2.3', now()), ($1, 'Safari no iPhone', '177.9.8.7', now())`, [B]);
 let meu = await um('authenticated', B, 'select public.meu_perfil()');
 assert.equal(meu.email, 'cliente@teste.local'); assert.equal(meu.nome, 'Cliente Teste'); assert.equal(meu.sessoes.length, 2);
-assert.equal(meu.acessos.length, 1); assert.equal(meu.acesso.ativo, true); assert.equal(meu.compras.length, 2); assert.equal(meu.online, true); ok('meu perfil traz conta, acesso, compras, aparelhos logados e acessos');
+assert.equal(meu.acessos.length, 1); assert.equal(meu.acesso.ativo, true); assert.equal(meu.compras.length, 3); assert.equal(meu.online, true); ok('meu perfil traz conta, acesso, compras, aparelhos logados e acessos');
 await falha(como('authenticated', B, `select public.salvar_meu_perfil('', '', '', '', '', '')`), /Informe seu nome/);
 await falha(como('authenticated', B, `select public.salvar_meu_perfil('Cliente', '', '', '123', '', '')`), /Telefone inválido/);
 await falha(como('authenticated', B, `select public.salvar_meu_perfil('Cliente', '', '', '', '123', '')`), /CPF ou CNPJ inválido/);
@@ -174,7 +183,7 @@ await falha(como('authenticated', B, `select public.excluir_minha_conta('sim')`)
 await como('authenticated', B, `select public.excluir_minha_conta('EXCLUIR')`);
 assert.equal((await db.query('select count(*)::int n from auth.users where id = $1', [B])).rows[0].n, 0);
 const restantes = await como('authenticated', C, 'select * from public.admin_listar_compras(50)');
-assert.equal(restantes.length, 2); assert.ok(restantes.every(r => /cliente@teste.local \(conta excluída\)/.test(r.email)));
+assert.equal(restantes.length, 3); assert.ok(restantes.every(r => /cliente@teste.local \(conta excluída\)/.test(r.email)));
 assert.equal((await db.query('select count(*)::int n from public.acessos_log where user_id is null')).rows[0].n, 2); ok('conta excluída: dados pessoais apagados, compras e registro de acesso guardados sem vínculo');
 
 console.log(`banco: ${n} verificações OK`);

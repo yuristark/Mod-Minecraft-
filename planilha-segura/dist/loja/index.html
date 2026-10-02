@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-N8RjKW3in6Xbn6yhDy02us0nZKPbxV9NeV1whCPJHw0=' 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-K5vsBCZkXpx5XH4ppf3gtCLbFD7oV2kLYcwUvaW6vt4='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-MnwrhjZxz+IwfRykCO/vOkPZC/vvmMgnkHkkkzdCp6E=' 'sha256-i6iQFXaST6SgR9t0PgC9D/yVZ9P8zkVjTfshgGWaQZU=' 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-DdUU7AfCxQjfck25s3yW5JJVYKMiFpZD7sa6e8WmiWs='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co; frame-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Acesso vitalício à Planilha Segura: limpe e automatize planilhas sem enviar seus dados.">
 <meta name="color-scheme" content="light dark">
@@ -75,7 +75,7 @@ textarea.input{min-height:76px;resize:vertical}
 .aviso.ok{background:var(--primary-soft);color:var(--primary)}
 .tag{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:600;background:var(--soft);color:var(--muted);white-space:nowrap}
 .tag.ok,.tag.aprovada{background:var(--ok-soft);color:var(--ok)}
-.tag.warn,.tag.divergente,.tag.contestada{background:var(--warn-soft);color:var(--warn)}
+.tag.warn,.tag.divergente,.tag.contestada,.tag.duplicada{background:var(--warn-soft);color:var(--warn)}
 .tag.bad,.tag.reembolsada,.tag.recusada,.tag.cancelada{background:var(--danger-soft);color:var(--danger)}
 .tag.info{background:var(--info-soft);color:var(--info)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--line);display:inline-block;flex:none}
@@ -193,6 +193,8 @@ tbody tr.clic:hover td{background:var(--hover)}
 .veu{position:fixed;inset:0;background:rgba(5,15,12,.45);z-index:60;animation:surge .15s ease}
 .gaveta{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);z-index:61;box-shadow:var(--shadow-lg);overflow:auto;animation:desliza .2s ease}
 .gaveta .cab{position:sticky;top:0;background:var(--card);border-bottom:1px solid var(--line);padding:16px 20px;display:flex;align-items:center;gap:12px;z-index:2}
+.gaveta .corpo h2{font-size:15px;margin-top:6px}
+.gaveta .corpo ul{margin:0;padding-left:18px;display:grid;gap:8px}
 .gaveta .corpo{padding:18px;display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
 .gaveta .card{min-width:0}
 .kv{display:grid;grid-template-columns:140px minmax(0,1fr);gap:8px 14px;font-size:13px}
@@ -236,7 +238,7 @@ tbody tr.clic:hover td{background:var(--hover)}
       <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span><b>Automação no Google Sheets</b>A limpeza roda sozinha todo dia, mesmo com o computador desligado.</span></li>
       <li><span class="i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><span><b>Privacidade de verdade</b>Os dados das planilhas são processados só no seu navegador.</span></li>
     </ul>
-    <p class="foot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Pagamento único · acesso vitalício · sem mensalidade</p>
+    <p class="foot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Pagamento único · acesso vitalício · sem mensalidade · <button class="link" data-act="privacidade" style="color:#cfe0d6;font-size:12px;font-weight:500">Privacidade</button></p>
   </section>
 
   <section class="lado">
@@ -257,6 +259,7 @@ tbody tr.clic:hover td{background:var(--hover)}
         <button class="btn primary largo" type="submit" id="btnEntrar">Entrar</button>
         <button class="link" type="button" data-act="esqueci" id="btnEsqueci" style="justify-self:center">Esqueci minha senha</button>
       </form>
+      <p class="muted" style="font-size:12px;text-align:center">Ao criar a conta, você declara que leu a <button class="link" data-act="privacidade" style="font-size:12px">Política de Privacidade</button>.</p>
       <p class="muted" id="semDono" hidden style="font-size:12px">Loja ainda sem dono. Se você é o dono, siga o passo “Assumir a loja” do manual.</p>
     </div>
 
@@ -282,7 +285,7 @@ tbody tr.clic:hover td{background:var(--hover)}
       <div class="aviso" id="avisoCompra" hidden></div>
       <button class="btn primary largo" data-act="comprar" id="btnComprar" style="min-height:48px;font-size:15px">Comprar acesso</button>
       <p class="muted" id="vendasFechadas" hidden></p>
-      <p class="muted" style="font-size:12px;text-align:center">Pix ou cartão. O acesso é liberado assim que o pagamento é confirmado.</p>
+      <p class="muted" style="font-size:12px;text-align:center">Pix ou cartão. O acesso é liberado assim que o pagamento é confirmado. <button class="link" data-act="ja-paguei" style="font-size:12px">Já paguei e não liberou</button></p>
       <div class="quem"><span id="quemCompra"></span><span style="display:flex;gap:14px"><button class="link" data-act="perfil">Meu perfil</button><button class="link" data-act="sair">Sair</button></span></div>
     </div>
   </section>
@@ -365,7 +368,7 @@ tbody tr.clic:hover td{background:var(--hover)}
     <section class="zona" aria-labelledby="h-priv">
       <div class="card-h"><div><h2 id="h-priv">Privacidade</h2><p>Seus direitos pela LGPD.</p></div></div>
       <div class="card-b">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" data-act="baixar-dados">Baixar meus dados (.json)</button><span class="muted" style="font-size:12.5px">Tudo o que está guardado sobre você.</span></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn" data-act="baixar-dados">Baixar meus dados (.json)</button><span class="muted" style="font-size:12.5px">Tudo o que está guardado sobre você.</span><button class="link" data-act="privacidade">Ler a Política de Privacidade</button></div>
         <form id="formExcluir" novalidate style="display:grid;gap:10px;max-width:520px">
           <p style="font-size:13px">Excluir a conta apaga seus dados pessoais e encerra o acesso. As compras continuam registradas sem vínculo com você, por obrigação fiscal. <b>Não dá para desfazer.</b></p>
           <label class="field"><span>Digite EXCLUIR para confirmar</span><input class="input" id="confirmaExcluir" autocomplete="off" maxlength="10"></label>
@@ -476,6 +479,30 @@ tbody tr.clic:hover td{background:var(--hover)}
   <aside class="gaveta" role="dialog" aria-modal="true" aria-labelledby="detNome">
     <div class="cab"><span class="avatar" id="detAvatar"></span><div style="flex:1;min-width:0"><b id="detNome" style="display:block"></b><small class="muted" id="detEmail"></small></div><button class="btn small" data-act="fechar-detalhe" aria-label="Fechar">Fechar</button></div>
     <div class="corpo" id="detCorpo"></div>
+  </aside>
+</div>
+
+<!-- política de privacidade -->
+<div id="privacidade" hidden>
+  <div class="veu" data-act="fechar-privacidade"></div>
+  <aside class="gaveta" role="dialog" aria-modal="true" aria-labelledby="privTitulo">
+    <div class="cab"><b id="privTitulo" style="flex:1">Política de Privacidade</b><button class="btn small" data-act="fechar-privacidade">Fechar</button></div>
+    <div class="corpo" style="line-height:1.7;font-size:13.5px">
+      <p><b class="nomeProduto">Planilha Segura</b> respeita a Lei Geral de Proteção de Dados (Lei 13.709/2018). Aqui está, sem letras miúdas, o que é guardado e por quê.</p>
+      <h2>O que NÃO coletamos</h2>
+      <p>O conteúdo das suas planilhas nunca sai do seu computador: a leitura, a limpeza e a exportação acontecem dentro do navegador. Nenhum arquivo é enviado aos nossos servidores.</p>
+      <h2>O que guardamos</h2>
+      <ul>
+        <li><b>Conta:</b> e-mail, senha (criptografada, ninguém consegue ler) e os dados de perfil que você preencher (nome, empresa, cargo, telefone, CPF/CNPJ, cidade). Para liberar seu acesso, dar suporte e emitir nota fiscal.</li>
+        <li><b>Compras:</b> valor, data, situação e o número do pagamento no Mercado Pago. Guardados mesmo após a exclusão da conta, por obrigação fiscal.</li>
+        <li><b>Registro de acessos:</b> data, hora, endereço IP e navegador de cada entrada e abertura do aplicativo, além do sinal de "online". Exigido pelo Marco Civil da Internet (art. 15) e usado para a segurança da sua conta. Guardado por até 13 meses.</li>
+        <li><b>No seu navegador:</b> receitas salvas, tema e preferências, apenas no seu aparelho.</li>
+      </ul>
+      <h2>Com quem compartilhamos</h2>
+      <p>Supabase (hospedagem do banco de dados e das contas) e Mercado Pago (processamento do pagamento; os dados do cartão ficam só com ele). Não vendemos nem compartilhamos seus dados para publicidade.</p>
+      <h2>Seus direitos</h2>
+      <p>Em <b>Meu perfil</b> você vê tudo o que está guardado, corrige seus dados, baixa uma cópia (.json), desconecta aparelhos e exclui a conta. <span id="privContato"></span></p>
+    </div>
   </aside>
 </div>
 
@@ -661,6 +688,7 @@ function preencherVitrine() {
   if (vitrine.descricao) { $('#descricaoProduto').textContent = vitrine.descricao; $('#pitchDescricao').textContent = vitrine.descricao; }
   $('#precoProduto').textContent = vitrine.preco_centavos ? brl(vitrine.preco_centavos) : '—';
   $('#semDono').hidden = !!vitrine.tem_dono;
+  $('#privContato').textContent = vitrine.email_suporte ? 'Dúvidas ou pedidos sobre seus dados: ' + vitrine.email_suporte + '.' : '';
 }
 
 async function rotear() {
@@ -786,11 +814,40 @@ function mostrarCompra() {
   } else av.hidden = true;
   porta('comprar');
 }
+// Pede ao servidor para conferir no Mercado Pago os pagamentos deste usuário (caso o aviso automático atrase ou falhe).
+async function verificarPagamento() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return null;
+  const r = await fetch(conf.url + '/functions/v1/criar-pagamento', {
+    method: 'POST', credentials: 'omit',
+    headers: { Authorization: 'Bearer ' + session.access_token, apikey: conf.chave, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ acao: 'verificar' })
+  });
+  return r.ok ? r.json().catch(() => null) : null;
+}
+let ultimaVerificacao = 0;
+async function jaPaguei(el) {
+  if (Date.now() - ultimaVerificacao < 15000) { toast('Aguarde alguns segundos antes de conferir de novo.'); return; }
+  ultimaVerificacao = Date.now();
+  if (el) el.disabled = true;
+  const av = $('#avisoCompra');
+  av.className = 'aviso ok'; av.hidden = false; av.textContent = 'Conferindo seu pagamento no Mercado Pago…';
+  try {
+    await verificarPagamento();
+    const s = await rpc('meu_status');
+    if (s.tem_acesso) { status = s; toast('Pagamento confirmado. Acesso liberado!'); await rotear(); return; }
+    av.className = 'aviso';
+    av.textContent = 'Ainda não encontramos um pagamento aprovado na sua conta. Pix e cartão costumam confirmar em poucos minutos; boleto, em até 3 dias úteis.' + (vitrine.email_suporte ? ' Se já foi descontado, fale com ' + vitrine.email_suporte + ' e informe o número do pagamento que está no comprovante do Mercado Pago.' : '');
+  } catch (e) { av.className = 'aviso'; av.textContent = traduzir(e); }
+  finally { if (el) el.disabled = false; }
+}
 function esperarLiberacao() {
   if (espera) return;
   let tentativas = 0;
+  verificarPagamento().catch(() => {});
   const passo = async () => {
     tentativas++;
+    if (tentativas % 8 === 0) await verificarPagamento().catch(() => {});
     try {
       const s = await rpc('meu_status');
       if (s.tem_acesso) { status = s; retornoPagamento = null; pararEspera(); toast('Acesso liberado. Bom trabalho!'); await rotear(); return; }
@@ -867,7 +924,7 @@ function voltar() {
 
 /* ---------- meu perfil ---------- */
 const TIPO_ACESSO = { login: 'Entrou', app: 'Abriu o aplicativo', perfil: 'Alterou o perfil', senha: 'Alterou a senha', saida: 'Saiu' };
-const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente' };
+const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente (devolvido)', duplicada: 'Em dobro (devolvida)' };
 async function idSessaoAtual() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return null;
@@ -1003,8 +1060,8 @@ async function excluirConta(e) {
 const EVENTO = {
   compra_aprovada: ['Venda aprovada', 'aprovada'], compra_recusada: ['Pagamento recusado', ''], compra_cancelada: ['Pagamento cancelado', ''],
   compra_reembolsada: ['Reembolso: acesso retirado', 'reembolsada'], compra_contestada: ['Contestação no cartão: acesso retirado', 'contestada'],
-  compra_divergente: ['Valor pago diferente do preço: confira', 'divergente'], compra_pendente: ['Pagamento aguardando', ''],
-  pagamento_duplicado: ['Cobrança em dobro: reembolse uma no Mercado Pago', 'divergente'],
+  compra_divergente: ['Valor pago diferente do preço: devolução automática solicitada', 'divergente'], compra_pendente: ['Pagamento aguardando', ''],
+  pagamento_duplicado: ['Cobrança em dobro: devolução automática solicitada (confira no Mercado Pago)', 'divergente'],
   acesso_liberado: ['Acesso liberado manualmente', 'aprovada'], acesso_bloqueado: ['Acesso bloqueado manualmente', 'cancelada'],
   config_alterada: ['Configuração da loja alterada', ''], transferencia_iniciada: ['Transferência de dono iniciada', ''],
   transferencia_cancelada: ['Transferência cancelada', ''], propriedade_transferida: ['Novo dono assumiu a loja', 'aprovada'],
@@ -1196,6 +1253,9 @@ document.addEventListener('click', async e => {
     case 'esqueci': esqueci(); break;
     case 'sair': sair(); break;
     case 'comprar': comprar(); break;
+    case 'ja-paguei': jaPaguei(el); break;
+    case 'privacidade': $('#privacidade').hidden = false; break;
+    case 'fechar-privacidade': $('#privacidade').hidden = true; break;
     case 'perfil': abrirPerfil(); break;
     case 'painel': abrirPainel(); break;
     case 'voltar': voltar(); break;
@@ -1229,6 +1289,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#detalhe').hidden) fecharDetalhe();
+  if (e.key === 'Escape') $('#privacidade').hidden = true;
   if (e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-act="ver-usuario"]')) verUsuario(e.target.dataset.uid);
 });
 $('#senha').addEventListener('input', () => {

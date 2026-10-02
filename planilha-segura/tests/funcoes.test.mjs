@@ -81,4 +81,25 @@ assert.equal(r.status, 502); ok('falha temporária pede para o Mercado Pago tent
 r = await webhook.tratar(new Request(`${SB}/functions/v1/webhook-mp?data.id=9&type=merchant_order`, { method: 'POST', headers: { 'x-request-id': 'r', 'x-signature': assinar('9', 'r', '1') }, body: '{}' }), envW, falsoFetch([]));
 assert.equal((await r.json()).resultado, 'ignorado'); ok('outros tipos de aviso são ignorados');
 
+// reembolso automático de cobrança em dobro
+f = falsoFetch([pagamento(), ['/rpc/registrar_pagamento', () => json(200, 'duplicado')], ['/v1/payments/555/refunds', () => json(201, { id: 1 })]]);
+r = await webhook.tratar(aviso('555', { 'x-request-id': 'r', 'x-signature': assinar('555', 'r', '1') }), envW, f);
+const rb = await r.json();
+assert.equal(rb.reembolso, 'solicitado');
+const chRef = f.chamadas.find(c => c.url.includes('/refunds'));
+assert.equal(chRef.init.headers['X-Idempotency-Key'], 'reembolso-555'); ok('cobrança em dobro é devolvida automaticamente, uma única vez');
+f = falsoFetch([pagamento({ status: 'refunded' }), ['/rpc/registrar_pagamento', () => json(200, 'reembolsada')]]);
+r = await webhook.tratar(aviso('555', { 'x-request-id': 'r', 'x-signature': assinar('555', 'r', '1') }), envW, f);
+assert.ok(!f.chamadas.some(c => c.url.includes('/refunds'))); ok('aviso de reembolso não gera outro reembolso');
+
+// "Já paguei": confere no Mercado Pago as compras pendentes
+const pedidoVerif = () => new Request(SB + '/functions/v1/criar-pagamento', { method: 'POST', headers: { authorization: TOKEN, origin: 'https://loja.exemplo.com.br' }, body: JSON.stringify({ acao: 'verificar' }) });
+f = falsoFetch([usuario(), ['/rpc/compras_pendentes', () => json(200, [compra.compra_id])],
+  ['/v1/payments/search', () => json(200, { results: [{ id: 777, status: 'approved', transaction_amount: 49.9, currency_id: 'BRL', external_reference: compra.compra_id }, { id: 778, status: 'approved', transaction_amount: 49.9, currency_id: 'BRL', external_reference: 'outra' }] })],
+  ['/rpc/registrar_pagamento', () => json(200, 'aprovada')]]);
+r = await criar.tratar(pedidoVerif(), envC, f);
+assert.equal(r.status, 200); assert.deepEqual(await r.json(), { verificadas: 1, registrados: 1 });
+assert.equal(JSON.parse(f.chamadas.find(c => c.url.includes('registrar_pagamento')).init.body).p_compra, compra.compra_id);
+assert.ok(!f.chamadas.some(c => c.url.includes('/checkout/preferences'))); ok('“já paguei” confere no Mercado Pago só as compras do próprio usuário');
+
 console.log(`funções: ${n} verificações OK`);

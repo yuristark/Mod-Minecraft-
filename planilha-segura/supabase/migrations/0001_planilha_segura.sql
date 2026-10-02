@@ -32,7 +32,7 @@ create table if not exists public.compras (
   email_comprador text,
   valor_centavos integer not null check (valor_centavos > 0),
   status         text not null default 'pendente'
-                 check (status in ('pendente', 'aprovada', 'recusada', 'cancelada', 'reembolsada', 'contestada', 'divergente')),
+                 check (status in ('pendente', 'aprovada', 'recusada', 'cancelada', 'reembolsada', 'contestada', 'divergente', 'duplicada')),
   mp_payment_id  text unique,
   criado_em      timestamptz not null default now(),
   atualizado_em  timestamptz not null default now()
@@ -44,6 +44,9 @@ alter table public.compras alter column user_id drop not null;
 alter table public.compras drop constraint if exists compras_user_id_fkey;
 alter table public.compras add constraint compras_user_id_fkey foreign key (user_id) references auth.users (id) on delete set null;
 update public.compras c set email_comprador = u.email from auth.users u where u.id = c.user_id and c.email_comprador is null;
+alter table public.compras drop constraint if exists compras_status_check;
+alter table public.compras add constraint compras_status_check
+  check (status in ('pendente', 'aprovada', 'recusada', 'cancelada', 'reembolsada', 'contestada', 'divergente', 'duplicada'));
 
 create table if not exists public.acessos (
   user_id       uuid primary key references auth.users (id) on delete cascade,
@@ -222,7 +225,7 @@ language plpgsql stable security definer set search_path = '' as $$
 begin
   perform public._exigir_dono();
   return query
-    select c.id, coalesce(u.email::text, c.email_comprador || ' (conta excluída)'), c.valor_centavos, c.status, c.mp_payment_id, c.criado_em
+    select c.id, coalesce(u.email::text, c.email_comprador || ' (conta excluída)', '(conta excluída)'), c.valor_centavos, c.status, c.mp_payment_id, c.criado_em
       from public.compras c left join auth.users u on u.id = c.user_id
      where c.status <> 'pendente' or c.criado_em > now() - interval '2 days'
      order by c.criado_em desc
@@ -380,6 +383,17 @@ begin
     return 'ignorado';
   end if;
 
+  -- Mesma pessoa pagou duas compras diferentes (ex.: abriu o pagamento em duas abas): a segunda é cobrança
+  -- em dobro. O acesso continua pela primeira e o servidor devolve o dinheiro da segunda automaticamente.
+  if v_status = 'aprovada' and v_compra.user_id is not null and exists (
+       select 1 from public.acessos a join public.compras c on c.id = a.compra_id
+        where a.user_id = v_compra.user_id and a.ativo and a.origem = 'compra' and a.compra_id <> p_compra and c.status = 'aprovada') then
+    update public.compras set status = 'duplicada', mp_payment_id = p_payment_id, atualizado_em = now() where id = p_compra;
+    perform public._registrar_evento('pagamento_duplicado', v_compra.user_id,
+      jsonb_build_object('compra', p_compra, 'payment_id', p_payment_id));
+    return 'duplicado';
+  end if;
+
   -- O valor pago tem de ser exatamente o preço registrado na compra.
   if v_status = 'aprovada' and (p_moeda is distinct from 'BRL' or p_valor_centavos is distinct from v_compra.valor_centavos) then
     v_status := 'divergente';
@@ -408,6 +422,14 @@ begin
   end if;
   return v_status;
 end;
+$$;
+
+-- Compras ainda pendentes de um usuário: usada para conferir no Mercado Pago quando o aviso automático não chegou.
+create or replace function public.compras_pendentes(p_user uuid)
+returns setof uuid language sql stable security definer set search_path = '' as $$
+  select id from public.compras
+   where user_id = p_user and status = 'pendente' and criado_em > now() - interval '30 days'
+   order by criado_em desc limit 5;
 $$;
 
 -- Primeiro dono, ou recuperação se o dono perder a conta. Só funciona pelo SQL Editor do Supabase.
@@ -612,8 +634,12 @@ begin
   if exists (select 1 from public.configuracao where dono_id = v_uid) then
     raise exception 'O dono da loja não pode excluir a conta. Passe a loja para outra pessoa primeiro.';
   end if;
+  begin
+    delete from auth.users where id = v_uid;
+  exception when others then
+    raise exception 'Não foi possível excluir a conta automaticamente. Peça a exclusão pelo e-mail de suporte.';
+  end;
   perform public._registrar_evento('conta_excluida', v_uid, '{}'::jsonb);
-  delete from auth.users where id = v_uid;
   return jsonb_build_object('ok', true);
 end;
 $$;
@@ -701,6 +727,7 @@ grant execute on function public.admin_detalhe_usuario(uuid)      to authenticat
 grant execute on function public.admin_encerrar_sessoes(uuid)     to authenticated;
 grant execute on function public.criar_compra(uuid)              to service_role;
 grant execute on function public.registrar_pagamento(uuid, text, text, integer, text) to service_role;
+grant execute on function public.compras_pendentes(uuid)         to service_role;
 
 -- ---------------------------------------------------------------- arquivo do aplicativo
 

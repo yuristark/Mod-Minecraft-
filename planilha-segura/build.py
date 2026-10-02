@@ -16,7 +16,7 @@ import re
 import shutil
 import sys
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC, LOJA, DIST = ROOT / "src", ROOT / "loja", ROOT / "dist"
 XLSX_FILE = ROOT / "vendor" / "xlsx-0.18.5.full.min.js"
