@@ -4,353 +4,424 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 </head>
-<body>
+<body style="margin:0">
 <title>Planilha Segura</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: ferramenta de trabalho. Faixa de abas no topo; à esquerda a "receita" (etapas em ordem), à direita a planilha com as células alteradas marcadas como marca-texto. */
+/* Layout: barra lateral verde-escura fixa à esquerda; à direita topo com caminho e páginas simples em cartões brancos. */
 :root{
-  --bg:#eef1f4; --sheet:#ffffff; --ink:#16202c; --muted:#566273; --line:#d6dce3; --grid:#e7ebf0;
-  --head:#f5f7f9; --accent:#1f56c9; --accent-soft:#e3ebfb; --on-accent:#ffffff;
-  --mark:#fff0a3; --mark-edge:#f2d34b; --gone:#fbe6e4; --gone-ink:#a3352d;
-  --ok:#17784e; --ok-soft:#dff3e9; --warn:#9a6409; --warn-soft:#fbefd6; --danger:#b93a32;
-  --display:"Archivo",ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
-  --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --r:10px;
+  --bg:#f5f8f7; --card:#ffffff; --ink:#1c2926; --muted:#6a7671; --line:#e2e8e5; --soft:#f0f4f2;
+  --primary:#1a674b; --primary-ink:#ffffff; --primary-soft:#e9f3ee;
+  --side:#112b26; --side-ink:#c2d0cb; --side-dim:#8ba99a; --side-line:#28433a; --side-active:#244b3c; --lime:#c4ec88; --lime-ink:#173c27;
+  --mark:#eef7d9; --mark-edge:#a9cf6b; --gone:#fbeceb; --gone-ink:#a23b33;
+  --ok:#2f7d4f; --warn:#9a6409; --warn-soft:#fdf4e2; --danger:#b23a32;
+  --font:Arial,Helvetica,sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0e1217; --sheet:#151b22; --ink:#e6ebf1; --muted:#9aa6b4; --line:#2a333e; --grid:#202832;
-  --head:#1a212a; --accent:#7ea4ff; --accent-soft:#1d2a45; --on-accent:#0b1220;
-  --mark:rgba(255,214,10,.20); --mark-edge:rgba(255,214,10,.55); --gone:rgba(255,99,88,.12); --gone-ink:#ff9b92;
-  --ok:#55c995; --ok-soft:rgba(85,201,149,.14); --warn:#e5b45a; --warn-soft:rgba(229,180,90,.14); --danger:#ff7b72;
+  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
+  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
+  --side:#0b1a16; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:#203630; --side-active:#1f3d32; --lime:#b9e27c; --lime-ink:#173c27;
+  --mark:rgba(169,207,107,.18); --mark-edge:rgba(169,207,107,.6); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
+  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#0e1217; --sheet:#151b22; --ink:#e6ebf1; --muted:#9aa6b4; --line:#2a333e; --grid:#202832;
-  --head:#1a212a; --accent:#7ea4ff; --accent-soft:#1d2a45; --on-accent:#0b1220;
-  --mark:rgba(255,214,10,.20); --mark-edge:rgba(255,214,10,.55); --gone:rgba(255,99,88,.12); --gone-ink:#ff9b92;
-  --ok:#55c995; --ok-soft:rgba(85,201,149,.14); --warn:#e5b45a; --warn-soft:rgba(229,180,90,.14); --danger:#ff7b72;
+  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
+  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
+  --side:#0b1a16; --side-ink:#c2d0cb; --side-dim:#7f9b8d; --side-line:#203630; --side-active:#1f3d32; --lime:#b9e27c; --lime-ink:#173c27;
+  --mark:rgba(169,207,107,.18); --mark-edge:rgba(169,207,107,.6); --gone:rgba(255,110,100,.10); --gone-ink:#ff9a90;
+  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73;
   color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-.wrap{max-width:1480px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:18px 56px}
-h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
-p{margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
+h1,h2,h3,p{margin:0}
+h1{font-size:26px;font-weight:600;letter-spacing:-.6px;line-height:1.25;text-wrap:balance}
+h2{font-size:16px;font-weight:600;letter-spacing:-.2px}
+h3{font-size:14px;font-weight:600}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
-:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+:focus-visible{outline:3px solid #75ab91;outline-offset:2px}
 .num{font-variant-numeric:tabular-nums}
 
-/* topo */
-.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between}
-.brand{display:flex;align-items:center;gap:12px}
-.brand svg{flex:none}
-.brand h1{font-size:24px;font-weight:800;font-stretch:88%}
-.brand p{color:var(--muted);font-size:13px}
-.privacy{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:7px 12px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:700}
-.privacy svg{flex:none}
-.tabs{display:flex;gap:4px;margin-block:18px 16px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tab{background:none;border:0;padding:10px 14px;font-family:var(--display);font-weight:700;font-stretch:95%;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
-.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+/* estrutura */
+.app{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{background:var(--side);color:var(--side-ink);display:flex;flex-direction:column;padding:26px 14px 18px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:0 8px 26px;color:#fff;font-size:19px;font-weight:700;letter-spacing:-.6px}
+.brand span{font-weight:400;color:#dfe9e4}
+.brand small{display:block;font-size:9px;letter-spacing:1.4px;color:var(--side-dim);font-weight:400;margin-top:3px}
+.nav{display:grid;gap:3px}
+.nav button{display:flex;align-items:center;gap:11px;width:100%;border:0;background:none;color:var(--side-ink);padding:11px 12px;border-radius:7px;font-size:14px;text-align:left}
+.nav button:hover{background:rgba(255,255,255,.05)}
+.nav button[aria-current="page"]{background:var(--side-active);color:#d6f5a8;box-shadow:inset 3px 0 var(--lime)}
+.side-note{margin-top:auto;padding:16px 14px;border:1px solid var(--side-line);border-radius:9px}
+.side-note strong{display:block;color:#eef6ef;font-size:13px}
+.side-note p{font-size:12px;line-height:1.7;color:#a9bcb0;margin-top:6px}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{height:64px;border-bottom:1px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:space-between;gap:12px;padding-inline:clamp(16px,3vw,36px)}
+.crumb{font-size:13px;color:var(--muted)}
+.crumb strong{color:var(--ink);font-weight:500}
+.pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--ok);background:var(--primary-soft);padding:6px 10px;border-radius:6px;white-space:nowrap}
+.content{width:100%;max-width:1440px;margin:0 auto;padding-inline:clamp(16px,3vw,36px);padding-block:30px 40px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.head p{color:var(--muted);margin-top:8px;font-size:14px}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static;height:auto;padding:14px 16px}
+  .brand{padding:0 0 12px}
+  .nav{grid-auto-flow:column;grid-auto-columns:max-content;overflow-x:auto;gap:4px}
+  .nav button{padding:8px 12px}
+  .side-note{display:none}
+  .topbar{display:none}
+}
 
-/* blocos */
-.panel{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
-.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
-.panel-h h2{font-size:17px;font-weight:750;font-stretch:92%}
-.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:8px 12px;font-weight:700;font-size:14px;white-space:nowrap}
-.btn:hover{border-color:var(--accent)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.btn.small{padding:5px 9px;font-size:13px}
-.btn.ghost{border-color:transparent;background:transparent}
+/* peças */
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.card-h{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:18px 20px;border-bottom:1px solid var(--line)}
+.card-h p{color:var(--muted);font-size:12px;margin-top:4px}
+.card-b{padding:18px 20px;display:grid;gap:14px}
+.card-b>p{color:var(--muted);max-width:70ch;line-height:1.7}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:7px;padding:9px 15px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:#9dbba8}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
+.btn.primary:hover{filter:brightness(.92)}
+.btn.lime{background:var(--lime);border-color:var(--lime);color:var(--lime-ink)}
+.btn.small{padding:6px 10px;font-size:12px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
-.field{display:grid;gap:5px}
-.field>span{font-size:13px;font-weight:700;color:var(--muted)}
-.input,select.input,textarea.input{width:100%;border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:7px 9px;font-size:14px;min-width:0}
-textarea.input{font-family:var(--mono);font-size:13px;min-height:130px;resize:vertical}
-.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
-.check input{margin-top:3px;accent-color:var(--accent)}
+.link{border:0;background:none;padding:0;color:var(--primary);font-size:12px}
+.link:hover{text-decoration:underline}
+.link.danger{color:var(--danger)}
 .muted{color:var(--muted)}
-.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--accent-soft);color:var(--accent)}
-.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.field{display:grid;gap:5px}
+.field>span{font-size:12px;color:var(--muted)}
+.input{width:100%;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:6px;padding:7px 9px;font-size:13px}
+textarea.input{font-family:var(--mono);font-size:12px;min-height:130px;resize:vertical}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.check input{margin-top:2px;accent-color:var(--primary)}
+.tag{font-size:11px;color:#5a7e56;background:var(--primary-soft);padding:3px 7px;border-radius:5px;white-space:nowrap}
+.tag.warn{color:var(--warn);background:var(--warn-soft)}
 
-/* fonte de dados */
-.source{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 16px;margin-bottom:16px}
-.source .file{display:flex;gap:10px;align-items:center;min-width:0;flex:1 1 260px}
-.source .file strong{display:block;overflow-wrap:anywhere;font-size:15px}
-.source .file small{color:var(--muted)}
-.fileicon{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
-.source .field{min-width:120px}
-.source .actions{display:flex;flex-wrap:wrap;gap:8px}
-.paste{padding:14px 16px;margin-bottom:16px;display:grid;gap:10px}
-.drop-hint{position:fixed;inset:0;background:color-mix(in srgb,var(--accent) 18%,transparent);border:4px dashed var(--accent);z-index:50;display:grid;place-items:center;font-family:var(--display);font-size:26px;font-weight:800;color:var(--ink);pointer-events:none}
+/* visão geral */
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:24px}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px 22px}
+.metric span{display:block;font-size:12px;color:var(--muted);margin-bottom:14px}
+.metric b{display:block;font-size:28px;font-weight:500;letter-spacing:-1px;line-height:1.1}
+.metric small{display:block;font-size:11px;color:var(--muted);margin-top:10px}
+.metric.green{background:var(--primary-soft);border-color:transparent}
+@media (max-width:1000px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.overview{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;align-items:start}
+.ov-col{display:grid;gap:24px;min-width:0}
+@media (max-width:1100px){.overview{grid-template-columns:minmax(0,1fr)}}
+.filerow{display:flex;align-items:center;gap:12px;padding:18px 20px;flex-wrap:wrap}
+.filerow .ficon{width:38px;height:38px;border-radius:7px;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none}
+.filerow strong{display:block;font-size:14px;font-weight:500;overflow-wrap:anywhere}
+.filerow small{color:var(--muted);font-size:12px}
+.filerow .acts{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.activity{list-style:none;margin:0;padding:0 20px}
+.activity li{display:flex;align-items:center;gap:12px;padding:15px 0;border-bottom:1px solid var(--soft)}
+.activity li:last-child{border-bottom:0}
+.activity .dot{width:30px;height:30px;border-radius:50%;background:var(--primary-soft);color:var(--primary);display:grid;place-items:center;flex:none;font-size:11px;font-weight:700}
+.activity strong{display:block;font-size:13px;font-weight:500}
+.activity small{font-size:12px;color:var(--muted)}
+.activity .r{margin-left:auto;font-size:12px;color:var(--muted);text-align:right}
+.start{background:var(--side);color:#fff;border-radius:10px;padding:24px 22px}
+.start h2{font-size:21px;font-weight:500;line-height:1.35;letter-spacing:-.6px}
+.start>p{color:#bbcdc0;font-size:13px;margin-top:10px;line-height:1.7}
+.start ol{list-style:none;margin:22px 0;padding:0;display:grid;gap:18px}
+.start li{display:flex;gap:12px;align-items:center}
+.start li>span{width:28px;height:28px;border:1px solid #648168;color:#d0e9b0;border-radius:50%;display:grid;place-items:center;font-size:11px;flex:none}
+.start li strong{font-size:13px;font-weight:500;display:block}
+.start li p{font-size:12px;color:#a7c0ad}
+.start .btn{width:100%}
+.note{display:flex;gap:9px;color:var(--muted);font-size:12px;line-height:1.7;padding:0 4px}
 
-/* área principal */
-.work{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start}
+/* limpar */
+.srcbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 18px;margin-bottom:16px}
+.srcbar .who{flex:1 1 220px;min-width:0}
+.srcbar .who strong{display:block;font-weight:500;overflow-wrap:anywhere}
+.srcbar .who small{color:var(--muted);font-size:12px}
+.srcbar .field{min-width:110px}
+.srcbar .acts{display:flex;gap:8px;flex-wrap:wrap}
+.pastebox{padding:16px 18px;margin-bottom:16px;display:grid;gap:10px}
+.work{display:grid;grid-template-columns:minmax(290px,350px) minmax(0,1fr);gap:16px;align-items:start}
 @media (max-width:960px){.work{grid-template-columns:minmax(0,1fr)}}
-
-/* receita */
-.recipe-name{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.recipe-name .input{flex:1 1 160px;font-weight:700}
-.steps{list-style:none;margin:0;padding:8px}
-.step{border:1px solid transparent;border-radius:8px}
-.step+.step{margin-top:2px}
-.step.open{border-color:var(--line);background:var(--head)}
-.step.off .step-title{opacity:.5}
-.step-head{display:flex;align-items:center;gap:10px;padding:8px}
-.step-n{font-family:var(--mono);font-size:12px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:var(--grid);color:var(--muted);flex:none}
-.step-title{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;font-weight:700;font-size:14px}
-.step-title small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
-.step-badge{margin:0 8px 6px 42px;font-size:12px;color:var(--muted)}
-.step-badge.has{color:var(--ink)}
-.step-badge .w{color:var(--warn);font-weight:700}
-.step-badge .hl{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge);padding:0 4px;border-radius:2px}
-.step-body{padding:4px 12px 12px 42px;display:grid;gap:10px}
-.step-tools{display:flex;gap:6px;flex-wrap:wrap}
-.switch{position:relative;width:34px;height:20px;flex:none}
+.rname{display:flex;gap:8px;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.rname .input{flex:1 1 140px;font-weight:600}
+.rname select{flex:0 1 150px}
+.steps{list-style:none;margin:0;padding:6px 8px}
+.step{border-radius:7px}
+.step.open{background:var(--soft)}
+.step-head{display:flex;align-items:center;gap:10px;padding:9px 8px}
+.step-n{font-size:11px;color:var(--muted);width:18px;text-align:right;flex:none}
+.step-title{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;font-size:13px;font-weight:500}
+.step-title small{display:block;font-weight:400;color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.step.off .step-title{opacity:.45}
+.step-badge{margin:-4px 8px 7px 36px;font-size:11.5px;color:var(--muted)}
+.step-badge .w{color:var(--warn)}
+.step-body{padding:2px 12px 12px 36px;display:grid;gap:10px}
+.step-tools{display:flex;gap:14px;flex-wrap:wrap;padding-top:2px}
+.switch{position:relative;width:30px;height:18px;flex:none}
 .switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
-.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
-.switch span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--sheet);transition:transform .15s}
-.switch input:checked+span{background:var(--accent)}
-.switch input:checked+span::after{transform:translateX(14px)}
-.switch input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line)}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:12px;height:12px;border-radius:50%;background:var(--card);transition:transform .15s}
+.switch input:checked+span{background:var(--primary)}
+.switch input:checked+span::after{transform:translateX(12px)}
+.switch input:focus-visible+span{outline:3px solid #75ab91;outline-offset:2px}
 .cols{display:flex;flex-wrap:wrap;gap:5px}
-.colbtn{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:3px 8px;font-size:12.5px;max-width:100%;overflow-wrap:anywhere;text-align:left}
-.colbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.colbtn{border:1px solid var(--line);background:var(--card);border-radius:5px;padding:3px 8px;font-size:12px;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.colbtn[aria-pressed="true"]{background:var(--primary);border-color:var(--primary);color:var(--primary-ink)}
 .colbtn.missing{border-style:dashed;color:var(--warn)}
-.addstep{padding:4px 16px 16px;display:grid;gap:8px}
-.recipe-foot{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
-
-/* resultado */
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line)}
-.stat{padding:12px 16px;border-right:1px solid var(--line);min-width:0}
-.stat:last-child{border-right:0}
-.stat b{display:block;font-family:var(--display);font-size:24px;font-weight:800;font-stretch:85%;font-variant-numeric:tabular-nums;line-height:1.2}
-.stat span{font-size:12.5px;color:var(--muted)}
-.stat b .hl{background:var(--mark);box-shadow:inset 0 -3px 0 var(--mark-edge);padding:0 4px}
-@media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
-.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line)}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.seg button{border:0;background:var(--sheet);padding:6px 12px;font-weight:700;font-size:13.5px}
-.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
-.search{flex:1 1 180px;max-width:320px}
-.exports{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.tablewrap{overflow:auto;max-height:min(68vh,720px)}
-table.grid{border-collapse:separate;border-spacing:0;font-family:var(--mono);font-size:12.5px;min-width:100%}
-.grid th,.grid td{border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:6px 10px;text-align:left;vertical-align:top;white-space:pre-wrap;max-width:320px;overflow-wrap:anywhere}
-.grid thead th{position:sticky;top:0;background:var(--head);font-family:var(--body);font-weight:700;font-size:13px;z-index:1;white-space:nowrap}
-.grid th.ln,.grid td.ln{position:sticky;left:0;background:var(--head);color:var(--muted);text-align:right;font-size:11.5px;min-width:44px}
-.grid thead th.ln{z-index:2}
+.rfoot{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;padding:12px 16px;border-top:1px solid var(--line)}
+.rfoot select{flex:1 1 100%}
+.tbar{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.tbar .sum{font-size:13px;color:var(--muted)}
+.tbar .sum b{color:var(--ink);font-weight:500}
+.tright{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{border:0;background:var(--card);padding:6px 12px;font-size:12px}
+.seg button[aria-pressed="true"]{background:var(--primary-soft);color:var(--primary);font-weight:600}
+.search{width:180px}
+.menu{position:relative}
+.menu summary{list-style:none}
+.menu summary::-webkit-details-marker{display:none}
+.menu .list{position:absolute;right:0;top:calc(100% + 6px);background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.10);padding:6px;display:grid;min-width:210px;z-index:5}
+.menu .list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:5px;font-size:13px}
+.menu .list button:hover{background:var(--soft)}
+.warnline{padding:9px 16px;font-size:12.5px;background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--line)}
+.tablewrap{overflow:auto;max-height:min(66vh,700px)}
+table.grid{border-collapse:separate;border-spacing:0;font-size:12.5px;min-width:100%}
+.grid th,.grid td{border-bottom:1px solid var(--soft);padding:9px 12px;text-align:left;vertical-align:top;white-space:nowrap}
+.grid thead th{position:sticky;top:0;background:var(--card);color:var(--muted);font-weight:400;font-size:12px;white-space:nowrap;border-bottom:1px solid var(--line);z-index:1}
+.grid th.ln,.grid td.ln{color:var(--muted);font-size:11px;text-align:right;min-width:40px}
 .grid td.chg{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
-.grid thead th.chg{box-shadow:inset 0 -3px 0 var(--mark-edge)}
-.grid tr.gone td:not(.ln){background:var(--gone);color:var(--gone-ink);text-decoration:line-through;text-decoration-thickness:1px}
-.grid td.empty::after{content:"·";color:var(--line)}
-.grid td.ok{color:var(--ok);font-weight:500}
-.grid td.bad{color:var(--danger);font-weight:500}
-.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;font-size:13px;color:var(--muted)}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
-.legend i{display:inline-block;width:14px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:5px}
-.legend .m{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
-.legend .g{background:var(--gone);border:1px solid var(--gone-ink)}
-.notice{padding:10px 16px;font-size:13.5px;background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--line)}
+.grid tr.gone td:not(.ln){background:var(--gone);color:var(--gone-ink);text-decoration:line-through}
+.grid td.ok{color:var(--ok)}
+.grid td.bad{color:var(--danger)}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;font-size:12px;color:var(--muted)}
+.pager i{display:inline-block;width:12px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:5px;background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
+.pager i.g{background:var(--gone);box-shadow:none;border:1px solid var(--gone-ink)}
+.drop-hint{position:fixed;inset:0;background:rgba(26,103,75,.14);border:3px dashed var(--primary);z-index:50;display:grid;place-items:center;font-size:22px;color:var(--ink);pointer-events:none}
 
-/* automação e segurança */
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start}
-.card-b{padding:16px;display:grid;gap:14px}
-.card-b>p{color:var(--muted);max-width:70ch}
-.formrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.dropzone{border:2px dashed var(--line);border-radius:10px;padding:22px 16px;text-align:center;display:grid;gap:6px;justify-items:center;background:var(--head)}
-.dropzone strong{font-family:var(--display);font-size:17px}
-.code{margin:0;font-family:var(--mono);font-size:12px;line-height:1.55;background:var(--head);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:360px;overflow:auto;white-space:pre;tab-size:2}
-ol.howto{margin:0;padding-left:22px;display:grid;gap:6px;max-width:72ch}
-ol.howto code,.kbd{font-family:var(--mono);font-size:12.5px;background:var(--grid);padding:1px 5px;border-radius:4px}
-.batch-table{width:100%;border-collapse:collapse;font-size:13.5px}
-.batch-table th,.batch-table td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
-.batch-table td.n{text-align:right;font-variant-numeric:tabular-nums}
-.batch-wrap{overflow-x:auto}
-.sec-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.sec-list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:14px 16px;border-bottom:1px solid var(--grid)}
-.sec-list li:last-child{border-bottom:0}
-.sec-list svg{color:var(--ok);margin-top:2px}
-.sec-list strong{display:block;font-size:15px}
-.sec-list p{color:var(--muted);max-width:75ch}
-.limits{width:100%;border-collapse:collapse;font-size:14px}
-.limits td{padding:8px 16px;border-bottom:1px solid var(--grid)}
-.limits td:last-child{text-align:right;font-family:var(--mono);font-size:13px}
+/* automações e segurança */
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:24px;align-items:start}
+.formrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+details.more summary{cursor:pointer;color:var(--primary);font-size:13px}
+.code{margin:10px 0 0;font-family:var(--mono);font-size:11.5px;line-height:1.55;background:var(--soft);border:1px solid var(--line);border-radius:7px;padding:12px;max-height:340px;overflow:auto;white-space:pre}
+ol.howto{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted);line-height:1.6}
+ol.howto b{color:var(--ink);font-weight:500}
+ol.howto code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 5px;border-radius:4px}
+.picker{border:1.5px dashed #b6c9a7;border-radius:9px;background:var(--soft);padding:22px 16px;display:grid;gap:8px;justify-items:center;text-align:center}
+.picker small{color:var(--muted)}
+.btable{width:100%;border-collapse:collapse;font-size:13px}
+.btable th,.btable td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--soft);vertical-align:top}
+.btable th{color:var(--muted);font-weight:400;font-size:12px}
+.btable td.n{text-align:right;font-variant-numeric:tabular-nums}
+.prot{list-style:none;margin:0;padding:6px 20px}
+.prot li{display:flex;gap:14px;padding:18px 0;border-bottom:1px solid var(--soft);color:var(--ok)}
+.prot li:last-child{border-bottom:0}
+.prot strong{display:block;color:var(--ink);font-size:13px;font-weight:600}
+.prot p{color:var(--muted);font-size:13px;line-height:1.7;margin-top:4px;max-width:70ch}
+.limits{width:100%;border-collapse:collapse;font-size:13px}
+.limits td{padding:11px 20px;border-bottom:1px solid var(--soft)}
+.limits td:last-child{text-align:right;color:var(--muted)}
 
-.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:10px 16px;border-radius:8px;font-size:14px;font-weight:700;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#173c2f;color:#fff;padding:10px 16px;border-radius:7px;font-size:13px;z-index:60;max-width:calc(100% - 32px)}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
-<div class="wrap">
-  <header class="top">
+<div class="app">
+  <aside class="side">
     <div class="brand">
-      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="9" fill="var(--accent)"/><path d="M9 13h22M9 20h22M9 27h22M17 9v22" stroke="var(--on-accent)" stroke-width="2.2" stroke-linecap="round"/><rect x="18.5" y="21.5" width="11" height="4.5" rx="1" fill="#ffd60a"/></svg>
-      <div><h1>Planilha Segura</h1><p>Limpe, padronize e automatize planilhas sem enviar seus dados.</p></div>
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--lime)" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9h17M3.5 14.5h17M9 3.5v17"/></svg>
+      <div>planilha<span>segura</span><small>MENOS ROTINA. MAIS CONTROLE.</small></div>
     </div>
-    <span class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Tudo é processado no seu navegador</span>
-  </header>
-
-  <nav class="tabs" role="tablist" aria-label="Seções">
-    <button class="tab" role="tab" id="tab-limpar" data-tab="limpar" aria-selected="true">Limpar planilha</button>
-    <button class="tab" role="tab" id="tab-automatizar" data-tab="automatizar" aria-selected="false">Automatizar</button>
-    <button class="tab" role="tab" id="tab-seguranca" data-tab="seguranca" aria-selected="false">Segurança</button>
-  </nav>
-
-  <!-- LIMPAR -->
-  <section id="view-limpar" role="tabpanel" aria-labelledby="tab-limpar">
-    <div class="panel source" id="source"></div>
-    <div class="panel paste" id="pastePanel" hidden>
-      <label class="field"><span>Cole aqui as células copiadas do Excel ou Google Sheets (a primeira linha deve ser o cabeçalho)</span>
-        <textarea class="input" id="pasteText" placeholder="Nome&#9;E-mail&#9;Telefone"></textarea></label>
-      <div class="source actions" style="padding:0;margin:0"><button class="btn primary" data-act="paste-load">Carregar dados colados</button><button class="btn ghost" data-act="paste-close">Cancelar</button></div>
+    <nav class="nav" aria-label="Seções">
+      <button data-tab="inicio"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Visão geral</button>
+      <button data-tab="limpar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>Limpar planilha</button>
+      <button data-tab="automatizar"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Automações</button>
+      <button data-tab="seguranca"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></svg>Segurança</button>
+    </nav>
+    <div class="side-note">
+      <strong>Seus dados, seu computador.</strong>
+      <p>As planilhas são lidas e limpas aqui no navegador. Nada é enviado para servidores.</p>
     </div>
-    <input type="file" id="fileInput" class="sr" accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
+  </aside>
 
-    <div class="work">
-      <aside class="panel" aria-label="Receita de limpeza">
-        <div class="panel-h"><div><div class="eyebrow">Receita</div><h2>Etapas, na ordem em que rodam</h2></div></div>
-        <div class="recipe-name">
-          <input class="input" id="recipeName" aria-label="Nome da receita" maxlength="80">
-          <select class="input" id="recipeLoad" aria-label="Abrir receita" style="flex:0 1 170px"></select>
-        </div>
-        <ol class="steps" id="steps"></ol>
-        <div class="addstep">
-          <label class="field"><span>Adicionar etapa</span>
-            <select class="input" id="addStep"></select></label>
-        </div>
-        <div class="recipe-foot">
-          <button class="btn small" data-act="recipe-save">Salvar receita</button>
-          <button class="btn small" data-act="recipe-export">Exportar .json</button>
-          <button class="btn small" data-act="recipe-import">Importar .json</button>
-          <button class="btn small ghost" data-act="recipe-clear">Limpar etapas</button>
-          <input type="file" id="recipeFile" class="sr" accept=".json,application/json" tabindex="-1" aria-hidden="true">
-        </div>
-      </aside>
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">Meu espaço › <strong id="crumb">Visão geral</strong></div>
+      <span class="pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Processado no seu navegador</span>
+    </header>
 
-      <section class="panel" aria-label="Resultado" style="min-width:0">
-        <div class="stats" id="stats"></div>
-        <div id="notice"></div>
-        <div class="toolbar">
-          <div class="seg" role="group" aria-label="Visualização">
-            <button data-act="view" data-view="result" aria-pressed="true">Resultado</button>
-            <button data-act="view" data-view="original" aria-pressed="false">Original</button>
+    <div class="content">
+      <!-- VISÃO GERAL -->
+      <section id="view-inicio">
+        <div class="head"><div><h1>Menos tarefas. Mais possibilidades.</h1><p>Organize suas planilhas e deixe a parte repetitiva com a gente.</p></div>
+          <button class="btn primary" data-act="pick">+ Abrir planilha</button></div>
+        <div class="metrics" id="metrics"></div>
+        <div class="overview">
+          <div class="ov-col">
+            <div class="card">
+              <div class="card-h"><div><h2>Planilha atual</h2><p>Escolha um arquivo do computador ou cole as células do Excel.</p></div></div>
+              <div class="filerow" id="ovFile"></div>
+            </div>
+            <div class="card">
+              <div class="card-h"><h2>O que a receita fez</h2><button class="link" data-tab="limpar">Ver planilha ›</button></div>
+              <ul class="activity" id="activity"></ul>
+            </div>
           </div>
-          <input class="input search" id="search" type="search" placeholder="Procurar na tabela" aria-label="Procurar na tabela">
-          <div class="exports">
-            <button class="btn small primary" data-act="export" data-fmt="xlsx">Baixar .xlsx</button>
-            <button class="btn small" data-act="export" data-fmt="csv">.csv</button>
-            <button class="btn small" data-act="export" data-fmt="json">.json</button>
-            <button class="btn small" data-act="copy-table" title="Copia o resultado para colar direto no Excel ou no Google Sheets">Copiar</button>
+          <aside class="ov-col">
+            <div class="start">
+              <h2>Da planilha bagunçada ao trabalho resolvido.</h2>
+              <p>Três passos para simplificar sua rotina.</p>
+              <ol>
+                <li><span>1</span><div><strong>Traga sua planilha</strong><p>Excel, CSV ou colando as células.</p></div></li>
+                <li><span>2</span><div><strong>Monte a receita</strong><p>Escolha o que deve ser arrumado.</p></div></li>
+                <li><span>3</span><div><strong>Confira e baixe</strong><p>Ou agende para rodar sozinho.</p></div></li>
+              </ol>
+              <button class="btn lime" data-tab="limpar">Ir para a planilha</button>
+            </div>
+            <p class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="flex:none;margin-top:2px"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>O arquivo original nunca é alterado. Você sempre baixa uma cópia nova.</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- LIMPAR -->
+      <section id="view-limpar" hidden>
+        <div class="head"><div><h1>Limpar planilha</h1><p>Escolha as etapas, confira o resultado e baixe quando estiver pronto.</p></div></div>
+        <div class="card srcbar" id="source"></div>
+        <div class="card pastebox" id="pastePanel" hidden>
+          <label class="field"><span>Cole as células copiadas do Excel ou Google Sheets (a primeira linha deve ser o cabeçalho)</span>
+            <textarea class="input" id="pasteText" placeholder="Nome&#9;E-mail&#9;Telefone"></textarea></label>
+          <div style="display:flex;gap:8px"><button class="btn primary" data-act="paste-load">Carregar</button><button class="btn" data-act="paste-close">Cancelar</button></div>
+        </div>
+        <div class="work">
+          <aside class="card" aria-label="Receita">
+            <div class="card-h"><div><h2>Receita</h2><p>As etapas rodam de cima para baixo.</p></div></div>
+            <div class="rname">
+              <input class="input" id="recipeName" aria-label="Nome da receita" maxlength="80">
+              <select class="input" id="recipeLoad" aria-label="Abrir receita"></select>
+            </div>
+            <ol class="steps" id="steps"></ol>
+            <div class="rfoot">
+              <select class="input" id="addStep" aria-label="Adicionar etapa"></select>
+              <button class="link" data-act="recipe-save">Salvar</button>
+              <button class="link" data-act="recipe-export">Exportar</button>
+              <button class="link" data-act="recipe-import">Importar</button>
+              <button class="link danger" data-act="recipe-clear">Limpar etapas</button>
+            </div>
+          </aside>
+          <section class="card" style="min-width:0" aria-label="Resultado">
+            <div class="tbar">
+              <div class="sum num" id="sumline"></div>
+              <div class="tright">
+                <div class="seg" role="group" aria-label="Visualização">
+                  <button data-act="view" data-view="result" aria-pressed="true">Resultado</button>
+                  <button data-act="view" data-view="original" aria-pressed="false">Original</button>
+                </div>
+                <input class="input search" id="search" type="search" placeholder="Procurar" aria-label="Procurar na tabela">
+                <details class="menu" id="dlMenu">
+                  <summary class="btn primary">Baixar ▾</summary>
+                  <div class="list">
+                    <button data-act="export" data-fmt="xlsx">Excel (.xlsx)</button>
+                    <button data-act="export" data-fmt="csv">CSV (.csv)</button>
+                    <button data-act="export" data-fmt="json">JSON (.json)</button>
+                    <button data-act="copy-table">Copiar para colar no Excel</button>
+                  </div>
+                </details>
+              </div>
+            </div>
+            <div id="notice"></div>
+            <div class="tablewrap" id="tablewrap"></div>
+            <div class="pager" id="pager"></div>
+          </section>
+        </div>
+      </section>
+
+      <!-- AUTOMAÇÕES -->
+      <section id="view-automatizar" hidden>
+        <div class="head"><div><h1>Automações</h1><p>Use a receita atual sem precisar repetir o trabalho.</p></div></div>
+        <div class="two">
+          <div class="card">
+            <div class="card-h"><div><h2>Rodar sozinho no Google Sheets</h2><p>Funciona mesmo com o computador desligado.</p></div></div>
+            <div class="card-b">
+              <div class="formrow">
+                <label class="field"><span>Aba com os dados</span><input class="input" id="gsSource" value="Dados"></label>
+                <label class="field"><span>Linha do cabeçalho</span><input class="input" id="gsHeader" type="number" min="1" max="50" value="1"></label>
+                <label class="field"><span>Aba do resultado</span><input class="input" id="gsOutput" value="Resultado"></label>
+              </div>
+              <div class="formrow">
+                <label class="field"><span>Quando rodar</span>
+                  <select class="input" id="gsFreq">
+                    <option value="daily">Todo dia</option>
+                    <option value="hourly">A cada hora</option>
+                    <option value="weekly">Toda semana</option>
+                    <option value="edit">Sempre que a planilha for editada</option>
+                    <option value="manual">Só quando eu mandar</option>
+                  </select></label>
+                <label class="field" id="gsHourF"><span>Horário</span><select class="input" id="gsHour"></select></label>
+                <label class="field" id="gsDayF"><span>Dia</span>
+                  <select class="input" id="gsDay">
+                    <option value="MONDAY">Segunda</option><option value="TUESDAY">Terça</option><option value="WEDNESDAY">Quarta</option><option value="THURSDAY">Quinta</option><option value="FRIDAY">Sexta</option><option value="SATURDAY">Sábado</option><option value="SUNDAY">Domingo</option>
+                  </select></label>
+              </div>
+              <label class="check"><input type="checkbox" id="gsBackup" checked> Guardar o resultado anterior numa aba de backup</label>
+              <label class="check"><input type="checkbox" id="gsLog" checked> Registrar cada execução numa aba de histórico</label>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="btn primary" data-act="gs-copy">Copiar script</button>
+                <button class="btn" data-act="gs-download">Baixar .txt</button>
+              </div>
+              <ol class="howto">
+                <li>Na planilha do Google, abra <b>Extensões → Apps Script</b>.</li>
+                <li>Apague o conteúdo de <code>Código.gs</code>, cole o script e salve.</li>
+                <li>Escolha a função <code>ativarAutomacao</code>, clique em <b>Executar</b> e autorize.</li>
+                <li>Pronto: o menu <b>Planilha Segura</b> aparece na planilha para executar ou desativar.</li>
+              </ol>
+              <details class="more"><summary>Ver o código</summary><pre class="code" id="gsCode" tabindex="0"></pre></details>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-h"><div><h2>Vários arquivos de uma vez</h2><p>A mesma receita para todos, num único arquivo de saída.</p></div></div>
+            <div class="card-b">
+              <div class="formrow">
+                <label class="field"><span>Saída</span>
+                  <select class="input" id="batchMode"><option value="merge">Juntar tudo em uma aba</option><option value="separate">Uma aba por arquivo</option></select></label>
+                <label class="field"><span>Aba lida de cada arquivo</span>
+                  <select class="input" id="batchSheet"><option value="same">Mesmo nome da aba atual</option><option value="first">Sempre a primeira</option></select></label>
+              </div>
+              <div class="picker">
+                <button class="btn primary" data-act="batch-pick">Selecionar arquivos</button>
+                <small>XLSX, XLS, ODS, CSV ou JSON · até 40 arquivos</small>
+              </div>
+              <div id="batchOut"></div>
+            </div>
           </div>
         </div>
-        <div class="tablewrap" id="tablewrap"></div>
-        <div class="pager" id="pager"></div>
+      </section>
+
+      <!-- SEGURANÇA -->
+      <section id="view-seguranca" hidden>
+        <div class="head"><div><h1>Segurança</h1><p>Como seus arquivos são tratados.</p></div></div>
+        <div class="two">
+          <div class="card"><div class="card-h"><h2>Proteções</h2></div><ul class="prot" id="secList"></ul></div>
+          <div class="card"><div class="card-h"><h2>Limites</h2></div>
+            <table class="limits"><tbody>
+              <tr><td>Tamanho por arquivo</td><td>50 MB</td></tr>
+              <tr><td>Células por aba</td><td>3.000.000</td></tr>
+              <tr><td>Abas lidas por arquivo</td><td>60</td></tr>
+              <tr><td>Arquivos por lote</td><td>40</td></tr>
+              <tr><td>Etapas por receita</td><td>60</td></tr>
+            </tbody></table>
+            <div class="card-b"><p>Planilhas grandes funcionam, mas cada mudança na receita processa tudo de novo. Para centenas de milhares de linhas, prefira a automação no Google Sheets.</p></div>
+          </div>
+        </div>
       </section>
     </div>
-  </section>
-
-  <!-- AUTOMATIZAR -->
-  <section id="view-automatizar" role="tabpanel" aria-labelledby="tab-automatizar" hidden>
-    <div class="cards">
-      <div class="panel">
-        <div class="panel-h"><div><div class="eyebrow">Agendamento</div><h2>Rodar sozinho no Google Sheets</h2></div></div>
-        <div class="card-b">
-          <p>Transforma a receita atual em um script do Google Apps Script. Ele roda na sua conta Google, no horário que você escolher, mesmo com o computador desligado. O resultado vai para uma aba separada e a aba original nunca é alterada.</p>
-          <div class="formrow">
-            <label class="field"><span>Aba com os dados</span><input class="input" id="gsSource" value="Dados"></label>
-            <label class="field"><span>Linha do cabeçalho</span><input class="input" id="gsHeader" type="number" min="1" max="50" value="1"></label>
-            <label class="field"><span>Aba do resultado</span><input class="input" id="gsOutput" value="Resultado"></label>
-          </div>
-          <div class="formrow">
-            <label class="field"><span>Frequência</span>
-              <select class="input" id="gsFreq">
-                <option value="daily">Todo dia</option>
-                <option value="hourly">A cada hora</option>
-                <option value="weekly">Toda semana</option>
-                <option value="edit">Sempre que a planilha for editada</option>
-                <option value="manual">Só quando eu mandar (menu)</option>
-              </select></label>
-            <label class="field" id="gsHourF"><span>Horário</span><select class="input" id="gsHour"></select></label>
-            <label class="field" id="gsDayF"><span>Dia da semana</span>
-              <select class="input" id="gsDay">
-                <option value="MONDAY">Segunda</option><option value="TUESDAY">Terça</option><option value="WEDNESDAY">Quarta</option><option value="THURSDAY">Quinta</option><option value="FRIDAY">Sexta</option><option value="SATURDAY">Sábado</option><option value="SUNDAY">Domingo</option>
-              </select></label>
-          </div>
-          <label class="check"><input type="checkbox" id="gsBackup" checked> Guardar o resultado anterior numa aba de backup antes de atualizar</label>
-          <label class="check"><input type="checkbox" id="gsLog" checked> Registrar cada execução numa aba de histórico</label>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn primary" data-act="gs-copy">Copiar script</button>
-            <button class="btn" data-act="gs-download">Baixar como .txt</button>
-          </div>
-          <pre class="code" id="gsCode" tabindex="0" aria-label="Código do Apps Script"></pre>
-          <div>
-            <h3 style="font-size:16px;margin-bottom:8px">Como instalar (5 minutos)</h3>
-            <ol class="howto">
-              <li>Abra sua planilha no Google Sheets e confira o nome da aba com os dados.</li>
-              <li>Vá em <b>Extensões → Apps Script</b>, apague o conteúdo do arquivo <code>Código.gs</code> e cole o script.</li>
-              <li>Clique em <b>Salvar</b>. No seletor de função escolha <code>ativarAutomacao</code> e clique em <b>Executar</b>.</li>
-              <li>Autorize o acesso quando o Google pedir. O script só usa a própria planilha.</li>
-              <li>Pronto. Volte à planilha: aparece o menu <b>Planilha Segura</b>, com “Executar agora” e “Desativar automação”.</li>
-            </ol>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-h"><div><div class="eyebrow">Lote</div><h2>Vários arquivos de uma vez</h2></div></div>
-        <div class="card-b">
-          <p>Aplica a mesma receita a todos os arquivos que você escolher, por exemplo as planilhas de cada mês ou de cada filial, e gera um único arquivo de saída.</p>
-          <div class="formrow">
-            <label class="field"><span>Saída</span>
-              <select class="input" id="batchMode">
-                <option value="merge">Juntar tudo em uma aba</option>
-                <option value="separate">Uma aba para cada arquivo</option>
-              </select></label>
-            <label class="field"><span>Qual aba ler de cada arquivo</span>
-              <select class="input" id="batchSheet">
-                <option value="same">Mesmo nome da aba atual, se existir</option>
-                <option value="first">Sempre a primeira aba</option>
-              </select></label>
-          </div>
-          <div class="dropzone">
-            <strong>Escolha os arquivos</strong>
-            <span class="muted">XLSX, XLS, ODS, CSV, TSV ou JSON. Linha do cabeçalho igual à da planilha atual.</span>
-            <button class="btn primary" data-act="batch-pick">Selecionar arquivos</button>
-          </div>
-          <input type="file" id="batchInput" class="sr" multiple accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
-          <div id="batchOut"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- SEGURANÇA -->
-  <section id="view-seguranca" role="tabpanel" aria-labelledby="tab-seguranca" hidden>
-    <div class="cards">
-      <div class="panel">
-        <div class="panel-h"><div><div class="eyebrow">Como seus dados são tratados</div><h2>Proteções</h2></div></div>
-        <ul class="sec-list" id="secList"></ul>
-      </div>
-      <div class="panel">
-        <div class="panel-h"><div><div class="eyebrow">Limites</div><h2>Para o navegador não travar</h2></div></div>
-        <table class="limits"><tbody>
-          <tr><td>Tamanho por arquivo</td><td>50 MB</td></tr>
-          <tr><td>Células por aba</td><td>3.000.000</td></tr>
-          <tr><td>Abas lidas por arquivo</td><td>60</td></tr>
-          <tr><td>Arquivos por lote</td><td>40</td></tr>
-          <tr><td>Etapas por receita</td><td>60</td></tr>
-          <tr><td>Linhas exibidas por página</td><td>100</td></tr>
-        </tbody></table>
-        <div class="card-b"><p>Planilhas muito grandes funcionam, mas cada mudança na receita processa tudo de novo. Acima de algumas centenas de milhares de linhas, prefira o agendamento no Google Sheets.</p></div>
-      </div>
-    </div>
-  </section>
+  </div>
 </div>
 
+<input type="file" id="fileInput" class="sr" accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
+<input type="file" id="batchInput" class="sr" multiple accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
+<input type="file" id="recipeFile" class="sr" accept=".json,application/json" tabindex="-1" aria-hidden="true">
 <div id="dropHint" class="drop-hint" hidden>Solte o arquivo para abrir</div>
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
@@ -963,17 +1034,41 @@ function recompute() {
 function renderSource() {
   const s = state.src, sh = s.sheets[s.sheet];
   const rows = state.input.rows.length, cols = state.input.headers.length;
+  const info = `${fmt(rows)} linhas · ${fmt(cols)} colunas${s.sample ? ' · dados fictícios de exemplo' : ''}`;
   $('#source').innerHTML = `
-    <div class="file"><span class="fileicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg></span>
-      <div style="min-width:0"><strong>${esc(s.fileName)} ${s.sample ? '<span class="chip warn">Exemplo</span>' : ''}</strong>
-      <small class="num">${fmt(rows)} linhas · ${fmt(cols)} colunas${s.sample ? ' · dados fictícios para demonstração' : ''}</small></div></div>
+    <div class="who"><strong>${esc(s.fileName)} ${s.sample ? '<span class="tag warn">Exemplo</span>' : ''}</strong><small class="num">${info}</small></div>
     ${s.sheets.length > 1 ? `<label class="field"><span>Aba</span><select class="input" id="sheetSel">${s.sheets.map((x, i) => `<option value="${i}" ${i === s.sheet ? 'selected' : ''}>${esc(x.name)}${x.error ? ' (grande demais)' : ''}</option>`).join('')}</select></label>` : ''}
-    <label class="field" style="min-width:110px;max-width:140px"><span>Cabeçalho na linha</span><input class="input" id="headerRow" type="number" min="1" max="${Math.max(1, Math.min(50, sh ? sh.aoa.length : 1))}" value="${s.headerRow}"></label>
-    <div class="actions">
-      <button class="btn primary" data-act="pick">Abrir arquivo</button>
+    <label class="field" style="max-width:130px"><span>Cabeçalho na linha</span><input class="input" id="headerRow" type="number" min="1" max="${Math.max(1, Math.min(50, sh ? sh.aoa.length : 1))}" value="${s.headerRow}"></label>
+    <div class="acts">
+      <button class="btn" data-act="pick">Trocar arquivo</button>
       <button class="btn" data-act="paste-open">Colar dados</button>
-      ${s.sample ? '' : '<button class="btn ghost" data-act="sample">Ver exemplo</button>'}
     </div>`;
+  $('#ovFile').innerHTML = `
+    <span class="ficon"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg></span>
+    <div style="min-width:0"><strong>${esc(s.fileName)} ${s.sample ? '<span class="tag warn">Exemplo</span>' : '<span class="tag">Só neste computador</span>'}</strong><small class="num">${info}</small></div>
+    <div class="acts"><button class="btn" data-act="paste-open">Colar dados</button>${s.sample ? '' : '<button class="btn" data-act="sample">Ver exemplo</button>'}<button class="btn primary" data-tab="limpar">Abrir</button></div>`;
+}
+function renderOverview() {
+  const res = state.res, inp = state.input;
+  if (!res) return;
+  let changed = 0;
+  res.rows.forEach(r => { changed += Object.keys(r.ch).length; });
+  const removed = Math.max(0, inp.rows.length - res.rows.length);
+  const active = state.recipe.steps.filter(s => s.on).length;
+  $('#metrics').innerHTML = `
+    <div class="metric"><span>Linhas na planilha</span><b class="num">${fmt(inp.rows.length)}</b><small>${fmt(res.rows.length)} depois da limpeza</small></div>
+    <div class="metric"><span>Células corrigidas</span><b class="num">${fmt(changed)}</b><small>Espaços, formatos e textos</small></div>
+    <div class="metric"><span>Linhas removidas</span><b class="num">${fmt(removed)}</b><small>Vazias, repetidas ou filtradas</small></div>
+    <div class="metric green"><span>Receita</span><b class="num">${fmt(active)} etapas</b><small>${esc(state.recipe.name)}</small></div>`;
+  const items = state.recipe.steps.map((st, i) => ({ st, i, rep: res.report[i] })).filter(x => x.rep && !x.rep.skip && (x.rep.changed || x.rep.removed || x.rep.cols || x.rep.added || x.rep.warn.length));
+  $('#activity').innerHTML = items.length ? items.slice(0, 6).map(({ st, i, rep }) => {
+    const r = [];
+    if (rep.changed) r.push(fmt(rep.changed) + (rep.changed === 1 ? ' célula' : ' células'));
+    if (rep.removed) r.push(fmt(rep.removed) + (rep.removed === 1 ? ' linha removida' : ' linhas removidas'));
+    if (rep.cols) r.push(fmt(rep.cols) + ' coluna(s) removida(s)');
+    if (rep.added) r.push('coluna criada');
+    return `<li><span class="dot">${i + 1}</span><div><strong>${esc(CATALOG[st.type].label)}</strong><small>${esc(summary(st))}</small></div><span class="r">${rep.warn.length ? `<span style="color:var(--warn)">${esc(rep.warn[0])}</span>` : esc(r.join(' · '))}</span></li>`;
+  }).join('') + (items.length > 6 ? `<li><span class="muted">e mais ${items.length - 6} etapa(s)</span></li>` : '') : '<li class="muted">A receita ainda não mudou nada nesta planilha.</li>';
 }
 
 /* ---------- Render: receita ---------- */
@@ -996,16 +1091,16 @@ function summary(st) {
 function badge(i) {
   const rep = state.res && state.res.report[i];
   if (!rep) return '';
-  if (rep.skip) return '<span class="muted">Desligada</span>';
+  if (rep.skip) return 'Desligada';
   const parts = [];
-  if (rep.changed) parts.push(`<span class="hl num">${fmt(rep.changed)} ${rep.changed === 1 ? 'célula alterada' : 'células alteradas'}</span>`);
+  if (rep.changed) parts.push(`<span class="num">${fmt(rep.changed)} ${rep.changed === 1 ? 'célula alterada' : 'células alteradas'}</span>`);
   if (rep.removed) parts.push(`<span class="num">${fmt(rep.removed)} ${rep.removed === 1 ? 'linha removida' : 'linhas removidas'}</span>`);
   if (rep.cols) parts.push(`<span class="num">${fmt(rep.cols)} ${rep.cols === 1 ? 'coluna removida' : 'colunas removidas'}</span>`);
   if (rep.added) parts.push('coluna criada');
   if (rep.renamed) parts.push('renomeada');
   rep.info.forEach(x => parts.push(esc(x)));
   rep.warn.forEach(x => parts.push(`<span class="w">${esc(x)}</span>`));
-  return parts.length ? parts.join(' · ') : '<span class="muted">Nada a mudar</span>';
+  return parts.join(' · ');
 }
 function fieldHtml(st, f, i) {
   const v = st.p[f.k], id = `f-${st.id}-${f.k}`;
@@ -1038,15 +1133,15 @@ function renderRecipe() {
         <button class="step-title" data-act="open" data-id="${st.id}" aria-expanded="${open}">${esc(c.label)}<small>${esc(summary(st))}</small></button>
         <label class="switch" title="Ligar ou desligar a etapa"><input type="checkbox" data-act="onoff" data-id="${st.id}" ${st.on ? 'checked' : ''} aria-label="Etapa ${i + 1} ligada"><span></span></label>
       </div>
-      <div class="step-badge has" id="b-${st.id}">${badge(i)}</div>
-      ${open ? `<div class="step-body"><p class="muted" style="font-size:13px">${esc(c.desc)}</p>${c.f.map(f => fieldHtml(st, f, i)).join('')}
-        <div class="step-tools"><button class="btn small" data-act="up" data-id="${st.id}" ${i === 0 ? 'disabled' : ''}>Subir</button><button class="btn small" data-act="down" data-id="${st.id}" ${i === steps.length - 1 ? 'disabled' : ''}>Descer</button><button class="btn small" data-act="dup" data-id="${st.id}">Duplicar</button><button class="btn small ghost" data-act="del" data-id="${st.id}" style="color:var(--danger)">Excluir</button></div></div>` : ''}
+      <div class="step-badge" id="b-${st.id}"${badge(i) ? '' : ' hidden'}>${badge(i)}</div>
+      ${open ? `<div class="step-body"><p class="muted" style="font-size:12px">${esc(c.desc)}</p>${c.f.map(f => fieldHtml(st, f, i)).join('')}
+        <div class="step-tools">${i > 0 ? `<button class="link" data-act="up" data-id="${st.id}">Subir</button>` : ''}${i < steps.length - 1 ? `<button class="link" data-act="down" data-id="${st.id}">Descer</button>` : ''}<button class="link" data-act="dup" data-id="${st.id}">Duplicar</button><button class="link danger" data-act="del" data-id="${st.id}">Excluir</button></div></div>` : ''}
     </li>`;
   }).join('') : '<li class="muted" style="padding:12px 8px">Nenhuma etapa. Escolha uma abaixo ou abra uma receita pronta.</li>';
   renderRecipeList();
 }
 function updateBadges() {
-  state.recipe.steps.forEach((st, i) => { const el = document.getElementById('b-' + st.id); if (el) el.innerHTML = badge(i); });
+  state.recipe.steps.forEach((st, i) => { const el = document.getElementById('b-' + st.id); if (el) { const b = badge(i); el.innerHTML = b; el.hidden = !b; } });
   state.recipe.steps.forEach(st => { const li = document.querySelector(`.step[data-id="${st.id}"] .step-title small`); if (li) li.textContent = summary(st); });
 }
 function renderRecipeList() {
@@ -1054,7 +1149,7 @@ function renderRecipeList() {
   $('#recipeLoad').innerHTML = `<option value="">Abrir receita…</option><optgroup label="Prontas">${Object.entries(TEMPLATES).map(([k, f]) => `<option value="t:${k}">${esc(f().name)}</option>`).join('')}</optgroup>${saved.length ? `<optgroup label="Salvas neste navegador">${saved.map((r, i) => `<option value="s:${i}">${esc(r.name)}</option>`).join('')}</optgroup>` : ''}`;
 }
 function renderAddStep() {
-  $('#addStep').innerHTML = '<option value="">Escolha uma etapa…</option>' + GROUPS.map(([g, list]) => `<optgroup label="${g}">${list.map(t => `<option value="${t}">${esc(CATALOG[t].label)}</option>`).join('')}</optgroup>`).join('');
+  $('#addStep').innerHTML = '<option value="">+ Adicionar etapa…</option>' + GROUPS.map(([g, list]) => `<optgroup label="${g}">${list.map(t => `<option value="${t}">${esc(CATALOG[t].label)}</option>`).join('')}</optgroup>`).join('');
 }
 
 /* ---------- Render: resultado ---------- */
@@ -1064,14 +1159,10 @@ function renderResults() {
   if (!res) return;
   let changedCells = 0;
   res.rows.forEach(r => { changedCells += Object.keys(r.ch).length; });
-  const removedRows = inp.rows.length - res.rows.length;
-  $('#stats').innerHTML = `
-    <div class="stat"><b class="num">${fmt(inp.rows.length)} → ${fmt(res.rows.length)}</b><span>linhas antes e depois</span></div>
-    <div class="stat"><b class="num"><span class="hl">${fmt(changedCells)}</span></b><span>células alteradas</span></div>
-    <div class="stat"><b class="num">${fmt(Math.max(0, removedRows))}</b><span>linhas removidas</span></div>
-    <div class="stat"><b class="num">${fmt(inp.headers.length)} → ${fmt(res.headers.length)}</b><span>colunas</span></div>`;
+  $('#sumline').innerHTML = `<b>${fmt(inp.rows.length)} → ${fmt(res.rows.length)}</b> linhas · <b>${fmt(changedCells)}</b> células alteradas`;
   const warns = res.report.reduce((n, r) => n + (r.warn ? r.warn.length : 0), 0);
-  $('#notice').innerHTML = warns ? `<div class="notice">${warns} ${warns === 1 ? 'aviso' : 'avisos'} na receita. Confira as etapas marcadas em laranja.</div>` : '';
+  $('#notice').innerHTML = warns ? `<div class="warnline">${warns} ${warns === 1 ? 'aviso' : 'avisos'} na receita. Confira as etapas com texto em laranja.</div>` : '';
+  renderOverview();
   document.querySelectorAll('[data-act="view"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
   renderTable();
 }
@@ -1374,12 +1465,14 @@ function sanitizeRecipe(obj) {
 function setRecipe(r) { state.recipe = r; state.open = null; recompute(); renderRecipe(); }
 
 /* ---------- Abas ---------- */
+const TABS = { inicio: 'Visão geral', limpar: 'Limpar planilha', automatizar: 'Automações', seguranca: 'Segurança' };
 function showTab(name) {
-  ['limpar', 'automatizar', 'seguranca'].forEach(t => {
-    $('#view-' + t).hidden = t !== name;
-    $('#tab-' + t).setAttribute('aria-selected', String(t === name));
-  });
+  if (!TABS[name]) name = 'inicio';
+  Object.keys(TABS).forEach(t => { $('#view-' + t).hidden = t !== name; });
+  document.querySelectorAll('.nav [data-tab]').forEach(b => { if (b.dataset.tab === name) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  $('#crumb').textContent = TABS[name];
   try { history.replaceState(null, '', '#' + name); } catch (e) {}
+  window.scrollTo(0, 0);
 }
 
 /* ---------- Avisos ---------- */
@@ -1389,6 +1482,7 @@ function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = fal
 /* ---------- Eventos ---------- */
 const findStep = id => state.recipe.steps.find(s => s.id === id);
 document.addEventListener('click', e => {
+  if (!e.target.closest('#dlMenu')) $('#dlMenu').open = false;
   const el = e.target.closest('[data-act]');
   if (!el) {
     const tab = e.target.closest('[data-tab]');
@@ -1415,11 +1509,11 @@ document.addEventListener('click', e => {
     case 'page': state.page += Number(el.dataset.d); renderTable(); break;
     case 'pick': $('#fileInput').click(); break;
     case 'sample': loadSample(); break;
-    case 'paste-open': $('#pastePanel').hidden = false; $('#pasteText').focus(); break;
+    case 'paste-open': showTab('limpar'); $('#pastePanel').hidden = false; $('#pasteText').focus(); break;
     case 'paste-close': $('#pastePanel').hidden = true; break;
     case 'paste-load': loadPasted($('#pasteText').value); break;
-    case 'export': exportResult(el.dataset.fmt); break;
-    case 'copy-table': { const g = resultGrid(); copyText([g.headers].concat(g.rows).map(r => r.map(v => String(v).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n'), 'Resultado copiado. Cole no Excel ou no Google Sheets com Ctrl+V.'); break; }
+    case 'export': $('#dlMenu').open = false; exportResult(el.dataset.fmt); break;
+    case 'copy-table': { $('#dlMenu').open = false; const g = resultGrid(); copyText([g.headers].concat(g.rows).map(r => r.map(v => String(v).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n'), 'Resultado copiado. Cole no Excel ou no Google Sheets com Ctrl+V.'); break; }
     case 'recipe-save': {
       const list = store.get('ps.recipes', []);
       const data = { name: state.recipe.name, steps: state.recipe.steps.map(s => ({ type: s.type, on: s.on, p: s.p })) };
@@ -1523,9 +1617,10 @@ const prev = store.get('ps.current', null);
 if (prev) { try { state.recipe = sanitizeRecipe(prev); } catch (e) {} }
 loadSample();
 const hash = (location.hash || '').slice(1);
-if (['limpar', 'automatizar', 'seguranca'].includes(hash)) showTab(hash);
+showTab(hash);
 downloadsNs();
 })();
+
 </script>
 
 </body>
