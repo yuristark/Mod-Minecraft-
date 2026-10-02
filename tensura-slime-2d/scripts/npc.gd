@@ -12,6 +12,9 @@ const LOOKS := {
 	"rigurd": {"name": "Rigurd", "kind": "goblin", "skin": Color(0.55, 0.72, 0.42), "hair": Color(0.3, 0.3, 0.3), "cloth": Color(0.4, 0.4, 0.55)},
 	"milim": {"name": "Milim Nava", "kind": "human", "skin": Color(1, 0.9, 0.85), "hair": Color(1, 0.6, 0.8), "cloth": Color(0.15, 0.15, 0.2)},
 	"diablo": {"name": "Diablo", "kind": "human", "skin": Color(0.95, 0.9, 0.9), "hair": Color(0.1, 0.1, 0.12), "cloth": Color(0.1, 0.1, 0.12)},
+	"hinata": {"name": "Hinata Sakaguchi", "kind": "human", "skin": Color(1, 0.9, 0.85), "hair": Color(0.12, 0.1, 0.12), "cloth": Color(0.9, 0.92, 1.0)},
+	"ramiris": {"name": "Ramiris", "kind": "fairy", "skin": Color(1, 0.9, 0.85), "hair": Color(0.3, 0.6, 1.0), "cloth": Color(0.7, 0.9, 1.0)},
+	"masayuki": {"name": "Masayuki", "kind": "human", "skin": Color(1, 0.9, 0.82), "hair": Color(0.98, 0.85, 0.35), "cloth": Color(0.3, 0.4, 0.8)},
 }
 
 var id := "veldora"
@@ -54,6 +57,15 @@ func _draw() -> void:
 			draw_circle(Vector2(23, -13), 3, Color(1, 0.85, 0.1))
 			for x in [-18, -8, 6, 14]:
 				draw_line(Vector2(x, 10), Vector2(x, 22), c, 5.0)
+		"fairy":
+			# Ramiris, a pequena Lorde Demônio fada
+			var fy := sin(_t * 4.0) * 4.0
+			for sd in [-1, 1]:
+				draw_circle(Vector2(sd * 10, -14 + fy), 9, Color(0.6, 0.85, 1.0, 0.5))
+			draw_circle(Vector2(0, -6 + fy), 6, look.skin)
+			draw_arc(Vector2(0, -7 + fy), 6, PI, TAU, 10, look.hair, 3.0)
+			draw_rect(Rect2(-4, fy, 8, 9), look.cloth)
+			draw_circle(Vector2(0, 0), 26, Color(0.6, 0.85, 1.0, 0.08 + sin(_t * 3) * 0.04))
 		_:
 			var r := 16.0 if look.kind == "human" else 13.0
 			var bob := sin(_t * 2.0) * 1.5

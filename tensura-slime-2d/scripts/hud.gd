@@ -10,6 +10,9 @@ const SPEAKER_COLORS := {
 	"Veldora": Color(1.0, 0.85, 0.4), "Rimuru": Color(0.55, 0.8, 1.0), "Slime": Color(0.55, 0.8, 1.0),
 	"Shion": Color(0.8, 0.6, 1.0), "Shuna": Color(1.0, 0.7, 0.85), "Benimaru": Color(1.0, 0.45, 0.4),
 	"Milim": Color(1.0, 0.6, 0.85), "Clayman": Color(0.85, 0.6, 1.0), "Geld": Color(0.7, 0.9, 0.4),
+	"Ciel": Color(0.85, 0.75, 1.0), "Diablo": Color(0.95, 0.3, 0.4), "Hinata Sakaguchi": Color(0.85, 0.9, 1.0),
+	"Ramiris": Color(0.6, 0.85, 1.0), "Souei": Color(0.6, 0.65, 0.95), "Yuuki": Color(0.9, 0.3, 0.4),
+	"Masayuki": Color(1.0, 0.9, 0.5), "Kondo": Color(0.7, 0.8, 0.6), "Gabiru": Color(0.5, 0.9, 0.6),
 }
 
 var main
@@ -34,8 +37,12 @@ var _overlay: PanelContainer
 var _overlay_title: Label
 var _overlay_text: Label
 var _overlay_hint: Label
-var _buttons: VBoxContainer
+var _buttons: GridContainer
 var _game_panels: Array = []
+var _skills_panel: PanelContainer
+var _level_label: Label
+var _xp_bar: ProgressBar
+var touch_mode := false
 
 var _dialogue: Array = []
 var _dialogue_done: Callable
@@ -61,6 +68,10 @@ func _ready() -> void:
 	_mp_bar = _bar(Color(0.35, 0.6, 1.0), 200)
 	_mp_text = _label("", 12)
 	sv.add_child(_row("Magículas", _mp_bar, _mp_text))
+	_level_label = _label("", 12, Color(1.0, 0.85, 0.4))
+	_xp_bar = _bar(Color(1.0, 0.8, 0.3), 200)
+	_xp_bar.custom_minimum_size = Vector2(200, 6)
+	sv.add_child(_row("", _xp_bar, _level_label))
 
 	var obj := _panel(_root)
 	_place(obj, Vector2(1, 0), Vector2(-12, 12), Control.GROW_DIRECTION_BEGIN, Control.GROW_DIRECTION_END)
@@ -84,6 +95,7 @@ func _ready() -> void:
 	_skills_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	sk.add_child(_skills_label)
 	_game_panels = [status, obj, sk]
+	_skills_panel = sk
 
 	_boss_panel = _panel(_root)
 	_place(_boss_panel, Vector2(0.5, 0), Vector2(0, 12), Control.GROW_DIRECTION_BOTH, Control.GROW_DIRECTION_END)
@@ -136,8 +148,9 @@ func _ready() -> void:
 	_overlay_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_overlay_text.custom_minimum_size = Vector2(710, 0)
 	ovb.add_child(_overlay_text)
-	_buttons = VBoxContainer.new()
-	_buttons.add_theme_constant_override("separation", 6)
+	_buttons = GridContainer.new()
+	_buttons.add_theme_constant_override("h_separation", 8)
+	_buttons.add_theme_constant_override("v_separation", 6)
 	ovb.add_child(_buttons)
 	_overlay_hint = _label("", 13, Color(1.0, 0.85, 0.4))
 	_overlay_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
@@ -209,11 +222,21 @@ func _row(title: String, bar: ProgressBar, value: Label) -> HBoxContainer:
 
 
 func _process(_delta: float) -> void:
+	if _overlay.visible:
+		# mantém a janela do tamanho certo e centralizada
+		_overlay.size = _overlay.get_combined_minimum_size()
+		_overlay.position = ((get_viewport().get_visible_rect().size - _overlay.size) / 2.0).round()
 	var playing: bool = player != null and is_instance_valid(player)
 	for p in _game_panels:
 		p.visible = playing
+	_skills_panel.visible = playing and not touch_mode
+	_sage_box.offset_top = -330.0 if touch_mode else -16.0
+	_sage_box.offset_bottom = _sage_box.offset_top
 	if not playing:
 		return
+	_level_label.text = " Nv %d" % main.level
+	_xp_bar.max_value = main.xp_needed()
+	_xp_bar.value = main.xp
 	_hp_bar.max_value = player.max_hp
 	_hp_bar.value = player.hp
 	_hp_text.text = " %d/%d" % [player.hp, player.max_hp]
@@ -269,6 +292,8 @@ func sage(text: String) -> void:
 	var who := "Grande Sábio"
 	if player != null and is_instance_valid(player) and player.skills.has("raphael"):
 		who = "Raphael"
+	if player != null and is_instance_valid(player) and player.skills.has("ciel"):
+		who = "Ciel"
 	var l := _label("《%s》 %s" % [who, text.trim_prefix("Raphael: ")], 15, Color(0.75, 0.95, 1.0))
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.custom_minimum_size = Vector2(620, 0)
@@ -297,41 +322,52 @@ func _button(text: String, cb: Callable, enabled := true) -> void:
 	var b := Button.new()
 	b.text = text
 	b.disabled = not enabled
-	b.add_theme_font_size_override("font_size", 17)
+	b.add_theme_font_size_override("font_size", 16)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.custom_minimum_size = Vector2(0, 40)
+	b.clip_text = true
 	b.pressed.connect(cb)
 	_buttons.add_child(b)
 
 
-## Menu inicial com seleção de capítulos.
-func show_menu(titles: Array, unlocked: int) -> void:
+## Menu com botões: buttons = Array de [texto, Callable, habilitado]
+func show_menu(title: String, text: String, buttons: Array, hint := "", columns := 1) -> void:
 	_mode = "menu"
 	get_tree().paused = true
 	_clear_buttons()
-	_show_overlay("Tensura: Reencarnado como Slime 2D",
-		"A história de Rimuru Tempest: da caverna do Veldora até virar Lorde Demônio.\n\n" +
-		"WASD: mover   Mouse: mirar   Clique: atacar   E: Predador (devorar)   F: conversar\n" +
-		"Espaço: Movimento Sombrio   Q: forma humana/slime   1–7: habilidades   Esc: pausa",
-		"Capítulos novos são liberados ao vencer o anterior.")
-	for i in titles.size():
-		var idx: int = i
-		_button(("" if i < unlocked else "[bloqueado] ") + titles[i], func(): _menu_pick(idx), i < unlocked)
+	_buttons.columns = columns
+	_overlay.custom_minimum_size = Vector2(1000 if columns > 1 else 760, 0)
+	_overlay_text.custom_minimum_size = Vector2(950 if columns > 1 else 710, 0)
+	_overlay.reset_size()
+	_show_overlay(title, text, hint)
+	for b in buttons:
+		var cb: Callable = b[1]
+		_button(b[0], func():
+			_close()
+			cb.call(), b[2] if b.size() > 2 else true)
 
 
-func _menu_pick(i: int) -> void:
-	_close()
-	main.start_chapter(i)
+## Escolha entre opções (bênçãos do Labirinto). Igual ao menu.
+func show_choice(title: String, text: String, buttons: Array) -> void:
+	show_menu(title, text, buttons, "")
 
 
 func show_pause() -> void:
 	_mode = "pause"
 	get_tree().paused = true
 	_clear_buttons()
+	_buttons.columns = 1
+	_overlay.custom_minimum_size = Vector2(760, 0)
+	_overlay.reset_size()
 	_show_overlay("Pausa", "", "")
 	_button("Continuar", func(): _close())
-	_button("Reiniciar capítulo", func():
+	_button("Reiniciar" + (" andar" if main.endless else " capítulo"), func():
 		_close()
-		main.start_chapter(main.chapter_index))
-	_button("Menu de capítulos", func():
+		main.restart_current())
+	_button("Controles de toque: " + ("LIGADOS" if touch_mode else "DESLIGADOS"), func():
+		main.set_touch(not touch_mode)
+		show_pause())
+	_button("Menu principal", func():
 		_close()
 		main.show_menu())
 
@@ -343,6 +379,9 @@ func show_dialogue(lines: Array, on_done: Callable) -> void:
 	_mode = "dialogue"
 	get_tree().paused = true
 	_clear_buttons()
+	_overlay.custom_minimum_size = Vector2(760, 0)
+	_overlay_text.custom_minimum_size = Vector2(710, 0)
+	_overlay.reset_size()
 	_next_line()
 
 
@@ -357,21 +396,9 @@ func _next_line() -> void:
 	_overlay_title.add_theme_color_override("font_color", SPEAKER_COLORS.get(line[0], Color(0.95, 0.9, 0.75)))
 
 
-func show_end(title: String, text: String, next_chapter: bool) -> void:
+func show_end(title: String, text: String, buttons: Array) -> void:
+	show_menu(title, text, buttons)
 	_mode = "end"
-	get_tree().paused = true
-	_clear_buttons()
-	_show_overlay(title, text, "")
-	if next_chapter:
-		_button("Próximo capítulo", func():
-			_close()
-			main.start_chapter(main.chapter_index + 1))
-	_button("Tentar de novo" if not next_chapter else "Jogar este capítulo de novo", func():
-		_close()
-		main.start_chapter(main.chapter_index))
-	_button("Menu de capítulos", func():
-		_close()
-		main.show_menu())
 
 
 func _show_overlay(title: String, text: String, hint: String) -> void:

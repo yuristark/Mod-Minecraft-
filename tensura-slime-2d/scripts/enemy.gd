@@ -11,6 +11,10 @@ var max_hp := 1.0
 var dead := false
 var is_boss := false
 var tag := ""  # "wave" para inimigos de ondas
+var hp_mult := 1.0   # escala do Labirinto Infinito
+var dmg_mult := 1.0
+var xp := 0.0
+var _dmg := 10.0
 var radius := 18.0
 
 var _main
@@ -35,7 +39,9 @@ var _facing := 1.0
 func _ready() -> void:
 	_main = get_tree().current_scene
 	data = Data.ENEMIES[type_id]
-	max_hp = data.hp
+	max_hp = data.hp * hp_mult
+	_dmg = data.dmg * dmg_mult
+	xp = (data.hp / 8.0) * (3.0 if data.ai == "boss" else 1.0) * sqrt(hp_mult)
 	hp = max_hp
 	radius = data.r
 	is_boss = data.ai == "boss"
@@ -100,7 +106,7 @@ func _physics_process(delta: float) -> void:
 					move = -to.normalized() * 0.7
 				if _attack_cd <= 0.0 and dist < 480.0 and speed > 0.0:
 					_attack_cd = 1.8
-					_main.shoot("enemy", global_position, to.normalized() * 260.0, data.dmg,
+					_main.shoot("enemy", global_position, to.normalized() * 260.0, _dmg,
 						data.get("shot", Color(1, 0.5, 0.2)), {"element": data.get("element", "")})
 			"charger":
 				move = to.normalized()
@@ -116,7 +122,7 @@ func _physics_process(delta: float) -> void:
 		# dano de contato
 		if dist < data.r + target.get("radius") + 8.0 and _attack_cd <= 0.0 and speed > 0.0 and data.ai != "ranged":
 			_attack_cd = 1.1
-			target.take_damage(data.dmg, data.get("element", ""), global_position)
+			target.take_damage(_dmg, data.get("element", ""), global_position)
 	else:
 		_wander_t -= delta
 		if _wander_t <= 0.0:
@@ -163,12 +169,12 @@ func _boss_patterns(delta: float, target, to: Vector2) -> void:
 			var off := randf() * TAU
 			for i in n:
 				var dir := Vector2.from_angle(off + i * TAU / n)
-				_main.shoot("enemy", global_position, dir * 220.0, data.dmg * 0.7, shot, {"element": el, "radius": 10.0})
+				_main.shoot("enemy", global_position, dir * 220.0, _dmg * 0.7, shot, {"element": el, "radius": 10.0})
 		"volley":
 			var base := to.angle()
 			for i in 5:
 				var dir := Vector2.from_angle(base + (i - 2) * 0.18)
-				_main.shoot("enemy", global_position, dir * 320.0, data.dmg * 0.8, shot, {"element": el})
+				_main.shoot("enemy", global_position, dir * 320.0, _dmg * 0.8, shot, {"element": el})
 		"charge":
 			_charge_dir = to.normalized()
 			_charge_time = 0.6
@@ -188,7 +194,7 @@ func _boss_patterns(delta: float, target, to: Vector2) -> void:
 			tw.tween_callback(func():
 				if not dead:
 					_main.fx("burst", center, shot, 130.0, 0.4)
-					_main.damage_area("enemy", center, 110.0, data.dmg * 1.6, el, "", 0.0))
+					_main.damage_area("enemy", center, 110.0, _dmg * 1.6, el, "", 0.0))
 		"regen":
 			hp = minf(hp + max_hp * 0.05, max_hp)
 			_main.fx("ring", global_position, Color(0.4, 1.0, 0.4), 90.0, 0.6)
@@ -198,6 +204,7 @@ func _boss_patterns(delta: float, target, to: Vector2) -> void:
 func take_damage(amount: float, element := "", _from := Vector2.ZERO) -> void:
 	if dead:
 		return
+	amount *= _main.power_mult()
 	if element != "" and data.get("weak", "") == element:
 		amount *= 2.0
 	if element == "fire" and data.get("element", "") == "fire":
@@ -283,8 +290,32 @@ func _draw() -> void:
 			draw_circle(Vector2(r * 0.4, -r * 0.2), 3.0, eye if type_id == "serpent" else Color(1, 1, 0.3))
 			if type_id == "salamander":
 				draw_circle(Vector2(-r * 2.2, 0), r * 0.5 + sin(_t * 20) * 2, Color(1, 0.8, 0.2, 0.7))
-		"lizard", "orc", "orc_general", "ogre", "knight", "puppet":
+		"lizard", "orc", "orc_general", "ogre", "knight", "puppet", "holy_knight", "challenger", "imperial":
 			_draw_humanoid(r, c)
+		"imperial_tank":
+			draw_rect(Rect2(-r, -r * 0.5, r * 2, r), c)
+			draw_rect(Rect2(-r * 0.5, -r * 0.9, r, r * 0.5), c.lightened(0.1))
+			draw_line(Vector2(0, -r * 0.65), Vector2(r * 1.5, -r * 0.65), c.darkened(0.3), 6.0)
+			for i in 4:
+				draw_circle(Vector2(-r * 0.75 + i * r * 0.5, r * 0.5), r * 0.2, Color(0.15, 0.15, 0.15))
+		"angel":
+			var flap2 := sin(_t * 10.0) * 6.0
+			for s2 in [-1, 1]:
+				draw_colored_polygon(PackedVector2Array([Vector2(0, -r * 0.3), Vector2(s2 * r * 1.8, -r * 1.2 - flap2), Vector2(s2 * r * 1.2, r * 0.3)]), Color(1, 1, 1, 0.85))
+			_draw_humanoid(r, Color(1.0, 0.92, 0.85), Color(1.0, 0.9, 0.5), Color(0.95, 0.95, 1.0))
+			draw_arc(Vector2(0, -r * 1.6), r * 0.4, 0, TAU, 16, Color(1, 0.9, 0.4), 2.0)
+		"hinata":
+			_draw_humanoid(r, Color(1.0, 0.9, 0.85), Color(0.12, 0.1, 0.12), Color(0.9, 0.92, 1.0))
+			draw_line(Vector2(r * 0.6, 0), Vector2(r * 1.8, -r * 0.6), Color(0.7, 0.9, 1.0), 3.0)
+		"masayuki":
+			_draw_humanoid(r, Color(1.0, 0.9, 0.82), Color(0.98, 0.85, 0.35), Color(0.3, 0.4, 0.8))
+			draw_circle(Vector2.ZERO, r * 1.5 + sin(_t * 5) * 3, Color(1, 0.9, 0.4, 0.1))  # aura de herói
+		"kondo":
+			_draw_humanoid(r, Color(0.95, 0.85, 0.75), Color(0.1, 0.1, 0.1), Color(0.25, 0.3, 0.22))
+			draw_line(Vector2(r * 0.6, -r * 0.1), Vector2(r * 1.6, -r * 0.1), Color(0.2, 0.2, 0.2), 4.0)
+		"yuuki":
+			_draw_humanoid(r, Color(1.0, 0.9, 0.85), Color(0.12, 0.12, 0.15), Color(0.15, 0.15, 0.25))
+			draw_circle(Vector2.ZERO, r * 1.6 + sin(_t * 6) * 4, Color(0.8, 0.1, 0.25, 0.12))
 		"direwolf", "direwolf_boss":
 			draw_rect(Rect2(-r, -r * 0.5, r * 1.8, r), c)
 			draw_circle(Vector2(r * 0.9, -r * 0.5), r * 0.5, c)
@@ -358,7 +389,9 @@ func _draw_humanoid(r: float, skin: Color, hair := Color(-1, 0, 0), cloth := Col
 	draw_circle(Vector2(0, -r * 0.85), r * 0.5, skin)
 	draw_arc(Vector2(0, -r * 0.9), r * 0.5, PI, TAU, 12, hair, r * 0.25)
 	draw_circle(Vector2(r * 0.22, -r * 0.88), 2.5, Color(0.1, 0.1, 0.1) if type_id != "puppet" else Color(0.9, 0.3, 1))
-	if type_id == "knight":
+	if type_id == "imperial":
+		draw_line(Vector2(r * 0.4, -r * 0.1), Vector2(r * 1.4, -r * 0.2), Color(0.15, 0.15, 0.15), 4.0)
+	elif type_id == "knight" or type_id == "holy_knight":
 		draw_line(Vector2(r * 0.6, 0), Vector2(r * 1.4, -r * 0.8), Color(0.85, 0.85, 0.9), 3.0)
 	elif type_id == "ogre" or type_id == "orc_general":
 		draw_line(Vector2(r * 0.6, 0), Vector2(r * 1.3, -r * 1.0), Color(0.5, 0.4, 0.3), 5.0)

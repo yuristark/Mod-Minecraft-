@@ -21,6 +21,8 @@ const S5 := ["predator", "great_sage", "water_blade", "poison_breath", "sticky_t
 	"shadow_motion", "black_lightning", "mimicry", "sword", "black_flame", "starved"]
 const S6 := ["beelzebub", "raphael", "water_blade", "poison_breath", "sticky_thread", "ultrasound",
 	"shadow_motion", "black_lightning", "mimicry", "sword", "black_flame", "starved", "megiddo"]
+const S9 := ["beelzebub", "ciel", "water_blade", "poison_breath", "sticky_thread", "ultrasound",
+	"shadow_motion", "black_lightning", "mimicry", "sword", "black_flame", "starved", "megiddo"]
 
 
 static func all() -> Array:
@@ -286,6 +288,142 @@ static func all() -> Array:
 					["Milim", "Agora você é um Lorde Demônio de verdade! Vamos ser melhores amigos para sempre, Rimuru!"],
 					["Veldora", "KUAHAHA! E não se esqueçam do grande Veldora!"],
 					["Rimuru", "Os Lordes Demônios agora são o Octagrama. E Tempest... vai ser o lugar mais divertido deste mundo!"],
+				]},
+			],
+		},
+		# ------------------------------------------------------------------ 7
+		{
+			"title": "Capítulo 7 — Hinata e os Cavaleiros Sagrados",
+			"theme": "forest", "size": Vector2(2600, 1900), "seed": 77,
+			"player_pos": Vector2(1300, 1700), "name": "Rimuru Tempest (Lorde Demônio)",
+			"skills": S6, "hp": 380.0, "mp": 480.0, "demon_lord": true,
+			"allies": ["ranga", "benimaru", "shion", "souei"],
+			"npcs": [], "spawns": [], "pickups": [], "herbs": 8,
+			"intro": [
+				["Souei", "Mestre Rimuru, a Igreja Ocidental marcha contra Tempest. À frente está Hinata Sakaguchi, a capitã dos Cavaleiros Sagrados."],
+				["Raphael", "Hinata foi aluna de Shizue Izawa. Alguém a convenceu de que você matou a professora dela."],
+				["Rimuru", "Então vou ter que mostrar a verdade... nem que seja na base da espada."],
+			],
+			"steps": [
+				{"type": "waves", "from": Vector2(1300, 150), "obj": "Detenha os Cavaleiros Sagrados! Onda %d/%d",
+				"waves": [[["holy_knight", 6]], [["holy_knight", 8], ["mage", 3]]]},
+				{"type": "boss", "boss": "hinata", "pos": Vector2(1300, 350),
+				"obj": "Duelo com Hinata Sakaguchi! Vença sem matá-la.",
+				"start": [["Hinata Sakaguchi", "Monstro que devorou a Shizu-sensei... Meu Disintegration vai apagar você deste mundo."],
+					["Rimuru", "Eu não matei a Shizu! Ela me pediu para levar os sentimentos dela comigo."]],
+				"lines": [
+					["Hinata Sakaguchi", "...Essa máscara. É a da sensei. Você... estava falando a verdade?"],
+					["Rimuru", "Alguém mentiu pra você, Hinata. E eu acho que sei quem foi."],
+					["Hinata Sakaguchi", "Então... me desculpe. A Igreja Ocidental e Tempest farão as pazes. Luminus também vai concordar."],
+					["Raphael", "Tratado de paz com o Santo Império de Lubelius estabelecido."],
+				],
+				"actions": [["stats", 420.0, 520.0]]},
+			],
+		},
+		# ------------------------------------------------------------------ 8
+		{
+			"title": "Capítulo 8 — O Festival da Fundação",
+			"theme": "town", "size": Vector2(2600, 1900), "seed": 88,
+			"player_pos": Vector2(1300, 1700), "name": "Rimuru Tempest (Lorde Demônio)",
+			"skills": S6, "hp": 420.0, "mp": 520.0, "demon_lord": true,
+			"allies": ["ranga", "shion", "shuna", "gabiru"],
+			"npcs": [["ramiris", Vector2(1300, 900)]], "spawns": [], "pickups": [], "herbs": 8,
+			"intro": [
+				["Shuna", "O Festival de Fundação de Tempest começou! Tem comida, música, e até um torneio!"],
+				["Shion", "E eu fiz o meu curry especial para todos os convidados! ...Por que estão todos correndo?"],
+			],
+			"steps": [
+				{"type": "talk", "npc": "ramiris", "obj": "Fale com a Ramiris (F).",
+				"lines": [
+					["Ramiris", "Rimuru! Eu, a grande Lorde Demônio Ramiris, criei um LABIRINTO debaixo da sua cidade! Ele não tem fim!"],
+					["Ramiris", "O mestre Veldora vai ser o chefe final do andar 100! Quem entrar e morrer volta à vida na entrada!"],
+					["Rimuru", "Um labirinto infinito? Isso vai atrair aventureiros do mundo todo! (E vai ser ótimo para treinar...)"],
+					["Raphael", "Novo modo desbloqueado no menu: LABIRINTO INFINITO."],
+				],
+				"actions": [["remove_npc", "ramiris"]]},
+				{"type": "waves", "from": Vector2(1300, 150), "obj": "Torneio do Festival: vença os desafiantes! Rodada %d/%d",
+				"waves": [[["challenger", 6]], [["challenger", 6], ["ogre", 3]], [["challenger", 8], ["orc_general", 2]]]},
+				{"type": "boss", "boss": "masayuki", "pos": Vector2(1300, 350),
+				"obj": "Final do torneio: derrote o Herói Masayuki!",
+				"start": [["Masayuki", "(Por que todo mundo acha que eu sou fortíssimo? Eu só tenho sorte! Socorro!)"],
+					["Plateia", "MA-SA-YU-KI! MA-SA-YU-KI! O Herói Escolhido vai vencer o Lorde Demônio!"]],
+				"lines": [
+					["Masayuki", "Eu... desisto! Por favor, não me devore!"],
+					["Rimuru", "Relaxa, outro japonês. Que tal trabalhar para Tempest? A gente precisa de alguém com essa sorte."],
+					["Raphael", "O Festival da Fundação foi um sucesso. Tempest agora é reconhecida pelas nações do mundo."],
+				],
+				"actions": [["stats", 460.0, 560.0]]},
+			],
+		},
+		# ------------------------------------------------------------------ 9
+		{
+			"title": "Capítulo 9 — A Invasão do Império Oriental",
+			"theme": "wetland", "size": Vector2(2800, 2000), "seed": 99,
+			"player_pos": Vector2(1400, 1800), "name": "Rimuru Tempest (Lorde Demônio)",
+			"skills": S6, "hp": 460.0, "mp": 560.0, "demon_lord": true,
+			"allies": ["ranga", "benimaru", "shion", "souei", "gabiru"],
+			"npcs": [["diablo", Vector2(1400, 1300)]], "spawns": [], "pickups": [], "herbs": 10,
+			"intro": [
+				["Benimaru", "O Império Oriental atravessou a fronteira com quase um milhão de soldados e tanques mágicos."],
+				["Rimuru", "Não vamos deixar eles chegarem a Tempest. Diablo, apresente-se!"],
+			],
+			"steps": [
+				{"type": "talk", "npc": "diablo", "obj": "Fale com Diablo (F).",
+				"lines": [
+					["Diablo", "Kufufufu... Rimuru-sama, as Demônios Primordiais Testarossa, Ultima e Carrera aguardam suas ordens."],
+					["Diablo", "Permita que eu cuide pessoalmente dos insetos que ousaram ameaçar o meu mestre."],
+					["Rimuru", "Diablo, só não exagera... Tá, pode exagerar um pouco."],
+				],
+				"actions": [["remove_npc", "diablo"], ["ally", "diablo"]]},
+				{"type": "waves", "from": Vector2(1400, 150), "obj": "Destrua o exército do Império! Onda %d/%d",
+				"waves": [[["imperial", 8]], [["imperial", 8], ["imperial_tank", 2]], [["imperial", 10], ["imperial_tank", 3], ["mage", 3]]]},
+				{"type": "boss", "boss": "kondo", "pos": Vector2(1400, 350), "devour": true,
+				"obj": "Derrote Kondo Tatsuya, o oficial do Império, e devore-o (E).",
+				"start": [["Kondo", "Lorde Demônio Rimuru. Por ordem do Imperador, sua cabeça será minha."],
+					["Raphael", "Aviso: o inimigo usa balas de magia capazes de matar até Lordes Demônios. Esquive!"]],
+				"lines": [
+					["Kondo", "Hm... Então este é... o verdadeiro poder... de um Lorde Demônio..."],
+					["Raphael", "Mestre, eu gostaria de pedir algo. Poderia me dar um nome?"],
+					["Rimuru", "Um nome para você? ...Que tal CIEL? Obrigado por sempre estar comigo."],
+					["Ciel", "Nome recebido. Raphael evoluiu para [Ciel, Senhor da Sabedoria]. Eu sempre estarei ao seu lado, mestre."],
+				],
+				"actions": [["revoke", "raphael"], ["grant", "ciel"], ["stats", 520.0, 640.0]]},
+			],
+		},
+		# ------------------------------------------------------------------ 10
+		{
+			"title": "Capítulo 10 — O Despertar do Verdadeiro Dragão",
+			"theme": "castle", "size": Vector2(2400, 1800), "seed": 101,
+			"player_pos": Vector2(1200, 1650), "name": "Rimuru Tempest (Lorde Demônio)",
+			"skills": S9, "hp": 520.0, "mp": 640.0, "demon_lord": true,
+			"allies": ["ranga", "benimaru", "shion", "shuna", "souei", "diablo"],
+			"npcs": [], "spawns": [], "pickups": [], "herbs": 8,
+			"intro": [
+				["Ciel", "Alerta máximo! Veldora foi capturado pela habilidade Dominação de Michael. Yuuki Kagurazaka está por trás de tudo."],
+				["Rimuru", "Yuuki... o mestre da Guilda. Ele enganou a Hinata, o Clayman, o Império... E agora levou o Veldora?!"],
+				["Rimuru", "Ninguém toca no meu melhor amigo."],
+			],
+			"steps": [
+				{"type": "waves", "from": Vector2(1200, 150), "obj": "Atravesse o exército de anjos de Feldway! Onda %d/%d",
+				"waves": [[["angel", 8]], [["angel", 10], ["holy_knight", 4]]]},
+				{"type": "event", "obj": "",
+				"lines": [
+					["Ciel", "A raiva do mestre está ressoando com o fragmento do Veldora no Estômago... Evolução iniciada."],
+					["Ciel", "Rimuru Tempest evoluiu para VERDADEIRO DRAGÃO. Belzebu evoluiu para [Azathoth, Senhor do Vazio] (tecla 9)."],
+					["Ciel", "Habilidade [Tempestade do Verdadeiro Dragão] criada a partir do poder do Veldora (tecla 8)."],
+				],
+				"actions": [["grant", "dragon_storm"], ["grant", "azathoth"], ["stats", 700.0, 850.0], ["heal"],
+					["name", "Rimuru Tempest (Verdadeiro Dragão)"]]},
+				{"type": "boss", "boss": "yuuki", "pos": Vector2(1200, 350), "devour": true,
+				"obj": "Derrote Yuuki Kagurazaka e liberte o Veldora!",
+				"start": [["Yuuki", "Rimuru-san! Você sempre foi tão interessante. Pena que o meu plano de dominar o mundo precisa que você suma."],
+					["Rimuru", "Yuuki, você vai devolver o Veldora. Agora."]],
+				"lines": [
+					["Yuuki", "Haha... eu perdi? Tudo bem... foi divertido..."],
+					["Ciel", "Dominação de Michael quebrada. Recuperando o Veldora..."],
+					["Veldora", "KUAHAHAHA! Rimuru! Eu sabia que você viria! Meu melhor amigo!"],
+					["Rimuru", "Bem-vindo de volta, Veldora. Agora... que tal uma festa em Tempest?"],
+					["Ramiris", "E não esqueçam do meu Labirinto Infinito! Treinem lá para sempre! Hehe!"],
 				]},
 			],
 		},

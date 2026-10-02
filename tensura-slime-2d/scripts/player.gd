@@ -14,6 +14,13 @@ var human := false
 var demon_lord := false
 var skills := {}
 var cooldowns := {}
+## Celular: mira automática no inimigo mais próximo
+var touch_mode := false
+## Bônus de bênçãos (Labirinto Infinito)
+var speed_mult := 1.0
+var cd_mult := 1.0
+var regen_bonus := 0.0
+var devour_heal := 10.0
 
 var _main
 var _invuln := 0.0
@@ -25,6 +32,7 @@ var _hurt_t := 0.0
 var _swing_t := 0.0
 var _aim := Vector2.RIGHT
 var _starved_t := 0.0
+var _last_move := Vector2.RIGHT
 
 
 func _ready() -> void:
@@ -50,9 +58,7 @@ func has_skill(id: String) -> bool:
 func _unhandled_input(event: InputEvent) -> void:
 	if dead:
 		return
-	if event.is_action_pressed("attack"):
-		_cast("sword" if human else "water_blade")
-	for id in ["poison_breath", "sticky_thread", "ultrasound", "black_lightning", "black_flame", "starved", "megiddo", "shadow_motion", "mimicry"]:
+	for id in Data.ACTIVE_SKILLS + ["shadow_motion", "mimicry"]:
 		if event.is_action_pressed(id):
 			_cast(id)
 	if event.is_action_pressed("devour"):
@@ -70,10 +76,18 @@ func _physics_process(delta: float) -> void:
 		cooldowns[k] = maxf(cooldowns[k] - delta, 0.0)
 	if not dead:
 		mp = minf(mp + mp_regen * delta, max_mp)
-		hp = minf(hp + (2.5 if demon_lord else 1.0) * delta, max_hp)
-	_aim = (get_global_mouse_position() - global_position).normalized()
+		hp = minf(hp + ((2.5 if demon_lord else 1.0) + regen_bonus) * delta, max_hp)
+	if touch_mode:
+		var near = _nearest_enemy(650.0)
+		_aim = (near.global_position - global_position).normalized() if near != null else _last_move
+	else:
+		_aim = (get_global_mouse_position() - global_position).normalized()
 	if _aim == Vector2.ZERO:
 		_aim = Vector2.RIGHT
+	# Ataque básico: segure o clique (PC) ou o botão de ataque (celular)
+	var firing := Input.is_action_pressed("touch_attack") or (not touch_mode and Input.is_action_pressed("attack"))
+	if firing and not dead and not get_tree().paused:
+		_cast("sword" if human else "water_blade")
 
 	if _starved_t > 0.0:
 		_starved_t -= delta
@@ -86,7 +100,9 @@ func _physics_process(delta: float) -> void:
 	var input := Vector2.ZERO
 	if not dead:
 		input = Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var speed := 230.0 if human else 200.0
+	if input.length() > 0.2:
+		_last_move = input.normalized()
+	var speed := (230.0 if human else 200.0) * speed_mult
 	if _dash_t > 0.0:
 		_dash_t -= delta
 		velocity = _dash_dir * 900.0
@@ -109,7 +125,7 @@ func _cast(id: String) -> void:
 		_main.sage("Notificação: magículas insuficientes.")
 		return
 	mp -= info.mp
-	cooldowns[id] = info.cd
+	cooldowns[id] = info.cd * cd_mult
 	_squash = 0.25
 	var pos := global_position
 	match id:
@@ -172,11 +188,39 @@ func _cast(id: String) -> void:
 				var e = targets[i]
 				_main.fx("beam", e.global_position, Color(1, 1, 0.8), 0.0, 0.5)
 				e.take_damage(110.0, "light", pos)
+		"dragon_storm":
+			# Tempestade do Verdadeiro Dragão: raios e vento em área enorme
+			_main.fx("ring", pos, Color(1.0, 0.85, 0.3), 520.0, 0.9)
+			_main.fx("ring", pos, Color(0.5, 0.8, 1.0), 380.0, 0.6)
+			for e in _enemies_sorted(pos, 480.0):
+				_main.fx("bolt", e.global_position + Vector2(0, -400), Color(1.0, 0.9, 0.4), 0.0, 0.4, Vector2(0, 400))
+				e.take_damage(160.0, "", pos)
+				e.apply_status("stun", 2.0)
+			_main.sage("Tempestade do Verdadeiro Dragão!")
+		"azathoth":
+			# Azathoth: o Vazio devora tudo que está na tela
+			_main.fx("burst", pos, Color(0.05, 0.0, 0.1), 700.0, 1.0)
+			_main.fx("ring", pos, Color(0.6, 0.3, 1.0), 800.0, 1.0)
+			for e in _enemies_sorted(pos, 900.0):
+				e.take_damage(320.0, "dark", pos)
+			heal(max_hp * 0.4)
+			_main.sage("Azathoth: o Vazio consome tudo!")
 		"mimicry":
 			human = not human
 			radius = 18.0
 			_main.fx("burst", pos, Color(0.5, 0.8, 1.0), 60.0, 0.4)
 			_main.sage("Mimetismo: " + ("forma humana." if human else "forma de slime."))
+
+
+func _nearest_enemy(max_d: float):
+	var best = null
+	var best_d := max_d
+	for e in get_tree().get_nodes_in_group("enemy"):
+		var d: float = e.global_position.distance_to(global_position)
+		if d < best_d:
+			best = e
+			best_d = d
+	return best
 
 
 func _enemies_sorted(pos: Vector2, max_d: float) -> Array:
@@ -223,6 +267,7 @@ func _devour() -> void:
 	tw.tween_property(best, "global_position", global_position, 0.3)
 	tw.tween_property(best, "scale", Vector2.ONE * 0.05, 0.3)
 	tw.chain().tween_callback(func():
+		heal(devour_heal)
 		_main.on_devoured(best)
 		if is_instance_valid(best):
 			best.queue_free())

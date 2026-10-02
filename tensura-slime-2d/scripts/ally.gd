@@ -140,6 +140,21 @@ func _special(target) -> void:
 				_main.fx("ring", p.global_position, Color(0.5, 1.0, 0.6), 60.0, 0.5)
 			for a in get_tree().get_nodes_in_group("ally"):
 				a.hp = minf(a.hp + 40.0, a.max_hp)
+		"temptation":
+			# Diablo: Tentação, paralisa todos ao redor
+			_special_cd = data.cd
+			_main.fx("ring", global_position, Color(0.6, 0.05, 0.15), 380.0, 0.7)
+			_main.damage_area("player", global_position, 350.0, 80.0, "dark", "stun", 2.5)
+			_main.fx("text", global_position + Vector2(0, -40), Color(1, 0.4, 0.5), 0, 1.0, Vector2.ZERO, "Kufufufu...")
+		"threads":
+			_special_cd = data.cd
+			_main.fx("ring", global_position, Color(0.6, 0.7, 1.0), 260.0, 0.4)
+			_main.damage_area("player", global_position, 250.0, 30.0, "", "root", 3.0)
+		"vortex_spear":
+			_special_cd = data.cd
+			var c2: Vector2 = target.global_position
+			_main.fx("burst", c2, Color(0.3, 0.7, 1.0), 140.0, 0.5)
+			_main.damage_area("player", c2, 140.0, 55.0, "water", "", 0.0)
 		"storm":
 			_special_cd = data.cd
 			_main.fx("ring", global_position, Color(1.0, 0.85, 0.3), 320.0, 0.6)
@@ -188,6 +203,17 @@ func _draw() -> void:
 		"shuna":
 			_humanoid(r, Color(1.0, 0.9, 0.85), Color(1.0, 0.72, 0.82), Color(0.95, 0.95, 1.0))
 			_horn(r, Color(0.95, 0.95, 0.9))
+		"diablo":
+			_humanoid(r, Color(0.98, 0.92, 0.9), Color(0.08, 0.08, 0.1), Color(0.1, 0.1, 0.12))
+			draw_line(Vector2(-r * 0.35, -r * 1.05), Vector2(-r * 0.6, -r * 0.6), Color(0.9, 0.75, 0.2), 2.0)
+			draw_circle(Vector2(r * 0.25, -r * 0.95), 2.4, Color(0.9, 0.1, 0.15))
+		"souei":
+			_humanoid(r, Color(0.98, 0.9, 0.85), Color(0.15, 0.2, 0.35), Color(0.1, 0.12, 0.25))
+			_horn(r, Color(0.2, 0.2, 0.3))
+			draw_rect(Rect2(-r * 0.5, -r * 0.8, r, r * 0.25), Color(0.1, 0.1, 0.2))  # máscara
+		"gabiru":
+			_humanoid(r, Color(0.4, 0.62, 0.45), Color(0.3, 0.5, 0.35), Color(0.65, 0.5, 0.2))
+			draw_line(Vector2(r * 0.6, r * 0.3), Vector2(r * 1.7, -r * 1.3), Color(0.4, 0.7, 1.0), 3.0)
 		"gobta":
 			_humanoid(r, Color(0.5, 0.75, 0.4), Color(0.3, 0.3, 0.3), Color(0.5, 0.4, 0.3))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
