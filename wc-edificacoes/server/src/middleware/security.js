@@ -13,6 +13,9 @@ export function securityHeaders() {
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", ...(useTurnstile ? [TURNSTILE] : [])],
+        scriptSrcAttr: ["'none'"], // nenhum onclick="" etc.
+        // nenhum style="" vindo do HTML (o React aplica estilos via CSSOM). O widget do Turnstile precisa deles.
+        ...(useTurnstile ? {} : { styleSrcAttr: ["'none'"] }),
         styleSrc: ["'self'"],
         imgSrc: ["'self'", 'data:', 'blob:'],
         fontSrc: ["'self'"],

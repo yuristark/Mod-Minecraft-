@@ -12,6 +12,7 @@ import {
   idParam, imageUpdate, projectBody, quoteListQuery, quoteUpdate, simulatorSettings,
 } from '../schemas.js';
 import { getSimulatorSettings, mapImage, mapProject, PROJECT_SELECT } from './public.js';
+import { clearSitemapCache } from './seo.js';
 
 export const adminRouter = Router();
 adminRouter.use(requireAuth, requireCsrf);
@@ -175,6 +176,7 @@ adminRouter.post('/projects', async (req, res) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING id`,
     [slug, d.title, d.category, d.status, d.city, d.areaM2, d.year, d.durationMonths, d.summary, d.description, d.featured, d.published],
   );
+  clearSitemapCache();
   await audit(req, 'project.create', 'project', rows[0].id);
   res.status(201).json({ id: rows[0].id, slug });
 });
@@ -190,6 +192,7 @@ adminRouter.put('/projects/:id', async (req, res) => {
     [id, slug, d.title, d.category, d.status, d.city, d.areaM2, d.year, d.durationMonths, d.summary, d.description, d.featured, d.published],
   );
   if (!rowCount) throw notFound('Obra não encontrada');
+  clearSitemapCache();
   await audit(req, 'project.update', 'project', id);
   res.json({ id, slug });
 });
@@ -203,6 +206,7 @@ adminRouter.delete('/projects/:id', async (req, res) => {
     return imgs.rows.map((r) => r.filename);
   });
   await Promise.all(files.map(deleteImageFiles));
+  clearSitemapCache();
   await audit(req, 'project.delete', 'project', id);
   res.status(204).end();
 });

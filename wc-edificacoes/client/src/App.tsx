@@ -6,6 +6,8 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { IS_DEMO } from "@/lib/api";
 import { installRipple } from "@/lib/ripple";
+import { NavProgress } from "@/components/NavProgress";
+import { Toaster } from "@/components/Toast";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import Home from "@/pages/Home";
 import NotFound from "@/pages/NotFound";
@@ -43,6 +45,8 @@ function PublicLayout() {
       </main>
       <SiteFooter />
       <WhatsAppButton />
+      <NavProgress />
+      <Toaster />
     </div>
   );
 }

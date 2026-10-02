@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Expand, Share2, X } from "lucide-react";
 import { Link } from "@/components/Link";
 import { Modal } from "@/components/Modal";
 import { ProjectArt } from "@/components/ProjectArt";
@@ -11,6 +11,7 @@ import { useAsync } from "@/hooks/useAsync";
 import { useSeo } from "@/hooks/useSeo";
 import { api } from "@/lib/api";
 import { num } from "@/lib/estimate";
+import { shareLink } from "@/lib/share";
 import { heroName, StaggerItem, Staggered } from "@/motion/flutter";
 import { curves, durations } from "@/motion/tokens";
 import { Reveal, SplitWords } from "@/motion/ui";
@@ -55,6 +56,13 @@ export default function ObraDetalhe() {
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <StatusPill status={project.status} className="border border-line" />
               <span className="label-mono text-ink-3">{CATEGORY_LABEL[project.category]}</span>
+              <button
+                type="button"
+                onClick={() => shareLink({ title: project.title, text: project.summary })}
+                className="ml-auto inline-flex items-center gap-2 border border-line bg-paper px-3 py-2 text-sm font-medium transition-colors hover:border-ink"
+              >
+                <Share2 className="h-4 w-4" aria-hidden="true" /> Compartilhar
+              </button>
             </div>
             <h1 className="mt-5 max-w-5xl text-display-lg uppercase text-balance"><SplitWords key={project.slug} text={project.title} gap={0.04} /></h1>
             <Reveal delay={0.3} y={16}><p className="mt-6 max-w-3xl text-xl leading-relaxed text-ink-3 text-pretty">{project.summary}</p></Reveal>

@@ -22,7 +22,7 @@ export default function Empresa() {
     <>
       <section className="on-dark grain relative overflow-hidden bg-ink text-paper">
         <div aria-hidden="true" className="blueprint-grid blueprint-pan absolute inset-0" />
-        <div aria-hidden="true" className="pointer-events-none absolute -left-40 bottom-0 h-[480px] w-[480px] rounded-full bg-signal/10 blur-[110px]" />
+        <div aria-hidden="true" className="glow pointer-events-none absolute -bottom-40 -left-64 h-[700px] w-[700px]" />
         <div className="container relative grid gap-12 py-16 md:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div>
             <SectionLabel className="text-paper/60">A empresa</SectionLabel>

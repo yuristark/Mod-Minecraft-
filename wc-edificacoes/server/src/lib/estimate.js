@@ -8,7 +8,7 @@ export function computeEstimate(settings, { projectType, standard, areaM2, extra
   if (!Number.isFinite(base) || base <= 0) return null;
   let extraPct = 0;
   for (const key of new Set(extras)) {
-    const e = settings.extras?.[key];
+    const e = settings.extras && Object.hasOwn(settings.extras, key) ? settings.extras[key] : null;
     if (e && Number.isFinite(e.percent)) extraPct += e.percent;
   }
   const total = base * areaM2 * (1 + extraPct / 100);

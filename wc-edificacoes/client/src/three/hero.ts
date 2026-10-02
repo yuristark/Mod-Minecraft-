@@ -134,30 +134,36 @@ export default function createHeroScene(canvas: HTMLCanvasElement, opts: HeroOpt
   const edgeMat = new LineBasicMaterial({ color: PALETTE.paper, transparent: true, opacity: 0.35 });
   const slabEdges = new EdgesGeometry(slabGeo);
 
-  interface Floor { columns: Group; slab: Group; core: Mesh }
-  const floors: Floor[] = [];
-  for (let i = 0; i < BUILT; i++) {
-    const y = i * FH;
-    const columns = new Group();
-    columns.position.y = y;
-    for (const [x, z] of COLS) {
-      const c = new Mesh(colGeo, concrete);
-      c.position.set(x, 0, z);
-      c.castShadow = true;
-      columns.add(c);
-    }
-    const slab = new Group();
-    const s = new Mesh(slabGeo, concrete);
-    s.castShadow = true;
-    s.receiveShadow = true;
-    slab.add(s, new LineSegments(slabEdges, edgeMat));
-    slab.position.y = y + FH - 0.11;
-    const coreMesh = new Mesh(coreGeo, core);
-    coreMesh.position.y = y;
-    coreMesh.visible = i < GLAZED;
-    building.add(columns, slab, coreMesh);
-    floors.push({ columns, slab, core: coreMesh });
+  // Desenho em lote (InstancedMesh): todas as colunas numa única chamada à GPU, idem lajes e núcleos.
+  // Antes eram ~110 objetos separados — o maior custo da cena em celulares.
+  const colMesh = new InstancedMesh(colGeo, concrete, BUILT * COLS.length);
+  const slabMesh = new InstancedMesh(slabGeo, concrete, BUILT);
+  const coreMeshes = new InstancedMesh(coreGeo, core, GLAZED);
+  for (const m of [colMesh, slabMesh, coreMeshes]) {
+    m.castShadow = true;
+    m.receiveShadow = m === slabMesh;
+    m.frustumCulled = false; // as instâncias se espalham além da caixa da geometria base
+    building.add(m);
   }
+  const place = new Object3D();
+  const setInstance = (mesh: InstancedMesh, idx: number, x: number, y: number, z: number, sx: number, sy: number, sz: number) => {
+    place.position.set(x, y, z);
+    place.rotation.set(0, 0, 0);
+    place.scale.set(sx, Math.max(0.0001, sy), sz);
+    place.updateMatrix();
+    mesh.setMatrixAt(idx, place.matrix);
+  };
+
+  // Contorno das lajes: uma única geometria com todas as lajes (aparece ao fim da montagem)
+  const mergeLines = (src: BufferGeometry, offsets: number[]) => {
+    const base = src.attributes.position.array as ArrayLike<number>;
+    const out = new Float32Array(base.length * offsets.length);
+    offsets.forEach((dy, k) => { for (let i = 0; i < base.length; i += 3) { out.set([base[i], base[i + 1] + dy, base[i + 2]], k * base.length + i); } });
+    return new BufferGeometry().setAttribute("position", new BufferAttribute(out, 3));
+  };
+  const slabOutline = new LineSegments(mergeLines(slabEdges, Array.from({ length: BUILT }, (_, i) => i * FH + FH - 0.11)), edgeMat);
+  slabOutline.visible = false;
+  building.add(slabOutline);
 
   // esperas de armadura no último pavimento
   const rebarPts: number[] = [];
@@ -168,12 +174,9 @@ export default function createHeroScene(canvas: HTMLCanvasElement, opts: HeroOpt
   // pavimentos futuros: tracejado de projeto
   const ghostMat = new LineDashedMaterial({ color: PALETTE.paper, dashSize: 0.22, gapSize: 0.16, transparent: true, opacity: 0.38 });
   const ghostGeo = new EdgesGeometry(new BoxGeometry(W + 0.5, FH, D + 0.5));
-  for (let i = BUILT; i < TOTAL; i++) {
-    const g = new LineSegments(ghostGeo, ghostMat);
-    g.position.y = i * FH + FH / 2;
-    g.computeLineDistances();
-    building.add(g);
-  }
+  const ghosts = new LineSegments(mergeLines(ghostGeo, Array.from({ length: TOTAL - BUILT }, (_, k) => (BUILT + k) * FH + FH / 2)), ghostMat);
+  ghosts.computeLineDistances();
+  building.add(ghosts);
 
   // fachada: painéis de vidro (instanciados), alguns acesos
   interface Pane { floor: number; m: Matrix4; lit: boolean }
@@ -312,29 +315,36 @@ export default function createHeroScene(canvas: HTMLCanvasElement, opts: HeroOpt
   let lightTimer = 0;
   let weldOn = 0;
   let panesSettled = false;
+  let buildSettled = false;
 
   /* ---------------- Quadro a quadro ---------------- */
   function frame(t: number, dt: number) {
     const T = still ? 999 : t;
 
-    // 1. Edifício: pavimentos sobem em sequência (Interval + easeOutBack)
+    // 1. Edifício: pavimentos sobem em sequência (Interval + easeOutBack).
+    //    Depois que tudo assenta, as matrizes não são mais recalculadas.
     let done = 0;
-    for (let i = 0; i < BUILT; i++) {
-      const start = INTRO_START + i * STEP;
-      const p = Math.min(1, Math.max(0, (T - start) / 0.95));
-      const f = floors[i];
-      f.columns.scale.y = Math.max(0.0001, interval(p, 0, 0.55, curveFns.easeOutCubic));
-      f.columns.visible = p > 0;
-      const sp = interval(p, 0.3, 1, curveFns.easeOutBack);
-      f.slab.visible = p > 0.3;
-      f.slab.position.y = i * FH + FH - 0.11 + (1 - sp) * 2.2;
-      f.slab.scale.set(0.9 + 0.1 * sp, 1, 0.9 + 0.1 * sp);
-      if (i < GLAZED) {
-        const gp = interval(T, start + 1.1, start + 1.9, curveFns.easeOutCubic);
-        f.core.visible = gp > 0;
-        f.core.scale.set(1, Math.max(0.0001, gp), 1);
+    if (!buildSettled) {
+      for (let i = 0; i < BUILT; i++) {
+        const start = INTRO_START + i * STEP;
+        const p = Math.min(1, Math.max(0, (T - start) / 0.95));
+        const colY = interval(p, 0, 0.55, curveFns.easeOutCubic) * (p > 0 ? 1 : 0);
+        COLS.forEach(([x, z], c) => setInstance(colMesh, i * COLS.length + c, x, i * FH, z, 1, colY, 1));
+        const sp = interval(p, 0.3, 1, curveFns.easeOutBack);
+        const shown = p > 0.3 ? 1 : 0.0001;
+        setInstance(slabMesh, i, 0, i * FH + FH - 0.11 + (1 - sp) * 2.2, 0, (0.9 + 0.1 * sp) * shown, shown, (0.9 + 0.1 * sp) * shown);
+        if (i < GLAZED) {
+          const gp = interval(T, start + 1.1, start + 1.9, curveFns.easeOutCubic);
+          setInstance(coreMeshes, i, 0, i * FH, 0, gp > 0 ? 1 : 0.0001, gp, gp > 0 ? 1 : 0.0001);
+        }
+        if (p >= 1) done++;
       }
-      if (p >= 1) done++;
+      colMesh.instanceMatrix.needsUpdate = true;
+      slabMesh.instanceMatrix.needsUpdate = true;
+      coreMeshes.instanceMatrix.needsUpdate = true;
+      if (T > INTRO_START + BUILT * STEP + 2.2) { buildSettled = true; slabOutline.visible = true; }
+    } else {
+      done = BUILT;
     }
     rebars.visible = T > INTRO_START + BUILT * STEP + 0.6;
 

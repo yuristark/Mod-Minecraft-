@@ -46,7 +46,8 @@ export function SiteHeader() {
   return (
     <motion.header
       className={cn(
-        "site-header on-dark sticky top-0 z-40 bg-ink/95 text-paper backdrop-blur-md supports-[backdrop-filter]:bg-ink/85",
+        // desfoque de fundo só em telas grandes: no celular ele é recalculado a cada quadro de rolagem
+        "site-header on-dark sticky top-0 z-40 bg-ink text-paper md:bg-ink/95 md:backdrop-blur-md md:supports-[backdrop-filter]:bg-ink/85",
         "transition-shadow duration-300",
         scrolled && !hidden && "shadow-[0_1px_0_0_rgba(255,255,255,0.08),0_10px_30px_-12px_rgba(0,0,0,0.5)]",
       )}

@@ -59,8 +59,13 @@ export async function processImage(buffer) {
     .webp({ quality: 74 })
     .toBuffer();
 
-  await fs.writeFile(path.join(config.uploadDir, filename), large.data, { flag: 'wx', mode: 0o644 });
-  await fs.writeFile(path.join(config.uploadDir, thumb), small, { flag: 'wx', mode: 0o644 });
+  try {
+    await fs.writeFile(path.join(config.uploadDir, filename), large.data, { flag: 'wx', mode: 0o644 });
+    await fs.writeFile(path.join(config.uploadDir, thumb), small, { flag: 'wx', mode: 0o644 });
+  } catch (err) {
+    await deleteImageFiles(filename); // não deixa arquivo órfão no disco
+    throw err;
+  }
   return { filename, width: large.info.width, height: large.info.height };
 }
 

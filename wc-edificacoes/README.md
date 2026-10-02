@@ -21,7 +21,7 @@ wc-edificacoes/
 ├── server/          API, banco, uploads
 │   ├── migrations/  schema SQL
 │   ├── src/         código da API
-│   └── test/        testes de API e segurança (27 testes)
+│   └── test/        testes de API e segurança (32 testes)
 └── deploy/          exemplos de Nginx, Docker e PM2
 ```
 
@@ -165,10 +165,11 @@ com senha de app, Brevo, Resend etc.). Sem SMTP o site funciona normalmente — 
 | SQL injection | 100% consultas parametrizadas (`$1, $2…`); busca escapa `%` e `_` do LIKE |
 | Validação | Todos os dados validados com Zod (tipos, tamanhos, listas fixas); campos desconhecidos são descartados |
 | Senhas | Argon2id (parâmetros OWASP), rehash automático, política mínima de 12 caracteres |
-| Força bruta | Rate limit por IP no login + bloqueio da conta após 5 erros (15 min) + resposta idêntica para e-mail inexistente (sem enumeração, mesmo tempo de resposta) |
+| Força bruta | Rate limit por IP no login + bloqueio da conta após 5 erros (15 min, contador atômico — tentativas em paralelo não driblam) + resposta idêntica para e-mail inexistente (sem enumeração, mesmo tempo de resposta) + senhas óbvias recusadas ("Construtora2026", "Senha123…") |
+| DoS no login | No máximo 4 verificações Argon2 simultâneas (~19 MB cada) e fila de 40; acima disso, 503 em vez de esgotar a memória |
 | Sessão | Token aleatório de 256 bits em cookie `HttpOnly`, `Secure`, `SameSite=Strict`, prefixo `__Host-`; no banco fica só o hash SHA-256; expira por inatividade (60 min) e por tempo total (8 h); rotação no login; máx. 5 sessões; troca de senha derruba as demais |
 | CSRF | 3 camadas: SameSite=Strict + verificação de `Origin` em toda escrita + token sincronizado (`X-CSRF-Token`) nas rotas do painel |
-| XSS | CSP estrita sem `unsafe-inline`/`unsafe-eval`; React escapa todo texto; nenhum `dangerouslySetInnerHTML`; caracteres de controle e bidi removidos |
+| XSS | CSP estrita sem `unsafe-inline`/`unsafe-eval`, com `script-src-attr 'none'` e `style-src-attr 'none'`; React escapa todo texto; nenhum `dangerouslySetInnerHTML`; caracteres de controle e bidi removidos |
 | Uploads | Só JPG/PNG/WebP verificados pelo **conteúdo** (não pela extensão); SVG recusado; limite de tamanho e pixels (anti "decompression bomb"); imagem re-codificada para WebP com **EXIF/GPS removido**; nome aleatório (UUID); servidos com `nosniff` e CSP `sandbox` |
 | Spam no formulário | Honeypot + tempo mínimo de preenchimento + rate limit (5/h por IP) + Cloudflare Turnstile opcional |
 | Dados adulterados | Estimativa de custo e status são calculados/definidos no servidor; o que vem do navegador é ignorado |
@@ -177,7 +178,9 @@ com senha de app, Brevo, Resend etc.). Sem SMTP o site funciona normalmente — 
 | Vazamento de erros | Stack traces nunca vão ao cliente (só um `requestId` para achar no log); logs com redação de cookies, senhas, e-mail e telefone |
 | DoS | Limite de JSON 32 KB, timeouts de consulta (10 s) e de conexão HTTP (anti slowloris), rate limit geral |
 | LGPD | Consentimento registrado com data/hora; IP guardado só como HMAC; exclusão definitiva pelo painel; política de privacidade; sem cookies de rastreamento |
-| E-mail de aviso | Enviado depois de responder ao visitante (falha no SMTP nunca perde o pedido); assunto sem quebras de linha (anti header injection); dados pessoais não vão para o log |
+| E-mail de aviso | Teto de 30 avisos/hora (spam com muitos IPs não lota a caixa); enviado depois de responder ao visitante (falha no SMTP nunca perde o pedido); assunto sem quebras de linha (anti header injection); dados pessoais não vão para o log |
+| Indexação | `X-Robots-Tag: noindex` em `/admin` e `/api` (além do robots.txt); sitemap com cache de 10 min |
+| Nginx (exemplo) | Corpo máx. 64 KB em tudo, 90 MB só na rota de upload; limite de 10 req/min por IP em login e orçamento já na borda; TLS sem session tickets |
 | Auditoria | Log de logins, falhas, bloqueios, exportações e alterações (visível em *Conta e segurança*) |
 
 ### Front-end
@@ -195,15 +198,29 @@ com senha de app, Brevo, Resend etc.). Sem SMTP o site funciona normalmente — 
   descrição e botões de WhatsApp/telefone/e-mail. Se algo quebrar durante o uso, uma tela de erro com os contatos.
 - Cenas 3D: sem WebGL, mostram o desenho técnico em SVG.
 
+### Fluidez (medida com CPU 4× mais lenta, celular emulado)
+| Página | Antes | Depois |
+|---|---|---|
+| Inicial (rolagem) | 5 fps | ~30 fps (GPU por software no teste; em celular real tende a 60) |
+| Obras | 23 fps | ~55 fps |
+| Simulador | 46 fps | ~58 fps |
+
+O que mudou: a cena 3D desenha colunas/lajes em lote (instancing), sem antisserrilhado no celular, com
+qualidade adaptativa (reduz resolução e, se preciso, cai para 30 fps) e congela enquanto o dedo rola a página;
+animações de fundo usam `transform` (antes repintavam a seção inteira a cada quadro); brilhos usam gradiente
+radial em vez de `filter: blur`; sem desfoque de fundo e sem granulação em telas de toque; seções abaixo da
+dobra com `content-visibility: auto`; ~90 camadas permanentes de GPU removidas dos títulos.
+
 ### Testes
 ```bash
 cd server
 TEST_DATABASE_URL=postgres://wc:senha@localhost:5432/wc_test npm test
 ```
-27 testes cobrindo: cabeçalhos, SQL injection, XSS armazenado, CSRF, enumeração de usuários,
+32 testes cobrindo: cabeçalhos, SQL injection, XSS armazenado, CSRF, enumeração de usuários,
 bloqueio de conta, cookie seguro, upload malicioso (SVG disfarçado, EXIF), path traversal,
 CSV injection, limites de tamanho, política de senha, rate limit, sitemap/robots e aviso por e-mail
-(inclusive falha do SMTP sem perder o pedido). `npm audit`: 0 vulnerabilidades.
+(inclusive falha do SMTP sem perder o pedido), ataque de login em paralelo, senhas óbvias, teto de e-mails
+e chaves especiais (`__proto__`) no formulário. `npm audit`: 0 vulnerabilidades.
 
 ---
 

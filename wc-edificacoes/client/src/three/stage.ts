@@ -42,8 +42,13 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
   const host = canvas.parentElement ?? canvas;
   const isMobile = window.matchMedia("(max-width: 767px)").matches || navigator.maxTouchPoints > 1;
 
-  const renderer = new WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75));
+  // Celular: sem antisserrilhado (MSAA é dos itens mais caros da GPU; em telas densas quase não se nota)
+  // e sem pedir a GPU de alto desempenho (poupa bateria).
+  const renderer = new WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: isMobile ? "default" : "high-performance" });
+  const maxRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
+  const minRatio = Math.min(maxRatio, isMobile ? 0.75 : 1);
+  let ratio = maxRatio;
+  renderer.setPixelRatio(ratio);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -84,12 +89,53 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
     renderer.render(scene, camera);
   };
 
+  /*
+   * Qualidade adaptativa: mede o tempo real entre quadros. Se o aparelho não sustenta ~45 fps,
+   * reduz a resolução da cena em degraus; no mínimo de resolução e ainda lento, passa a desenhar
+   * a 30 fps. Assim a rolagem da página continua fluida em celulares mais simples.
+   */
+  let avgFrame = 1 / 60;
+  let slowFor = 0;
+  let skip = false;
+  let odd = false;
+  let pendingDt = 0;
+  const adapt = (rawDt: number) => {
+    if (rawDt > 0.25) return; // aba voltou / pausa: não conta
+    avgFrame = avgFrame * 0.9 + rawDt * 0.1;
+    slowFor = avgFrame > 1 / 45 ? slowFor + rawDt : 0;
+    if (slowFor < 1.2) return;
+    slowFor = 0;
+    if (ratio > minRatio) {
+      ratio = Math.max(minRatio, ratio - 0.25);
+      renderer.setPixelRatio(ratio);
+      resize();
+    } else if (!skip) {
+      skip = true;
+    }
+  };
+
+  // No celular, a rolagem da página tem prioridade: enquanto o dedo rola, a cena congela no
+  // último quadro (custo zero de GPU) e continua de onde parou assim que a rolagem termina.
+  let scrollingUntil = 0;
+  const onScroll = () => { scrollingUntil = performance.now() + 140; };
+  if (isMobile) window.addEventListener("scroll", onScroll, { passive: true });
+
   const loop = () => {
     raf = requestAnimationFrame(loop);
     timer.update();
-    const dt = Math.min(timer.getDelta(), 1 / 20); // evita "saltos" após a aba voltar
-    elapsed += dt;
-    onFrame(elapsed, dt);
+    const raw = timer.getDelta();
+    if (isMobile && performance.now() < scrollingUntil) return;
+    adapt(skip ? raw * 0.5 : raw);
+    const dt = Math.min(raw, 1 / 20); // evita "saltos" após a aba voltar
+    if (skip) {
+      odd = !odd;
+      pendingDt += dt;
+      if (odd) return; // desenha um quadro sim, outro não (30 fps)
+    }
+    const step = skip ? Math.min(pendingDt, 1 / 15) : dt;
+    pendingDt = 0;
+    elapsed += step;
+    onFrame(elapsed, step);
     renderer.render(scene, camera);
   };
 
@@ -122,6 +168,7 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
       ro.disconnect();
       io.disconnect();
       document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("scroll", onScroll);
       timer.dispose();
       disposeTree(scene);
       renderer.dispose();

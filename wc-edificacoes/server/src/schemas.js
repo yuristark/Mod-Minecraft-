@@ -69,11 +69,20 @@ export const loginBody = z.object({
   password: z.string().min(1).max(256),
 });
 
+// Senhas que aparecem no topo de todos os vazamentos (com ou sem números no fim)
+const COMMON = ['senha', 'password', 'admin', 'qwerty', 'abc123', '123456', 'mudar', 'trocar', 'teste', 'brasil', 'construtora', 'edificacoes'];
+const isCommon = (s) => {
+  const base = s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const word = base.replace(/^\d+|\d+$/g, ''); // "Senha2026", "123admin" → palavra-base
+  return COMMON.includes(word) || /^(.)\1+$/.test(base);
+};
+
 export const passwordPolicy = z.string()
   .min(12, 'A senha precisa ter pelo menos 12 caracteres')
   .max(128, 'A senha pode ter no máximo 128 caracteres')
   .refine((s) => /[a-zA-Z]/.test(s) && /\d/.test(s), 'Use letras e números')
-  .refine((s) => !/^(.)\1+$/.test(s), 'Senha muito fraca');
+  .refine((s) => !/^(.)\1+$/.test(s), 'Senha muito fraca')
+  .refine((s) => !isCommon(s), 'Senha muito comum — escolha outra');
 
 export const changePasswordBody = z.object({
   currentPassword: z.string().min(1).max(256),

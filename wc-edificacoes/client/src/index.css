@@ -221,6 +221,9 @@
   .range:active::-webkit-slider-thumb, .range:hover::-webkit-slider-thumb { transform: scale(1.25) rotate(45deg); }
   .range:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 
+  /* Brilho laranja difuso: gradiente radial (custo zero) no lugar de filter: blur (caro na GPU) */
+  .glow { background: radial-gradient(closest-side, rgb(var(--c-signal) / 0.13), rgb(var(--c-signal) / 0.05) 55%, transparent); }
+
   /* Placeholder de carregamento com brilho deslizante (substitui o "pulse") */
   .shimmer {
     background: linear-gradient(100deg, rgb(var(--c-concrete-2)) 30%, rgb(var(--c-paper)) 50%, rgb(var(--c-concrete-2)) 70%) 0 0 / 300% 100%;
@@ -232,6 +235,8 @@
 }
 
 @layer utilities {
+  /* Seções abaixo da dobra: o navegador pula estilo/layout/pintura até chegarem perto da tela */
+  .cv-auto { content-visibility: auto; contain-intrinsic-size: auto 900px; }
   .tabular { font-variant-numeric: tabular-nums; }
   .stretch-wide { font-stretch: 125%; }
   .stretch-normal { font-stretch: 100%; }
@@ -287,25 +292,24 @@
   @keyframes logo-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
 
   /* Grade de prancha deslizando lentamente (fundo "vivo") */
-  .blueprint-pan { animation: blueprint-pan 60s linear infinite; }
-  @keyframes blueprint-pan { to { background-position: 48px 48px, 48px 48px; } }
+  /* Desloca a camada inteira (transform, roda na GPU) em vez de background-position (repintava a seção
+     inteira a cada quadro). A camada é 48 px maior para o deslocamento nunca mostrar borda. */
+  .blueprint-pan { top: -48px; left: -48px; animation: blueprint-pan 60s linear infinite; }
+  @keyframes blueprint-pan { to { transform: translate3d(48px, 48px, 0); } }
 
   /* Linha de varredura sobre a prancha 3D */
   .scanline::before {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--signal), transparent);
-    box-shadow: 0 0 18px 2px color-mix(in srgb, var(--signal) 55%, transparent);
+    inset: 0;
     z-index: 3;
     pointer-events: none;
+    /* rastro suave + linha laranja na borda inferior; a camada inteira desce com transform (sem repintar) */
+    background: linear-gradient(to bottom, transparent 70%, color-mix(in srgb, var(--signal) 12%, transparent) 99%, var(--signal) 99.6%, transparent 100%);
     animation: scan 7s var(--ease-standard) infinite;
     opacity: 0;
   }
-  @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { top: 100%; opacity: 0; } }
+  @keyframes scan { 0% { transform: translateY(-100%); opacity: 0; } 10% { opacity: 0.55; } 90% { opacity: 0.55; } 100% { transform: translateY(0); opacity: 0; } }
 
   .shimmer { animation: shimmer 1.6s var(--ease-standard) infinite; }
   @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
@@ -381,6 +385,12 @@
 @keyframes ripple { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
 
 .site-header { view-transition-name: site-header; }
+
+/* Telas de toque (celular/tablet): fundo estático e sem granulação — a rolagem fica com a GPU livre */
+@media (hover: none), (pointer: coarse) {
+  .blueprint-pan { animation: none; }
+  .grain::after { display: none; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }

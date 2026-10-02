@@ -3,6 +3,7 @@ import { ArrowDown, ArrowRight, ArrowUpRight, Calculator } from "lucide-react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { SectionLabel } from "@/components/Brand";
 import { Link } from "@/components/Link";
+import { Faq } from "@/components/Faq";
 import { ProjectArt } from "@/components/ProjectArt";
 import { ProjectCard, ProjectCardSkeleton } from "@/components/ProjectCard";
 import { CATEGORY_LABEL, STANDARD_LABEL, site } from "@/config/site";
@@ -86,7 +87,7 @@ export default function Home() {
       </section>
 
       {/* ======================= OBRAS EM DESTAQUE ======================= */}
-      <section className="section-pad border-t border-line bg-concrete-2/60" aria-labelledby="obras-titulo">
+      <section className="cv-auto section-pad border-t border-line bg-concrete-2/60" aria-labelledby="obras-titulo">
         <div className="container">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
@@ -114,7 +115,7 @@ export default function Home() {
       </section>
 
       {/* =========================== PROCESSO =========================== */}
-      <section className="section-pad" aria-labelledby="processo-titulo">
+      <section className="cv-auto section-pad" aria-labelledby="processo-titulo">
         <div className="container">
           <Reveal><SectionLabel index="03">Como trabalhamos</SectionLabel></Reveal>
           <h2 id="processo-titulo" className="mt-5 max-w-3xl text-display-lg uppercase text-balance">
@@ -149,7 +150,7 @@ export default function Home() {
       </section>
 
       {/* ======================== MINI SIMULADOR ======================== */}
-      <section className="on-dark grain relative overflow-hidden bg-ink-2 text-paper" aria-labelledby="sim-titulo">
+      <section className="cv-auto on-dark grain relative overflow-hidden bg-ink-2 text-paper" aria-labelledby="sim-titulo">
         <div aria-hidden="true" className="blueprint-grid-fine blueprint-pan absolute inset-0 text-paper" />
         <div className="container relative grid gap-12 py-20 md:py-24 lg:grid-cols-2 lg:items-center">
           <div>
@@ -171,7 +172,7 @@ export default function Home() {
       </section>
 
       {/* ========================= COMPROMISSOS ========================= */}
-      <section className="section-pad" aria-labelledby="comp-titulo">
+      <section className="cv-auto section-pad" aria-labelledby="comp-titulo">
         <div className="container grid gap-12 lg:grid-cols-[1fr_1.4fr]">
           <div>
             <Reveal><SectionLabel index="05">Compromissos</SectionLabel></Reveal>
@@ -190,6 +191,8 @@ export default function Home() {
           </Staggered>
         </div>
       </section>
+
+      <Faq index="06" />
     </>
   );
 }
@@ -217,7 +220,7 @@ function Hero({ stats }: { stats: { label: string; value: number | null | undefi
   return (
     <section ref={ref} className="on-dark grain relative overflow-hidden bg-ink text-paper">
       <div aria-hidden="true" className="blueprint-grid blueprint-pan absolute inset-0 text-paper" />
-      <div aria-hidden="true" className="pointer-events-none absolute -right-48 top-1/4 h-[640px] w-[640px] rounded-full bg-signal/10 blur-[120px]" />
+      <div aria-hidden="true" className="glow pointer-events-none absolute -right-72 top-0 h-[900px] w-[900px]" />
 
       <div className="container relative grid min-h-[calc(100svh-var(--header-h))] content-center gap-10 pb-12 pt-12 lg:static lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:pb-24 lg:pt-16">
         <motion.div className="relative z-10" style={{ y: textY, opacity: textOpacity }}>
@@ -275,7 +278,7 @@ function Hero({ stats }: { stats: { label: string; value: number | null | undefi
             load={loadHero}
             props={NO_PROPS}
             options={options}
-            className="scanline h-full w-full"
+            className="scanline h-full w-full overflow-hidden"
             label="Ilustração 3D animada de um edifício em construção, com grua içando vigas até o último pavimento"
             placeholder={<span className="label-mono animate-pulse text-paper/40">Carregando maquete 3D…</span>}
             fallback={

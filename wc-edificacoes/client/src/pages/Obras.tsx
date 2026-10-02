@@ -67,7 +67,7 @@ export default function Obras() {
         </div>
       </section>
 
-      <div className="sticky top-[var(--header-offset)] z-30 transition-[top] duration-300 [transition-timing-function:var(--ease-standard)] border-b border-line bg-concrete/95 backdrop-blur supports-[backdrop-filter]:bg-concrete/80">
+      <div className="sticky top-[var(--header-offset)] z-30 transition-[top] duration-300 [transition-timing-function:var(--ease-standard)] border-b border-line bg-concrete md:bg-concrete/95 md:backdrop-blur md:supports-[backdrop-filter]:bg-concrete/80">
         <div className="container flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
           <FilterGroup label="Tipo" value={category} options={CATEGORY_LABEL} onChange={(v) => setFilter("tipo", v)} />
           <FilterGroup label="Fase" value={status} options={STATUS_LABEL} onChange={(v) => setFilter("fase", v)} />

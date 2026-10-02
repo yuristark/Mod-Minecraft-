@@ -1,5 +1,6 @@
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "@/components/Link";
+import { FadeImg } from "@/components/FadeImg";
 import { ProjectArt } from "@/components/ProjectArt";
 import { CATEGORY_LABEL, STATUS_LABEL } from "@/config/site";
 import { num } from "@/lib/estimate";
@@ -28,7 +29,7 @@ export function StatusPill({ status, className }: { status: Project["status"]; c
 export function ProjectCover({ project, priority = false, className }: { project: Project; priority?: boolean; className?: string }) {
   if (project.cover) {
     return (
-      <img
+      <FadeImg
         src={project.cover.thumbUrl}
         alt={project.cover.alt || project.title}
         width={project.cover.width}

@@ -72,7 +72,7 @@ export function SplitWords({
         <Fragment key={i}>
           <span aria-hidden="true" className="inline-block overflow-hidden pb-[0.1em] -mb-[0.1em] align-top">
             <motion.span
-              className={cn("inline-block will-change-transform", isHl && highlightClassName)}
+              className={cn("inline-block", isHl && highlightClassName)}
               variants={{
                 hidden: { y: "105%", rotate: 4 },
                 show: { y: "0%", rotate: 0, transition: { duration: durations.slower + 0.1, ease: curves.easeOutExpo } },
@@ -112,7 +112,15 @@ export function Magnetic({ children, strength = 0.28, className }: { children: R
  * Cartão com inclinação 3D seguindo o ponteiro + brilho especular.
  * Expõe --mx/--my (posição do ponteiro em %) para o brilho em CSS (.tilt-glare).
  */
-export function TiltCard({ children, className, max = 6 }: { children: ReactNode; className?: string; max?: number }) {
+// Telas de toque não têm "hover": lá o cartão é um bloco simples (sem camadas 3D extras para a GPU).
+const canHover = typeof window !== "undefined" && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+export function TiltCard(props: { children: ReactNode; className?: string; max?: number }) {
+  if (!canHover) return <div className={cn("tilt", props.className)}>{props.children}</div>;
+  return <TiltCardInteractive {...props} />;
+}
+
+function TiltCardInteractive({ children, className, max = 6 }: { children: ReactNode; className?: string; max?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
   const px = useMotionValue(0.5);

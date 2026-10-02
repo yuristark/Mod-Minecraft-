@@ -209,6 +209,14 @@ describe('autenticação', () => {
     expect(res.status).toBe(429);
     await query('UPDATE admins SET failed_attempts = 0, locked_until = NULL');
   });
+
+  it('tentativas em paralelo não driblam o bloqueio (contador atômico)', async () => {
+    await Promise.all(Array.from({ length: 12 }, (_, i) =>
+      request(app).post('/api/auth/login').set('Origin', ORIGIN).send({ email: ADMIN.email, password: `paralela${i}` })));
+    const res = await request(app).post('/api/auth/login').set('Origin', ORIGIN).send(ADMIN);
+    expect(res.status).toBe(429);
+    await query('UPDATE admins SET failed_attempts = 0, locked_until = NULL');
+  });
 });
 
 describe('painel administrativo', () => {
@@ -324,6 +332,47 @@ describe('SEO e avisos', () => {
     expect(res.status).toBe(201);
     const { rows } = await query('SELECT 1 FROM quotes WHERE protocol = $1', [res.body.protocol]);
     expect(rows).toHaveLength(1);
+  });
+});
+
+describe('endurecimento', () => {
+  it('recusa senhas óbvias na troca de senha', async () => {
+    const creds = { email: ADMIN.email, password: 'NovaSenhaSegura2027' }; // trocada no teste anterior
+    const s1 = await login(request.agent(app), creds);
+    expect(s1.res.status).toBe(200);
+    for (const weak of ['Construtora2026', 'Senha123456789', 'admin12345678']) {
+      const r = await s1.agent.post('/api/auth/password').set('Origin', ORIGIN).set('X-CSRF-Token', s1.csrf)
+        .send({ currentPassword: creds.password, newPassword: weak });
+      expect(r.status).toBe(400);
+      expect(r.body.fields.newPassword).toMatch(/comum/);
+    }
+  });
+
+  it('marca painel e API como noindex e proíbe atributos de script/estilo inline', async () => {
+    const api = await request(app).get('/api/health');
+    expect(api.headers['x-robots-tag']).toContain('noindex');
+    const csp = api.headers['content-security-policy'];
+    expect(csp).toContain("script-src-attr 'none'");
+    expect(csp).toContain("style-src-attr 'none'");
+  });
+
+  it('limita avisos por e-mail por hora (spam com muitos IPs não lota a caixa)', async () => {
+    const sent = [];
+    setMailTransport({ sendMail: async (m) => { sent.push(m); } });
+    for (let i = 0; i < 33; i++) {
+      await request(app).post('/api/quotes').set('Origin', ORIGIN).send(validQuote({ name: `Pessoa ${String.fromCharCode(65 + (i % 26))}` }));
+    }
+    await new Promise((r) => setTimeout(r, 100));
+    setMailTransport(null);
+    expect(sent.length).toBe(30);
+  });
+
+  it('chaves especiais nos adicionais não afetam a estimativa', async () => {
+    const res = await request(app).post('/api/quotes').set('Origin', ORIGIN)
+      .send(validQuote({ extras: ['__proto__', 'constructor', 'toString'] }));
+    expect(res.status).toBe(201);
+    const { rows } = await query('SELECT estimate_min, estimate_max FROM quotes WHERE protocol = $1', [res.body.protocol]);
+    expect(Number.isFinite(rows[0].estimate_min)).toBe(true);
   });
 });
 

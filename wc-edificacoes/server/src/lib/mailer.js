@@ -31,6 +31,19 @@ function getTransport() {
 export function setMailTransport(t) {
   transport = t;
   overridden = true;
+  sentTimes.length = 0;
+}
+
+// Teto global de avisos por hora: mesmo um ataque de spam vindo de muitos IPs não lota a caixa
+// de entrada nem queima a cota do provedor de e-mail. Os pedidos continuam todos no painel.
+const MAX_PER_HOUR = 30;
+const sentTimes = [];
+function allowSend() {
+  const cutoff = Date.now() - 3600_000;
+  while (sentTimes.length && sentTimes[0] < cutoff) sentTimes.shift();
+  if (sentTimes.length >= MAX_PER_HOUR) return false;
+  sentTimes.push(Date.now());
+  return true;
 }
 
 const LABELS = {
@@ -46,6 +59,10 @@ const oneLine = (s) => String(s ?? '').replace(/[\r\n]+/g, ' ').slice(0, 120);
 export async function notifyNewQuote(q) {
   const t = getTransport();
   if (!t) return false;
+  if (!allowSend()) {
+    logger.warn('limite de avisos por e-mail atingido nesta hora; pedido salvo apenas no painel');
+    return false;
+  }
   const text = [
     `Novo pedido de orçamento pelo site — protocolo ${q.protocol}`,
     '',

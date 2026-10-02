@@ -14,6 +14,8 @@ para uma construtora. O passo a passo técnico está no `README.md`.
 - Simulador de custo de obra com maquete 3D que muda conforme tipo, padrão e área
 - Formulário de orçamento com proteção anti-spam e protocolo de atendimento
 - Botão flutuante de WhatsApp, links de telefone e e-mail em todas as páginas
+- Perguntas frequentes (editáveis em `client/src/data/faq.ts`)
+- Simulação e obras compartilháveis por link (WhatsApp, e-mail)
 - Animações profissionais (transições entre páginas, revelações, micro-interações)
 - Funciona em celular, tablet e computador; acessível (teclado, leitores de tela, "reduzir movimento")
 
@@ -25,7 +27,7 @@ para uma construtora. O passo a passo técnico está no `README.md`.
 - Registro de acessos e troca de senha
 
 **Qualidade técnica** (diferencial para clientes mais exigentes)
-- Segurança de nível profissional: proteção contra SQL injection, XSS, CSRF, força bruta, uploads maliciosos — com 27 testes automáticos
+- Segurança de nível profissional: proteção contra SQL injection, XSS, CSRF, força bruta, uploads maliciosos — com 32 testes automáticos
 - LGPD: consentimento registrado, IP anonimizado, sem cookies de rastreamento (dispensa banner de cookies)
 - SEO: título e descrição por página, `sitemap.xml` automático com as obras, dados estruturados para o Google (empresa, telefone, endereço), imagem de compartilhamento para WhatsApp/Instagram/LinkedIn
 - Compatível com celulares a partir de iOS 14 e Android com Chrome 87; se o navegador não conseguir carregar o site, aparece uma página com os contatos (nunca tela branca)

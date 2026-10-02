@@ -11,8 +11,9 @@ export async function migrate({ silent = false } = {}) {
   try {
     await client.query(`CREATE TABLE IF NOT EXISTS schema_migrations (
       name VARCHAR(200) PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())`);
-    // Trava para impedir duas instâncias migrando ao mesmo tempo
+    // Trava para impedir duas instâncias migrando ao mesmo tempo (liberada mesmo se algo falhar)
     await client.query('SELECT pg_advisory_lock(727001)');
+    try {
     const files = (await fs.readdir(dir)).filter((f) => f.endsWith('.sql')).sort();
     const { rows } = await client.query('SELECT name FROM schema_migrations');
     const applied = new Set(rows.map((r) => r.name));
@@ -30,7 +31,9 @@ export async function migrate({ silent = false } = {}) {
         throw new Error(`Falha na migração ${file}: ${err.message}`);
       }
     }
-    await client.query('SELECT pg_advisory_unlock(727001)');
+    } finally {
+      await client.query('SELECT pg_advisory_unlock(727001)').catch(() => {});
+    }
   } finally {
     client.release();
   }

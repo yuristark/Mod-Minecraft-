@@ -1,6 +1,7 @@
-import { useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "motion/react";
-import { ArrowRight, Info, Move3d } from "lucide-react";
+import { ArrowRight, Info, Move3d, Share2 } from "lucide-react";
 import { SectionLabel } from "@/components/Brand";
 import { Link } from "@/components/Link";
 import { CATEGORY_LABEL, STANDARD_LABEL } from "@/config/site";
@@ -9,6 +10,7 @@ import { useSeo } from "@/hooks/useSeo";
 import { api } from "@/lib/api";
 import { brl, computeEstimate, num } from "@/lib/estimate";
 import type { Category, Standard } from "@/lib/types";
+import { shareLink } from "@/lib/share";
 import { cn } from "@/lib/utils";
 import { AnimatedSwitcher, TweenNumber } from "@/motion/flutter";
 import { curves, durations, springs } from "@/motion/tokens";
@@ -47,10 +49,22 @@ const STAGES: Record<Category, { label: string; pct: number }[]> = {
 export default function Simulador() {
   useSeo("Simulador de custo de obra", "Simule quanto custa construir ou reformar por m², por tipo de obra e padrão de acabamento.");
   const { data: settings, error, loading } = useAsync(() => api.simulator(), []);
-  const [type, setType] = useState<Category>("residencial");
-  const [standard, setStandard] = useState<Standard>("medio");
-  const [area, setArea] = useState<number>(180);
-  const [extras, setExtras] = useState<string[]>([]);
+  // Estado inicial vem do link (simulação compartilhada) — cada valor é validado contra listas fixas
+  const [params, setParams] = useSearchParams();
+  const [type, setType] = useState<Category>(() => { const v = params.get("tipo"); return v && v in CATEGORY_LABEL ? (v as Category) : "residencial"; });
+  const [standard, setStandard] = useState<Standard>(() => { const v = params.get("padrao"); return v && v in STANDARD_LABEL ? (v as Standard) : "medio"; });
+  const [area, setArea] = useState<number>(() => { const n = Number(params.get("area")); return Number.isFinite(n) && n >= 10 && n <= 100000 ? Math.round(n) : 180; });
+  const [extras, setExtras] = useState<string[]>(() => (params.get("extras") || "").split(",").filter((e) => /^[a-zA-Z]{2,40}$/.test(e)).slice(0, 10));
+
+  // Mantém o link sempre atualizado (debounce: o controle deslizante muda muitas vezes por segundo)
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const next = new URLSearchParams({ tipo: type, padrao: standard, area: String(Number.isFinite(area) ? Math.round(area) : "") });
+      if (extras.length) next.set("extras", extras.join(","));
+      if (next.toString() !== params.toString()) setParams(next, { replace: true, preventScrollReset: true });
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [type, standard, area, extras, params, setParams]);
 
   const safeArea = Number.isFinite(area) ? Math.min(Math.max(area, 0), 100000) : 0;
   const est = computeEstimate(settings, { projectType: type, standard, areaM2: safeArea || null, extras });
@@ -182,6 +196,16 @@ export default function Simulador() {
                 <Link to={quoteLink} className={cn("btn btn-signal mt-8 w-full", !est && "pointer-events-none opacity-60")} aria-disabled={!est}>
                   Quero um orçamento detalhado <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
+                <button
+                  type="button"
+                  className="btn btn-ghost mt-3 w-full"
+                  onClick={() => shareLink({
+                    title: "Minha simulação de obra",
+                    text: est ? `${CATEGORY_LABEL[type]}, ${num(safeArea)} m², padrão ${STANDARD_LABEL[standard].toLowerCase()}: de ${brl(est.min)} a ${brl(est.max)}` : undefined,
+                  })}
+                >
+                  <Share2 className="h-4 w-4" aria-hidden="true" /> Compartilhar simulação
+                </button>
                 <p id="sim-nota" className="mt-5 flex gap-2 text-xs leading-relaxed text-paper/55">
                   <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   {settings.referenceNote}

@@ -39,6 +39,8 @@ export function createApp() {
 
   app.use(securityHeaders());
   app.use(permissionsPolicy);
+  // Painel e API nunca devem aparecer no Google (além do robots.txt, que é só um pedido)
+  app.use(['/admin', '/api'], (_req, res, next) => { res.setHeader('X-Robots-Tag', 'noindex, nofollow'); next(); });
 
   /* ------------------------------ API ------------------------------ */
   const api = express.Router();
