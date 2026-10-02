@@ -46,9 +46,18 @@ O código é seu para vender. Os componentes de terceiros permitem uso comercial
 
 **Mensagem pronta para mandar ao cliente:**
 
-> Olá, [nome]! Obrigado pela compra 🎉
-> Segue em anexo o seu **Planilha Segura**. É só extrair o .zip e dar dois cliques no arquivo .html: abre no navegador, não precisa instalar nada e funciona até sem internet. Suas planilhas não saem do seu computador.
-> No arquivo LEIA-ME tem o passo a passo. Qualquer dúvida, é só me chamar por aqui. Você tem 7 dias para desistir, se não gostar.
+> Prezado(a) [nome],
+>
+> Agradecemos a sua compra. Segue em anexo o arquivo do **Planilha Segura**.
+>
+> Para utilizar, extraia o arquivo .zip e abra o arquivo .html com dois cliques. O aplicativo funciona diretamente no navegador, sem instalação e sem necessidade de conexão com a internet. As planilhas são processadas apenas no seu computador.
+>
+> As instruções de uso estão no arquivo LEIA-ME, e as condições de uso, no arquivo LICENCA-DE-USO. O prazo para desistência da compra é de 7 dias.
+>
+> Permanecemos à disposição para qualquer dúvida.
+>
+> Atenciosamente,
+> [seu nome ou empresa]
 
 ### B. Loja própria com login
 

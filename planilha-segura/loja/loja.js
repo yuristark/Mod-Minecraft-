@@ -175,7 +175,7 @@ function definirModo(m) {
   $('#btnEntrar').textContent = criar ? 'Criar conta' : 'Entrar';
   $('#btnEsqueci').hidden = criar;
   $('#tituloEntrar').textContent = criar ? 'Criar sua conta' : 'Entrar na sua conta';
-  $('#subEntrar').textContent = criar ? 'Leva menos de um minuto.' : 'Bem-vindo de volta.';
+  $('#subEntrar').textContent = criar ? 'Preencha os dados abaixo para criar seu acesso.' : 'Informe seu e-mail e senha para continuar.';
   $('#senha').autocomplete = criar ? 'new-password' : 'current-password';
   msg('#msgEntrar', '');
 }
@@ -344,7 +344,7 @@ async function jaPaguei(el) {
   try {
     await verificarPagamento();
     const s = await rpc('meu_status');
-    if (s.tem_acesso) { status = s; toast('Pagamento confirmado. Acesso liberado!'); await rotear(); return; }
+    if (s.tem_acesso) { status = s; toast('Pagamento confirmado. Acesso liberado.'); await rotear(); return; }
     av.className = 'aviso';
     av.textContent = 'Ainda não encontramos um pagamento aprovado na sua conta. Pix e cartão costumam confirmar em poucos minutos; boleto, em até 3 dias úteis.' + (vitrine.email_suporte ? ' Se já foi descontado, fale com ' + vitrine.email_suporte + ' e informe o número do pagamento que está no comprovante do Mercado Pago.' : '');
   } catch (e) { av.className = 'aviso'; av.textContent = traduzir(e); }
@@ -359,7 +359,7 @@ function esperarLiberacao() {
     if (tentativas % 8 === 0 && aceitaMp()) await verificarPagamento().catch(() => {});
     try {
       const s = await rpc('meu_status');
-      if (s.tem_acesso) { status = s; retornoPagamento = null; pararEspera(); toast('Acesso liberado. Bom trabalho!'); await rotear(); return; }
+      if (s.tem_acesso) { status = s; retornoPagamento = null; pararEspera(); toast('Pagamento confirmado. Acesso liberado.'); await rotear(); return; }
     } catch (e) {}
     espera = setTimeout(passo, tentativas < 45 ? 4000 : 20000);
   };
@@ -764,7 +764,7 @@ async function transferir(e) {
   if (!$('#confirmaTransferir').checked) return msg('#msgTransferir', 'Marque a confirmação para continuar.', 'erro');
   try {
     await rpc('admin_transferir_propriedade', { p_email: email });
-    msg('#msgTransferir', 'Pronto. Peça para ' + email + ' criar a conta (se ainda não tiver), entrar no site e clicar em “Assumir a loja” em até 7 dias.', 'ok');
+    msg('#msgTransferir', 'Indicação registrada. Peça para ' + email + ' criar a conta (se ainda não tiver), entrar no site e clicar em “Assumir a loja” em até 7 dias.', 'ok');
     $('#novoDono').value = ''; $('#confirmaTransferir').checked = false;
     await carregarPainel(true);
   } catch (err) { msg('#msgTransferir', traduzir(err), 'erro'); }

@@ -473,7 +473,7 @@ function fieldHtml(st, f, i) {
     const hint = !hasData && !sel.length ? '<span class="muted" style="font-size:12px">Abra uma planilha para escolher as colunas.</span>' : '';
     return `<div class="field"><span>${esc(f.l)}${f.all ? ' <span class="muted" style="font-weight:400">(nenhuma marcada = todas)</span>' : ''}</span><div class="cols" role="group" aria-label="${esc(f.l)}">
       ${headers.map(h => `<button type="button" class="colbtn" data-act="col" data-id="${st.id}" data-k="${f.k}" data-col="${esc(h)}" aria-pressed="${sel.some(x => lc(x) === lc(h))}">${esc(h)}</button>`).join('')}
-      ${missing.map(m => `<button type="button" class="colbtn${hasData ? ' missing' : ''}" data-act="col" data-id="${st.id}" data-k="${f.k}" data-col="${esc(m)}" aria-pressed="true" title="${hasData ? 'Esta coluna não existe nesta planilha' : 'Clique para remover'}">${esc(m)} ✕</button>`).join('')}${hint}
+      ${missing.map(m => `<button type="button" class="colbtn${hasData ? ' missing' : ''}" data-act="col" data-id="${st.id}" data-k="${f.k}" data-col="${esc(m)}" aria-pressed="true" title="${hasData ? 'Esta coluna não existe nesta planilha' : 'Clique para remover'}">${esc(m)} ×</button>`).join('')}${hint}
     </div></div>`;
   }
   return '';
@@ -1305,7 +1305,7 @@ function saudar(nome) {
   const primeiro = String(nome || '').trim().split(/\s+/)[0];
   const h = new Date().getHours();
   $('#hello').textContent = primeiro
-    ? (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + primeiro + '! Vamos deixar suas planilhas impecáveis.'
+    ? (h >= 5 && h < 12 ? 'Bom dia' : h >= 12 && h < 18 ? 'Boa tarde' : 'Boa noite') + ', ' + primeiro + '.'
     : 'Planilhas limpas, padronizadas e prontas para usar.';
 }
 function renderPerfil() {
