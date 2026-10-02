@@ -1,0 +1,233 @@
+# Manual do dono — Planilha Segura
+
+Este manual explica como colocar a loja da Planilha Segura no ar, como cuidar dela no dia a dia e como passá-la para outro dono. Não é preciso saber programar: tudo é feito pelos painéis do Supabase, do Mercado Pago e da hospedagem.
+
+## 1. Como a loja funciona
+
+| Parte | O que faz | Onde fica |
+| --- | --- | --- |
+| **Site da loja** | Tela de login, compra, o aplicativo e o painel do dono | Hospedagem (Netlify ou Cloudflare Pages) — pasta `dist/loja` |
+| **Supabase** | Contas dos clientes, registro das vendas e o arquivo do aplicativo protegido | Conta Supabase do dono |
+| **Mercado Pago** | Recebe o pagamento (Pix ou cartão) e avisa o Supabase | Conta Mercado Pago do dono |
+
+O modelo é **pagamento único**: quem compra ganha acesso vitalício, sem mensalidade.
+
+O caminho de uma venda:
+
+1. O cliente cria a conta e clica em "Comprar".
+2. Ele paga no Mercado Pago.
+3. O Mercado Pago avisa o Supabase.
+4. O acesso é liberado sozinho, em poucos segundos.
+
+As planilhas dos clientes **nunca** passam pelo servidor. O Supabase só guarda e-mail, senha (criptografada) e o registro das compras.
+
+O dinheiro cai direto na conta Mercado Pago do dono. Ninguém mais tem acesso a ele.
+
+## 2. O que você precisa ter em mãos
+
+- Um e-mail que será o do dono.
+- Conta no **Supabase** (supabase.com). O plano gratuito serve para começar.
+- Conta de vendedor no **Mercado Pago**, de preferência com CNPJ.
+- Conta no **Netlify** (netlify.com) ou no **Cloudflare Pages**, ambos gratuitos.
+- Opcional: um domínio próprio, como `suaplanilha.com.br` (registro.br).
+- Os arquivos do produto:
+
+| Pasta ou arquivo | Para que serve |
+| --- | --- |
+| `dist/loja/` | Site que vai para a hospedagem |
+| `dist/enviar-ao-supabase/planilha-segura.html` | Aplicativo protegido, que vai para o Supabase |
+| `supabase/migrations/0001_planilha_segura.sql` | Estrutura do banco de dados |
+| `supabase/functions/criar-pagamento/index.ts` | Função que cria o pagamento |
+| `supabase/functions/webhook-mp/index.ts` | Função que recebe o aviso do Mercado Pago |
+
+> **Importante:** nunca publique a pasta `dist/aberto/` nem o arquivo `dist/enviar-ao-supabase/planilha-segura.html` na hospedagem. Eles contêm o aplicativo sem proteção. Se o código estiver no GitHub, deixe o repositório **privado**.
+
+## 3. Instalação (cerca de 40 minutos)
+
+### Passo A — Criar o projeto no Supabase
+
+1. Entre no Supabase e clique em **New project**.
+2. Escolha um nome e a região **South America (São Paulo)**.
+3. Guarde a senha do banco num lugar seguro.
+4. Abra **SQL Editor** e clique em **New query**.
+5. Cole o conteúdo inteiro de `supabase/migrations/0001_planilha_segura.sql` e clique em **Run**. Deve aparecer "Success".
+6. Abra **Storage**. Já existe um depósito chamado **app**.
+7. Entre nele e envie o arquivo `dist/enviar-ao-supabase/planilha-segura.html`. O nome precisa ser exatamente esse.
+8. Abra **Authentication → Sign In / Providers → Email**:
+   - deixe **Confirm email** ligado;
+   - coloque a senha mínima em **8** caracteres.
+9. Abra **Authentication → URL Configuration**:
+   - em **Site URL**, coloque o endereço do site, por exemplo `https://suaplanilha.com.br/`;
+   - em **Redirect URLs**, adicione o mesmo endereço.
+   - Se ainda não tiver o endereço, volte aqui depois do passo D.
+10. Abra **Project Settings → API** e anote dois valores:
+    - **Project URL**, algo como `https://abcdefgh.supabase.co`;
+    - **anon / publishable key**, a chave **pública**.
+    - **Nunca** use a chave `service_role` / `secret` no site.
+
+> **E-mails de confirmação:** o envio de e-mail que já vem no Supabase tem limite de poucas mensagens por hora. Para vender de verdade, configure um SMTP próprio em **Authentication → Emails → SMTP Settings**. Serviços como Resend ou Brevo têm plano gratuito.
+
+### Passo B — Configurar o Mercado Pago
+
+1. Entre em **mercadopago.com.br/developers** → **Suas integrações** → **Criar aplicação**.
+2. Escolha pagamentos online com **Checkout Pro**.
+3. Em **Credenciais de produção**, copie o **Access Token**, que começa com `APP_USR-`.
+4. Em **Webhooks → Configurar notificações**:
+   - URL de produção: `https://SUA_REFERENCIA.supabase.co/functions/v1/webhook-mp`, usando o Project URL do passo A;
+   - evento: marque **Pagamentos**;
+   - salve e copie a **assinatura secreta** que aparece.
+
+### Passo C — Publicar as funções no Supabase
+
+1. No Supabase, abra **Edge Functions → Deploy a new function → Via Editor**.
+2. Dê o nome **criar-pagamento** (exatamente assim).
+3. Apague o exemplo, cole o conteúdo de `supabase/functions/criar-pagamento/index.ts` e clique em **Deploy**.
+4. Repita com o nome **webhook-mp** e o arquivo `supabase/functions/webhook-mp/index.ts`.
+5. Em cada uma das duas funções, abra **Details / Settings** e **desligue** a opção de verificação de JWT (**Verify JWT** / **Enforce JWT verification**). As duas funções conferem quem chamou dentro do próprio código.
+6. Abra **Edge Functions → Secrets** e cadastre:
+
+| Nome | Valor |
+| --- | --- |
+| `MP_ACCESS_TOKEN` | Access Token do passo B |
+| `MP_WEBHOOK_SECRET` | Assinatura secreta do passo B |
+| `SITE_URL` | Endereço do site, ex.: `https://suaplanilha.com.br/` |
+
+> Quem usa o terminal pode publicar as funções pelo CLI, de dentro da pasta do projeto:
+>
+> ```
+> npx supabase login
+> npx supabase link --project-ref SUA_REFERENCIA
+> npx supabase functions deploy
+> ```
+>
+> O arquivo `supabase/config.toml` já desliga a verificação de JWT das duas funções.
+
+### Passo D — Colocar o site no ar
+
+1. Abra `dist/loja/config.json` num editor de texto (o Bloco de Notas serve). Troque os dois valores pelos do passo A:
+   ```json
+   {
+     "supabaseUrl": "https://abcdefgh.supabase.co",
+     "supabaseChavePublica": "a chave pública anon / publishable"
+   }
+   ```
+   Para não precisar refazer isso a cada versão, faça a mesma troca em `loja/config.json`. O `python3 build.py` copia esse arquivo para `dist/loja`.
+2. Entre em **app.netlify.com/drop** e arraste a pasta `dist/loja` inteira. O arquivo `_headers` aplica as proteções de segurança automaticamente.
+3. Se tiver domínio, ligue-o em **Domain management**.
+4. Confira se o endereço final está igual em três lugares:
+   - `SITE_URL` (passo C);
+   - **Site URL** do Supabase (passo A);
+   - **Redirect URLs** do Supabase (passo A).
+
+Se o site mostrar "o config.json está com a chave SECRETA", você colou a chave errada. Troque pela pública e, no Supabase, gere uma nova chave secreta, porque a antiga ficou exposta.
+
+### Passo E — Assumir a loja
+
+1. No Supabase, abra **SQL Editor** e rode, com o seu e-mail:
+   ```sql
+   select public.definir_dono_pelo_sql('seu-email@exemplo.com');
+   ```
+2. Abra o site, clique em **Criar conta** com esse mesmo e-mail e confirme pelo link que chegar no e-mail.
+3. Entre no site. Vai aparecer o aviso **"Você foi indicado para ser o novo dono"**. Clique em **Assumir a loja**. O prazo é de 7 dias.
+4. Clique em **Conta → Painel do dono**, defina o preço, o e-mail de suporte e marque **Vendas abertas**.
+
+### Passo F — Testar antes de vender
+
+1. No Mercado Pago, crie **contas de teste** em **Suas integrações → Contas de teste**: uma vendedora e uma compradora.
+2. Use temporariamente o **Access Token de teste** em `MP_ACCESS_TOKEN`.
+3. Crie uma conta de cliente no site, compre com a conta compradora de teste e confira que o aplicativo abre sozinho.
+4. Reembolse essa compra no Mercado Pago e confira que o acesso foi retirado.
+5. Volte o `MP_ACCESS_TOKEN` para o token de produção.
+6. Faça uma compra real de valor baixo e reembolse.
+
+## 4. Dia a dia
+
+| Situação | O que fazer |
+| --- | --- |
+| Ver vendas e receita | Painel do dono → Vendas (dá para baixar em .csv) |
+| Cliente pagou por Pix fora do site, ou é cortesia | Peça para criar a conta no site → Painel → Liberar acesso |
+| Pedido de reembolso (o cliente tem 7 dias pelo Código de Defesa do Consumidor) | Reembolse no painel do Mercado Pago; o acesso é retirado sozinho |
+| "Para conferir" maior que zero | Veja o Histórico: valor pago diferente do preço, contestação no cartão ou cobrança em dobro (reembolse uma das duas) |
+| Mudar o preço | Painel → Loja → Preço. Vale para as próximas compras; quem já comprou continua com acesso |
+| Parar de vender, ou usar só para você | Painel → desmarque **Vendas abertas**. Só você e quem você liberar entram |
+| Cliente esqueceu a senha | Ele mesmo clica em "Esqueci minha senha" na tela de login |
+| Atualizar o aplicativo | Envie o novo `planilha-segura.html` ao depósito **app**, substituindo o antigo, **e** publique de novo a pasta `dist/loja` gerada na mesma versão |
+
+> As duas pastas de cada versão precisam andar juntas. A página da loja autoriza só o código daquela versão do aplicativo. Se você trocar só uma delas, o aplicativo não abre.
+
+## 5. Passar a loja para outro dono
+
+### Cenário 1 — Você vendeu o site para um cliente (instalação nova)
+
+Este é o caminho recomendado:
+
+1. O cliente cria **as próprias contas**: Supabase, Mercado Pago e Netlify.
+2. Seguindo a seção 3, você (ou ele) instala tudo **nas contas dele**.
+3. No passo E, use o e-mail **do cliente**.
+
+O dinheiro das vendas cai direto na conta dele. Você nunca tem acesso às senhas nem ao dinheiro.
+
+### Cenário 2 — Transferir uma loja que já está funcionando
+
+Faça nesta ordem:
+
+1. **Dono no site:** Painel → Propriedade da loja → digite o e-mail do novo dono e confirme. O novo dono cria a conta (se não tiver), entra e clica em **Assumir a loja** em até 7 dias. Até ele aceitar, nada muda.
+2. **Supabase:** o novo dono cria uma organização no Supabase. O dono atual abre **Project Settings → General → Transfer project** e transfere o projeto para essa organização.
+3. **Chaves do Supabase:** depois da transferência, o novo dono gera novas chaves em **Project Settings → API Keys** e atualiza o `config.json` do site. Assim o antigo dono não conserva nenhuma chave.
+4. **Mercado Pago:** o novo dono cria a aplicação na conta dele (passo B) e troca `MP_ACCESS_TOKEN` e `MP_WEBHOOK_SECRET` em **Edge Functions → Secrets**. O antigo dono apaga o webhook da conta dele.
+   - As vendas antigas continuam na conta antiga: reembolsos delas só o antigo dono consegue fazer.
+5. **Hospedagem:** transfira o site no Netlify (**Site configuration → Transfer site**), ou o novo dono publica a pasta `dist/loja` na conta dele.
+6. **Domínio:** faça a transferência de titularidade no registro.br.
+7. **Termos e política de privacidade:** atualize o nome e o CNPJ do novo responsável.
+
+Os clientes que já compraram **mantêm o acesso** durante toda a troca.
+
+### Se o dono perder o acesso à conta
+
+Quem controla o projeto no Supabase pode indicar um novo dono pelo SQL Editor, como no passo E:
+
+```sql
+select public.definir_dono_pelo_sql('novo-email@exemplo.com');
+```
+
+## 6. Segurança: o que nunca fazer
+
+- Nunca coloque no site, no GitHub ou em mensagens:
+  - a chave `service_role` / `secret` do Supabase;
+  - o Access Token do Mercado Pago;
+  - a assinatura secreta do webhook.
+  Esses valores só existem em **Edge Functions → Secrets**.
+- Não deixe o depósito **app** do Storage como público.
+- Não publique `dist/aberto/` nem `dist/enviar-ao-supabase/` na hospedagem.
+- Ative a verificação em duas etapas nas contas Supabase, Mercado Pago, Netlify e no e-mail do dono.
+
+O que já vem protegido:
+
+- cada cliente só enxerga a própria compra;
+- o navegador não consegue se dar acesso nem virar dono;
+- avisos de pagamento falsos são recusados pela assinatura secreta;
+- o valor pago é conferido com o preço;
+- reembolsos e contestações retiram o acesso.
+
+**Limitação honesta:** nenhum software vendido é 100% à prova de cópia. Quem não pagou não recebe o aplicativo. Mas alguém que pagou e entende de programação consegue salvar a página. O objetivo é que comprar seja mais fácil do que piratear.
+
+## 7. Problemas comuns
+
+| Mensagem ou sintoma | Causa provável | Solução |
+| --- | --- | --- |
+| "Este site ainda não foi configurado" | `config.json` com os valores de exemplo | Passo D |
+| "O banco de dados não está atualizado" | O SQL não foi executado | Passo A, item 5 |
+| "O arquivo do aplicativo ainda não foi enviado" | Falta o arquivo no depósito **app** | Passo A, item 7 |
+| O link de confirmação abre uma página errada | Site URL ou Redirect URLs diferentes do endereço real | Passo A, item 9 |
+| E-mails de confirmação não chegam | Limite do e-mail padrão do Supabase | Configure SMTP próprio |
+| "O Mercado Pago não respondeu" ao comprar | `MP_ACCESS_TOKEN` errado ou faltando | Passo C, item 6 |
+| Pagou, mas o acesso não liberou | Webhook com URL ou assinatura errada | Mercado Pago → Webhooks → confira a URL e o evento "Pagamentos"; confira `MP_WEBHOOK_SECRET`; veja os logs em Edge Functions → webhook-mp → Logs. Enquanto isso, libere manualmente pelo painel |
+| O aplicativo abre em branco depois de uma atualização | Versões diferentes da loja e do aplicativo | Envie os dois arquivos da mesma versão |
+
+## 8. Antes de vender: parte legal
+
+- **CNPJ** para emitir nota fiscal. Pergunte a um contador qual regime serve para venda de software.
+- **Termos de Uso** no site: o que está incluído, reembolso em 7 dias, suporte, limite de responsabilidade.
+- **Política de Privacidade (LGPD):** quais dados você guarda (e-mail e registro de compras), para quê, por quanto tempo e como o cliente pede para apagar.
+  - Para apagar a conta de um cliente: Supabase → Authentication → Users → excluir. As compras e o acesso dele são apagados junto.
+- **Licença de terceiros:** o produto usa SheetJS Community Edition e supabase-js. Mantenha os créditos (tela de Segurança do aplicativo e aviso de licença dentro da página da loja) e os arquivos de licença em `vendor/`.

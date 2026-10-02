@@ -4,25 +4,56 @@ Aplicação web de uma página para limpar, padronizar e automatizar planilhas. 
 
 Versão atual: **1.0.0**
 
-## Como usar
+## Duas formas de usar
 
-- **Usar localmente:** abra `dist/index.html` no navegador.
-- **Hospedar:** publique a pasta `dist/` em qualquer hospedagem de arquivos estáticos (Netlify, Cloudflare Pages, GitHub Pages). Netlify e Cloudflare Pages aplicam automaticamente o arquivo `dist/_headers` com os cabeçalhos de segurança. Em outras hospedagens, configure esses mesmos cabeçalhos no servidor.
+- **Aberto (sem login):** `dist/aberto/index.html`. Serve para uso próprio ou demonstração. Funciona abrindo o arquivo no navegador ou hospedando a pasta.
+- **Loja (venda com pagamento único):** login, compra pelo Mercado Pago com acesso vitalício, painel do dono e troca de dono. Usa Supabase como back-end. A instalação completa, o uso diário e a transferência para outro dono estão no **[MANUAL-DO-DONO.md](MANUAL-DO-DONO.md)**.
 
 ## Estrutura
 
 | Caminho | Conteúdo |
 | --- | --- |
-| `src/layout.html` | Estrutura e estilo da página |
+| `src/layout.html` | Estrutura e estilo do aplicativo |
 | `src/engine.js` | Motor de limpeza (`PlanilhaEngine`), sem dependência da página. É o mesmo código embutido no Apps Script gerado. |
-| `src/app.js` | Interface, leitura e exportação de arquivos, geração do Apps Script |
-| `vendor/` | SheetJS Community Edition 0.18.5 (Apache 2.0) e sua licença |
-| `build.py` | Gera `dist/` a partir de `src/` e `vendor/` |
-| `tests/` | Testes do motor de limpeza |
+| `src/app.js` | Interface do aplicativo, leitura e exportação de arquivos, geração do Apps Script |
+| `loja/` | Site da loja: login, compra, painel do dono (`layout.html`, `loja.js`, `config.json`) |
+| `supabase/migrations/` | Banco de dados: tabelas, regras de acesso (RLS) e funções |
+| `supabase/functions/` | Edge Functions `criar-pagamento` e `webhook-mp` |
+| `vendor/` | SheetJS CE 0.18.5 (Apache 2.0) e supabase-js 2.117.2 (MIT), com as licenças |
+| `build.py` | Gera `dist/` |
+| `tests/` | Testes do motor, do banco (Postgres real via PGlite) e das funções |
 
-Para gerar uma nova versão: `python3 build.py`. Para testar o motor: `node tests/engine.test.js`.
+Comandos:
+- `python3 build.py` gera:
+  - `dist/aberto/`;
+  - `dist/loja/` (vai para a hospedagem);
+  - `dist/enviar-ao-supabase/planilha-segura.html` (vai para o Storage);
+  - `dist/artifact.html`.
+- `npm install && npm test` roda os testes. Precisa do Node 22.18 ou mais recente.
 
-## Recursos
+## Back-end da loja
+
+- **Pagamento único:** cada compra é uma preferência do Mercado Pago Checkout Pro (Pix ou cartão). Quando o pagamento é aprovado, o acesso vitalício é liberado. Reembolso ou contestação retiram o acesso automaticamente.
+- **Webhook seguro:**
+  - confere a assinatura HMAC (`x-signature`) do Mercado Pago;
+  - consulta o pagamento direto na API, sem confiar no conteúdo do aviso;
+  - confere se o valor pago é exatamente o preço registrado na compra;
+  - trata avisos repetidos e cobranças em dobro.
+- **Banco com RLS:** o navegador só lê as próprias compras e o próprio acesso. Toda escrita passa por funções `security definer` que conferem quem chamou. As funções de pagamento só são executáveis pelo servidor (`service_role`).
+- **Aplicativo protegido:** fica num depósito privado do Storage. A política de acesso só entrega o arquivo a quem comprou, recebeu acesso manual ou é o dono. A loja abre o aplicativo num iframe `srcdoc`.
+- **Dono transferível:**
+  - o dono atual indica um e-mail pelo painel;
+  - a troca só acontece quando essa pessoa entra com o e-mail confirmado e aceita, em até 7 dias;
+  - o primeiro dono (ou a recuperação) é definido pelo SQL Editor do Supabase.
+- **Configurável sem programar:** nome do produto, descrição, preço, e-mail de suporte e "vendas abertas" ficam no painel. Endereço e chave pública do Supabase ficam em `config.json`. Os segredos ficam só em Edge Functions → Secrets.
+- **Proteções do site da loja:**
+  - CSP com hashes;
+  - conexões limitadas ao próprio site e a `*.supabase.co`;
+  - recusa de `config.json` com chave secreta;
+  - CORS da função de pagamento limitado ao endereço do site;
+  - histórico de eventos visível só para o dono.
+
+## Recursos do aplicativo
 
 - **Importação:** XLSX, XLSM, XLS, ODS, CSV (UTF-8 ou Windows-1252), TSV, TXT e JSON. Também aceita colar direto do Excel com Ctrl+V ou arrastar o arquivo para a página.
 - **Receita de limpeza:** etapas que rodam em ordem e podem ser ligadas, desligadas e reordenadas:
@@ -47,7 +78,7 @@ O produto não inclui dados de exemplo: a página abre vazia e só mostra o que 
 
 ## Segurança
 
-### Página (front-end)
+### Aplicativo (front-end)
 
 - **Nenhum dado sai do navegador.** A política de segurança de conteúdo (CSP) usa `default-src 'none'` e `connect-src 'none'`, o que impede a página de fazer qualquer requisição de rede. Também não há scripts, fontes ou imagens de terceiros: tudo vem embutido no arquivo.
 - **Só scripts autorizados executam.** Os scripts da página são liberados pelo hash SHA-256 do seu conteúdo. Qualquer script injetado é bloqueado pelo navegador.
@@ -64,7 +95,7 @@ O produto não inclui dados de exemplo: a página abre vazia e só mostra o que 
 - **Receitas importadas são validadas.** Só tipos, campos e opções conhecidos são aceitos, com tamanho limitado.
 - **Nomes de arquivo higienizados** nos downloads.
 
-### Cabeçalhos de hospedagem (`dist/_headers`)
+### Cabeçalhos de hospedagem (`_headers` em `dist/aberto` e `dist/loja`)
 
 - CSP com `frame-ancestors 'none'`;
 - `X-Frame-Options: DENY`;
@@ -87,7 +118,14 @@ O produto não inclui dados de exemplo: a página abre vazia e só mostra o que 
 
 ### Privacidade (LGPD)
 
-O produto não coleta, não armazena e não transmite dados pessoais. O único dado guardado é a configuração das receitas salvas pelo usuário (nomes de etapas e de colunas), no `localStorage` do próprio navegador.
+O conteúdo das planilhas nunca é coletado nem transmitido. No navegador, o único dado guardado é a configuração das receitas salvas pelo usuário (nomes de etapas e de colunas), no `localStorage`.
+
+Na loja, o Supabase guarda:
+- o e-mail e a senha criptografada de cada conta;
+- o registro das compras;
+- o histórico de eventos.
+
+A política de privacidade de quem vende precisa informar isso (veja o MANUAL-DO-DONO).
 
 ## Componentes de terceiros
 

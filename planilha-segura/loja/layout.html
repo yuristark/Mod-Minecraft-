@@ -1,0 +1,271 @@
+<title>Planilha Segura</title>
+<style>
+[hidden]{display:none!important}
+:root{
+  --bg:#f5f8f7; --card:#ffffff; --ink:#1c2926; --muted:#6a7671; --line:#e2e8e5; --soft:#f0f4f2;
+  --primary:#1a674b; --primary-ink:#ffffff; --primary-soft:#e9f3ee;
+  --side:#112b26; --side-ink:#c2d0cb; --lime:#c4ec88; --lime-ink:#173c27;
+  --ok:#2f7d4f; --warn:#9a6409; --warn-soft:#fdf4e2; --danger:#b23a32; --danger-soft:#fbeceb;
+  --font:Arial,Helvetica,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
+  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
+  --side:#0b1a16; --side-ink:#c2d0cb; --lime:#b9e27c; --lime-ink:#173c27;
+  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73; --danger-soft:rgba(255,110,100,.10);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1513; --card:#161e1b; --ink:#e2ebe7; --muted:#97a8a0; --line:#27332e; --soft:#1b2521;
+  --primary:#5fbf91; --primary-ink:#0c1a14; --primary-soft:#1d2e27;
+  --side:#0b1a16; --side-ink:#c2d0cb; --lime:#b9e27c; --lime-ink:#173c27;
+  --ok:#6fcf98; --warn:#e2b25b; --warn-soft:rgba(226,178,91,.12); --danger:#ff7d73; --danger-soft:rgba(255,110,100,.10);
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5}
+h1,h2,p{margin:0}
+h1{font-size:24px;font-weight:600;letter-spacing:-.5px;line-height:1.25}
+h2{font-size:16px;font-weight:600}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid #75ab91;outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+
+.centro{min-height:100vh;display:grid;place-items:center;align-content:center;gap:16px;padding:32px 16px}
+.caixa{width:100%;max-width:420px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:28px;display:grid;gap:16px}
+.marca{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;letter-spacing:-.3px}
+.marca span.logo{width:34px;height:34px;border-radius:8px;background:var(--side);color:var(--lime);display:grid;place-items:center;flex:none}
+.rodape{max-width:420px;text-align:center;color:var(--muted);font-size:12px}
+
+.abas{display:grid;grid-template-columns:1fr 1fr;background:var(--soft);border-radius:8px;padding:3px}
+.abas button{border:0;background:none;border-radius:6px;padding:8px;color:var(--muted)}
+.abas button[aria-pressed="true"]{background:var(--card);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+form{display:grid;gap:14px}
+.field{display:grid;gap:6px}
+.field>span{font-size:12px;color:var(--muted)}
+.input{width:100%;border:1px solid var(--line);background:var(--card);border-radius:7px;padding:10px 12px;min-height:40px}
+textarea.input{min-height:70px;resize:vertical}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px}
+.check input{margin-top:3px;accent-color:var(--primary)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:9px 16px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none}
+.btn:hover{background:var(--soft)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--primary-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--danger)}
+.btn.largo{width:100%}
+.btn:disabled{opacity:.6;cursor:default}
+.link{border:0;background:none;color:var(--primary);padding:0;text-decoration:underline;text-underline-offset:2px;justify-self:start}
+.msg{font-size:13px;min-height:0}
+.msg:empty{display:none}
+.msg.erro{color:var(--danger)}
+.msg.ok{color:var(--ok)}
+.aviso{border-radius:8px;padding:10px 12px;font-size:13px;background:var(--warn-soft);color:var(--warn)}
+.aviso.ok{background:var(--primary-soft);color:var(--primary)}
+
+.preco{display:grid;gap:4px;padding:16px;border-radius:10px;background:var(--primary-soft)}
+.preco b{font-size:30px;letter-spacing:-.8px;color:var(--primary)}
+.preco small{color:var(--muted)}
+.lista{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.lista li{display:flex;gap:8px;align-items:flex-start}
+.lista li::before{content:"";width:16px;height:16px;flex:none;margin-top:2px;border-radius:50%;background:var(--primary-soft) no-repeat center/10px;box-shadow:inset 0 0 0 5px var(--primary)}
+.quem{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+
+.spinner{width:28px;height:28px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--primary);animation:gira 0.9s linear infinite}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.spinner{animation:none}}
+
+#appFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
+.conta{position:fixed;right:16px;bottom:16px;z-index:20}
+.conta>button{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 14px;box-shadow:0 4px 14px rgba(0,0,0,.12);font-size:13px}
+.conta-pop{position:absolute;right:0;bottom:46px;min-width:220px;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.16);padding:6px;display:grid}
+.conta-pop small{padding:8px 10px;color:var(--muted);overflow-wrap:anywhere;border-bottom:1px solid var(--line);margin-bottom:4px}
+.conta-pop button{border:0;background:none;text-align:left;padding:9px 10px;border-radius:6px}
+.conta-pop button:hover{background:var(--soft)}
+
+.convite{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:30;max-width:calc(100% - 32px);background:var(--side);color:var(--side-ink);border-radius:10px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.convite .btn{min-height:34px;padding:6px 12px;background:var(--lime);color:var(--lime-ink);border:0;font-weight:600}
+
+.painel{max-width:1100px;margin:0 auto;padding:28px 16px 64px;display:grid;gap:18px}
+.painel-topo{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.painel-topo p{color:var(--muted);margin-top:4px}
+.acoes{display:flex;gap:8px;flex-wrap:wrap}
+.metricas{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.metrica{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:4px}
+.metrica span{font-size:12px;color:var(--muted)}
+.metrica b{font-size:22px;letter-spacing:-.4px}
+.metrica.alerta b{color:var(--warn)}
+.grade{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px}
+.card-h{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;align-items:center}
+.card-h p{font-size:12px;color:var(--muted);margin-top:2px}
+.card-b{padding:16px 18px;display:grid;gap:14px}
+.linha2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tabela-w{overflow:auto;max-height:420px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{text-align:left;padding:9px 18px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;font-weight:500;color:var(--muted);position:sticky;top:0;background:var(--card)}
+td.n,th.n{text-align:right}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;background:var(--soft);color:var(--muted)}
+.tag.aprovada{background:var(--primary-soft);color:var(--primary)}
+.tag.divergente,.tag.contestada{background:var(--warn-soft);color:var(--warn)}
+.tag.reembolsada,.tag.recusada,.tag.cancelada{background:var(--danger-soft);color:var(--danger)}
+.vazio td{color:var(--muted);text-align:center;padding:22px}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%);background:var(--side);color:#fff;padding:10px 16px;border-radius:8px;font-size:13px;z-index:40;max-width:calc(100% - 32px)}
+@media (max-width:860px){.metricas{grid-template-columns:1fr 1fr}.grade{grid-template-columns:1fr}}
+@media (max-width:480px){.caixa{padding:20px}.linha2{grid-template-columns:1fr}th,td{padding:8px 12px}}
+</style>
+
+<!-- carregando -->
+<div id="t-carregando" class="tela centro" role="status" aria-live="polite">
+  <div class="spinner" aria-hidden="true"></div>
+  <p class="muted" id="carregandoMsg">Carregando…</p>
+</div>
+
+<!-- erro de configuração -->
+<div id="t-erro" class="tela centro" hidden>
+  <div class="caixa">
+    <h1>Não foi possível abrir</h1>
+    <p id="erroMsg"></p>
+    <button class="btn" data-act="recarregar">Tentar de novo</button>
+  </div>
+</div>
+
+<!-- entrar / criar conta -->
+<main id="t-entrar" class="tela centro" hidden>
+  <div class="caixa">
+    <div class="marca"><span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span><span class="nomeProduto">Planilha Segura</span></div>
+    <div class="abas" role="group" aria-label="Escolha">
+      <button type="button" data-modo="entrar" aria-pressed="true">Entrar</button>
+      <button type="button" data-modo="criar" aria-pressed="false">Criar conta</button>
+    </div>
+    <form id="formEntrar" novalidate>
+      <label class="field"><span>E-mail</span><input class="input" id="email" type="email" autocomplete="email" maxlength="254" required></label>
+      <label class="field"><span>Senha</span><input class="input" id="senha" type="password" autocomplete="current-password" minlength="8" maxlength="72" required></label>
+      <label class="field" id="campoSenha2" hidden><span>Repita a senha</span><input class="input" id="senha2" type="password" autocomplete="new-password" minlength="8" maxlength="72"></label>
+      <p class="msg" id="msgEntrar" role="alert"></p>
+      <button class="btn primary largo" type="submit" id="btnEntrar">Entrar</button>
+      <button class="link" type="button" data-act="esqueci" id="btnEsqueci">Esqueci minha senha</button>
+    </form>
+    <p class="muted" id="semDono" hidden style="font-size:12px">Loja ainda sem dono. Se você é o dono, siga o passo “Assumir a loja” do manual.</p>
+  </div>
+  <p class="rodape">Suas planilhas nunca são enviadas para a internet. A conta serve apenas para liberar o seu acesso.</p>
+</main>
+
+<!-- nova senha -->
+<main id="t-nova-senha" class="tela centro" hidden>
+  <div class="caixa">
+    <h1>Criar nova senha</h1>
+    <form id="formNovaSenha" novalidate>
+      <label class="field"><span>Nova senha (mínimo 8 caracteres)</span><input class="input" id="novaSenha" type="password" autocomplete="new-password" minlength="8" maxlength="72" required></label>
+      <p class="msg" id="msgNovaSenha" role="alert"></p>
+      <button class="btn primary largo" type="submit">Salvar senha</button>
+    </form>
+  </div>
+</main>
+
+<!-- comprar -->
+<main id="t-comprar" class="tela centro" hidden>
+  <div class="caixa">
+    <div class="marca"><span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></span><span class="nomeProduto">Planilha Segura</span></div>
+    <p class="muted" id="descricaoProduto" hidden></p>
+    <div id="blocoVenda">
+      <div class="preco"><small>Acesso vitalício</small><b class="num" id="precoProduto">—</b><small>Pagamento único. Sem mensalidade.</small></div>
+    </div>
+    <ul class="lista">
+      <li>Limpeza e padronização de planilhas Excel, CSV e Google Sheets</li>
+      <li>Automação agendada no Google Sheets</li>
+      <li>Suas planilhas são processadas só no seu computador</li>
+    </ul>
+    <div class="aviso" id="avisoCompra" hidden></div>
+    <button class="btn primary largo" data-act="comprar" id="btnComprar">Comprar acesso</button>
+    <p class="muted" id="vendasFechadas" hidden></p>
+    <p class="muted" style="font-size:12px">Pagamento processado pelo Mercado Pago (Pix ou cartão). Você tem 7 dias para desistir e receber o valor de volta.</p>
+    <div class="quem"><span id="quemCompra"></span><button class="link" data-act="sair">Sair</button></div>
+  </div>
+</main>
+
+<!-- aplicativo -->
+<div id="t-app" class="tela" hidden>
+  <iframe id="appFrame" title="Planilha Segura" allow="clipboard-write"></iframe>
+  <div class="conta">
+    <div class="conta-pop" id="contaPop" hidden>
+      <small id="contaEmail"></small>
+      <button data-act="painel" id="btnPainel" hidden>Painel do dono</button>
+      <button data-act="sair">Sair</button>
+    </div>
+    <button id="contaBtn" data-act="conta" aria-expanded="false" aria-controls="contaPop">Conta</button>
+  </div>
+</div>
+
+<!-- painel do dono -->
+<div id="t-painel" class="tela" hidden>
+  <div class="painel">
+    <div class="painel-topo">
+      <div><h1>Painel do dono</h1><p id="painelDono"></p></div>
+      <div class="acoes"><button class="btn" data-act="atualizar-painel">Atualizar</button><button class="btn primary" data-act="voltar-app">Voltar ao aplicativo</button></div>
+    </div>
+    <div class="metricas" id="metricas"></div>
+
+    <div class="grade">
+      <section class="card" aria-labelledby="h-loja">
+        <div class="card-h"><div><h2 id="h-loja">Loja</h2><p>Como o produto aparece para quem vai comprar.</p></div></div>
+        <form class="card-b" id="formLoja" novalidate>
+          <label class="field"><span>Nome do produto</span><input class="input" id="cfgNome" maxlength="80" required></label>
+          <label class="field"><span>Descrição (opcional)</span><textarea class="input" id="cfgDescricao" maxlength="500"></textarea></label>
+          <div class="linha2">
+            <label class="field"><span>Preço (R$)</span><input class="input num" id="cfgPreco" inputmode="decimal" placeholder="0,00" maxlength="12"></label>
+            <label class="field"><span>E-mail de suporte</span><input class="input" id="cfgSuporte" type="email" maxlength="254"></label>
+          </div>
+          <label class="check"><input type="checkbox" id="cfgVendas"> Vendas abertas (desmarque para que só você e quem você liberar possam entrar)</label>
+          <p class="msg" id="msgLoja" role="alert"></p>
+          <div><button class="btn primary" type="submit">Salvar</button></div>
+        </form>
+      </section>
+
+      <section class="card" aria-labelledby="h-acesso">
+        <div class="card-h"><div><h2 id="h-acesso">Liberar acesso</h2><p>Para quem pagou por fora ou para cortesias. A pessoa precisa ter criado a conta.</p></div></div>
+        <form class="card-b" id="formAcesso" novalidate>
+          <label class="field"><span>E-mail da pessoa</span><input class="input" id="acessoEmail" type="email" maxlength="254" required></label>
+          <p class="msg" id="msgAcesso" role="alert"></p>
+          <div class="acoes"><button class="btn primary" type="submit" data-ativo="1">Liberar</button><button class="btn danger" type="submit" data-ativo="0">Bloquear</button></div>
+        </form>
+        <div class="tabela-w"><table><thead><tr><th>E-mail</th><th>Situação</th><th>Origem</th><th>Atualizado</th></tr></thead><tbody id="tabAcessos"></tbody></table></div>
+      </section>
+    </div>
+
+    <section class="card" aria-labelledby="h-vendas">
+      <div class="card-h"><div><h2 id="h-vendas">Vendas</h2><p>Reembolsos são feitos no painel do Mercado Pago; o acesso é retirado automaticamente.</p></div><button class="btn" data-act="baixar-vendas">Baixar .csv</button></div>
+      <div class="tabela-w"><table><thead><tr><th>Data</th><th>E-mail</th><th class="n">Valor</th><th>Situação</th><th>Pagamento no Mercado Pago</th></tr></thead><tbody id="tabVendas"></tbody></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-hist">
+      <div class="card-h"><div><h2 id="h-hist">Histórico</h2><p>Tudo o que aconteceu na loja: vendas, reembolsos, alertas e mudanças.</p></div></div>
+      <div class="tabela-w"><table><thead><tr><th>Quando</th><th>O que aconteceu</th><th>Conta</th><th>Detalhe</th></tr></thead><tbody id="tabEventos"></tbody></table></div>
+    </section>
+
+    <section class="card" aria-labelledby="h-dono">
+      <div class="card-h"><div><h2 id="h-dono">Propriedade da loja</h2><p>Passe a loja para outra pessoa. Ela vira a dona quando entrar com o e-mail indicado e aceitar.</p></div></div>
+      <div class="card-b">
+        <div class="aviso" id="transferenciaPendente" hidden></div>
+        <form id="formTransferir" novalidate style="display:grid;gap:14px">
+          <label class="field"><span>E-mail do novo dono</span><input class="input" id="novoDono" type="email" maxlength="254" required></label>
+          <label class="check"><input type="checkbox" id="confirmaTransferir"> Entendo que, quando o novo dono aceitar, perco o acesso a este painel.</label>
+          <p class="msg" id="msgTransferir" role="alert"></p>
+          <div><button class="btn primary" type="submit">Indicar novo dono</button></div>
+        </form>
+        <p class="muted" style="font-size:12px">A troca de dono neste painel não transfere as contas do Supabase, do Mercado Pago, da hospedagem e do domínio. Veja o passo a passo completo no manual.</p>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="convite" id="convite" hidden role="region" aria-label="Convite">
+  <span>Você foi indicado para ser o novo dono desta loja.</span>
+  <button class="btn" data-act="aceitar-propriedade">Assumir a loja</button>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+{{SUPABASE}}
+
+{{LOJA}}

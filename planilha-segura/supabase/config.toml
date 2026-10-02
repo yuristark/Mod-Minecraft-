@@ -1,0 +1,10 @@
+# Configuração usada pelo Supabase CLI ao publicar as funções (supabase functions deploy).
+project_id = "planilha-segura"
+
+# As duas funções conferem quem chamou dentro do próprio código:
+# criar-pagamento valida o login no Supabase Auth; webhook-mp valida a assinatura do Mercado Pago.
+[functions.criar-pagamento]
+verify_jwt = false
+
+[functions.webhook-mp]
+verify_jwt = false
