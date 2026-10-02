@@ -1,0 +1,1532 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+</head>
+<body>
+<title>Planilha Segura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: ferramenta de trabalho. Faixa de abas no topo; à esquerda a "receita" (etapas em ordem), à direita a planilha com as células alteradas marcadas como marca-texto. */
+:root{
+  --bg:#eef1f4; --sheet:#ffffff; --ink:#16202c; --muted:#566273; --line:#d6dce3; --grid:#e7ebf0;
+  --head:#f5f7f9; --accent:#1f56c9; --accent-soft:#e3ebfb; --on-accent:#ffffff;
+  --mark:#fff0a3; --mark-edge:#f2d34b; --gone:#fbe6e4; --gone-ink:#a3352d;
+  --ok:#17784e; --ok-soft:#dff3e9; --warn:#9a6409; --warn-soft:#fbefd6; --danger:#b93a32;
+  --display:"Archivo",ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
+  --body:"Atkinson Hyperlegible",ui-sans-serif,system-ui,"Segoe UI",Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e1217; --sheet:#151b22; --ink:#e6ebf1; --muted:#9aa6b4; --line:#2a333e; --grid:#202832;
+  --head:#1a212a; --accent:#7ea4ff; --accent-soft:#1d2a45; --on-accent:#0b1220;
+  --mark:rgba(255,214,10,.20); --mark-edge:rgba(255,214,10,.55); --gone:rgba(255,99,88,.12); --gone-ink:#ff9b92;
+  --ok:#55c995; --ok-soft:rgba(85,201,149,.14); --warn:#e5b45a; --warn-soft:rgba(229,180,90,.14); --danger:#ff7b72;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1217; --sheet:#151b22; --ink:#e6ebf1; --muted:#9aa6b4; --line:#2a333e; --grid:#202832;
+  --head:#1a212a; --accent:#7ea4ff; --accent-soft:#1d2a45; --on-accent:#0b1220;
+  --mark:rgba(255,214,10,.20); --mark-edge:rgba(255,214,10,.55); --gone:rgba(255,99,88,.12); --gone-ink:#ff9b92;
+  --ok:#55c995; --ok-soft:rgba(85,201,149,.14); --warn:#e5b45a; --warn-soft:rgba(229,180,90,.14); --danger:#ff7b72;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:clamp(16px,3vw,32px);padding-block:18px 56px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* topo */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{flex:none}
+.brand h1{font-size:24px;font-weight:800;font-stretch:88%}
+.brand p{color:var(--muted);font-size:13px}
+.privacy{display:inline-flex;align-items:center;gap:8px;font-size:13px;padding:7px 12px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-weight:700}
+.privacy svg{flex:none}
+.tabs{display:flex;gap:4px;margin-block:18px 16px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{background:none;border:0;padding:10px 14px;font-family:var(--display);font-weight:700;font-stretch:95%;font-size:15px;color:var(--muted);border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tab[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+
+/* blocos */
+.panel{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.panel-h h2{font-size:17px;font-weight:750;font-stretch:92%}
+.eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:8px 12px;font-weight:700;font-size:14px;white-space:nowrap}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.small{padding:5px 9px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.field{display:grid;gap:5px}
+.field>span{font-size:13px;font-weight:700;color:var(--muted)}
+.input,select.input,textarea.input{width:100%;border:1px solid var(--line);background:var(--sheet);border-radius:7px;padding:7px 9px;font-size:14px;min-width:0}
+textarea.input{font-family:var(--mono);font-size:13px;min-height:130px;resize:vertical}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.check input{margin-top:3px;accent-color:var(--accent)}
+.muted{color:var(--muted)}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 9px;background:var(--accent-soft);color:var(--accent)}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+
+/* fonte de dados */
+.source{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 16px;padding:14px 16px;margin-bottom:16px}
+.source .file{display:flex;gap:10px;align-items:center;min-width:0;flex:1 1 260px}
+.source .file strong{display:block;overflow-wrap:anywhere;font-size:15px}
+.source .file small{color:var(--muted)}
+.fileicon{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);flex:none}
+.source .field{min-width:120px}
+.source .actions{display:flex;flex-wrap:wrap;gap:8px}
+.paste{padding:14px 16px;margin-bottom:16px;display:grid;gap:10px}
+.drop-hint{position:fixed;inset:0;background:color-mix(in srgb,var(--accent) 18%,transparent);border:4px dashed var(--accent);z-index:50;display:grid;place-items:center;font-family:var(--display);font-size:26px;font-weight:800;color:var(--ink);pointer-events:none}
+
+/* área principal */
+.work{display:grid;grid-template-columns:minmax(300px,390px) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:960px){.work{grid-template-columns:minmax(0,1fr)}}
+
+/* receita */
+.recipe-name{display:flex;gap:8px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.recipe-name .input{flex:1 1 160px;font-weight:700}
+.steps{list-style:none;margin:0;padding:8px}
+.step{border:1px solid transparent;border-radius:8px}
+.step+.step{margin-top:2px}
+.step.open{border-color:var(--line);background:var(--head)}
+.step.off .step-title{opacity:.5}
+.step-head{display:flex;align-items:center;gap:10px;padding:8px}
+.step-n{font-family:var(--mono);font-size:12px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:var(--grid);color:var(--muted);flex:none}
+.step-title{flex:1;min-width:0;text-align:left;border:0;background:none;padding:0;font-weight:700;font-size:14px}
+.step-title small{display:block;font-weight:400;color:var(--muted);font-size:12.5px;overflow-wrap:anywhere}
+.step-badge{margin:0 8px 6px 42px;font-size:12px;color:var(--muted)}
+.step-badge.has{color:var(--ink)}
+.step-badge .w{color:var(--warn);font-weight:700}
+.step-badge .hl{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge);padding:0 4px;border-radius:2px}
+.step-body{padding:4px 12px 12px 42px;display:grid;gap:10px}
+.step-tools{display:flex;gap:6px;flex-wrap:wrap}
+.switch{position:relative;width:34px;height:20px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.switch span{position:absolute;inset:0;border-radius:999px;background:var(--line);transition:background .15s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:var(--sheet);transition:transform .15s}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span::after{transform:translateX(14px)}
+.switch input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.cols{display:flex;flex-wrap:wrap;gap:5px}
+.colbtn{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:3px 8px;font-size:12.5px;max-width:100%;overflow-wrap:anywhere;text-align:left}
+.colbtn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.colbtn.missing{border-style:dashed;color:var(--warn)}
+.addstep{padding:4px 16px 16px;display:grid;gap:8px}
+.recipe-foot{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+
+/* resultado */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-bottom:1px solid var(--line)}
+.stat{padding:12px 16px;border-right:1px solid var(--line);min-width:0}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-family:var(--display);font-size:24px;font-weight:800;font-stretch:85%;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat span{font-size:12.5px;color:var(--muted)}
+.stat b .hl{background:var(--mark);box-shadow:inset 0 -3px 0 var(--mark-edge);padding:0 4px}
+@media (max-width:620px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--line)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:var(--sheet);padding:6px 12px;font-weight:700;font-size:13.5px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--sheet)}
+.search{flex:1 1 180px;max-width:320px}
+.exports{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.tablewrap{overflow:auto;max-height:min(68vh,720px)}
+table.grid{border-collapse:separate;border-spacing:0;font-family:var(--mono);font-size:12.5px;min-width:100%}
+.grid th,.grid td{border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:6px 10px;text-align:left;vertical-align:top;white-space:pre-wrap;max-width:320px;overflow-wrap:anywhere}
+.grid thead th{position:sticky;top:0;background:var(--head);font-family:var(--body);font-weight:700;font-size:13px;z-index:1;white-space:nowrap}
+.grid th.ln,.grid td.ln{position:sticky;left:0;background:var(--head);color:var(--muted);text-align:right;font-size:11.5px;min-width:44px}
+.grid thead th.ln{z-index:2}
+.grid td.chg{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
+.grid thead th.chg{box-shadow:inset 0 -3px 0 var(--mark-edge)}
+.grid tr.gone td:not(.ln){background:var(--gone);color:var(--gone-ink);text-decoration:line-through;text-decoration-thickness:1px}
+.grid td.empty::after{content:"·";color:var(--line)}
+.grid td.ok{color:var(--ok);font-weight:500}
+.grid td.bad{color:var(--danger);font-weight:500}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;font-size:13px;color:var(--muted)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:11px;border-radius:2px;vertical-align:-1px;margin-right:5px}
+.legend .m{background:var(--mark);box-shadow:inset 0 -2px 0 var(--mark-edge)}
+.legend .g{background:var(--gone);border:1px solid var(--gone-ink)}
+.notice{padding:10px 16px;font-size:13.5px;background:var(--warn-soft);color:var(--warn);border-bottom:1px solid var(--line)}
+
+/* automação e segurança */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:16px;align-items:start}
+.card-b{padding:16px;display:grid;gap:14px}
+.card-b>p{color:var(--muted);max-width:70ch}
+.formrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.dropzone{border:2px dashed var(--line);border-radius:10px;padding:22px 16px;text-align:center;display:grid;gap:6px;justify-items:center;background:var(--head)}
+.dropzone strong{font-family:var(--display);font-size:17px}
+.code{margin:0;font-family:var(--mono);font-size:12px;line-height:1.55;background:var(--head);border:1px solid var(--line);border-radius:8px;padding:12px;max-height:360px;overflow:auto;white-space:pre;tab-size:2}
+ol.howto{margin:0;padding-left:22px;display:grid;gap:6px;max-width:72ch}
+ol.howto code,.kbd{font-family:var(--mono);font-size:12.5px;background:var(--grid);padding:1px 5px;border-radius:4px}
+.batch-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.batch-table th,.batch-table td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--grid);vertical-align:top}
+.batch-table td.n{text-align:right;font-variant-numeric:tabular-nums}
+.batch-wrap{overflow-x:auto}
+.sec-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.sec-list li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:14px 16px;border-bottom:1px solid var(--grid)}
+.sec-list li:last-child{border-bottom:0}
+.sec-list svg{color:var(--ok);margin-top:2px}
+.sec-list strong{display:block;font-size:15px}
+.sec-list p{color:var(--muted);max-width:75ch}
+.limits{width:100%;border-collapse:collapse;font-size:14px}
+.limits td{padding:8px 16px;border-bottom:1px solid var(--grid)}
+.limits td:last-child{text-align:right;font-family:var(--mono);font-size:13px}
+
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--sheet);padding:10px 16px;border-radius:8px;font-size:14px;font-weight:700;z-index:60;max-width:calc(100% - 32px);box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true"><rect x="1" y="1" width="38" height="38" rx="9" fill="var(--accent)"/><path d="M9 13h22M9 20h22M9 27h22M17 9v22" stroke="var(--on-accent)" stroke-width="2.2" stroke-linecap="round"/><rect x="18.5" y="21.5" width="11" height="4.5" rx="1" fill="#ffd60a"/></svg>
+      <div><h1>Planilha Segura</h1><p>Limpe, padronize e automatize planilhas sem enviar seus dados.</p></div>
+    </div>
+    <span class="privacy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Tudo é processado no seu navegador</span>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Seções">
+    <button class="tab" role="tab" id="tab-limpar" data-tab="limpar" aria-selected="true">Limpar planilha</button>
+    <button class="tab" role="tab" id="tab-automatizar" data-tab="automatizar" aria-selected="false">Automatizar</button>
+    <button class="tab" role="tab" id="tab-seguranca" data-tab="seguranca" aria-selected="false">Segurança</button>
+  </nav>
+
+  <!-- LIMPAR -->
+  <section id="view-limpar" role="tabpanel" aria-labelledby="tab-limpar">
+    <div class="panel source" id="source"></div>
+    <div class="panel paste" id="pastePanel" hidden>
+      <label class="field"><span>Cole aqui as células copiadas do Excel ou Google Sheets (a primeira linha deve ser o cabeçalho)</span>
+        <textarea class="input" id="pasteText" placeholder="Nome&#9;E-mail&#9;Telefone"></textarea></label>
+      <div class="source actions" style="padding:0;margin:0"><button class="btn primary" data-act="paste-load">Carregar dados colados</button><button class="btn ghost" data-act="paste-close">Cancelar</button></div>
+    </div>
+    <input type="file" id="fileInput" class="sr" accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
+
+    <div class="work">
+      <aside class="panel" aria-label="Receita de limpeza">
+        <div class="panel-h"><div><div class="eyebrow">Receita</div><h2>Etapas, na ordem em que rodam</h2></div></div>
+        <div class="recipe-name">
+          <input class="input" id="recipeName" aria-label="Nome da receita" maxlength="80">
+          <select class="input" id="recipeLoad" aria-label="Abrir receita" style="flex:0 1 170px"></select>
+        </div>
+        <ol class="steps" id="steps"></ol>
+        <div class="addstep">
+          <label class="field"><span>Adicionar etapa</span>
+            <select class="input" id="addStep"></select></label>
+        </div>
+        <div class="recipe-foot">
+          <button class="btn small" data-act="recipe-save">Salvar receita</button>
+          <button class="btn small" data-act="recipe-export">Exportar .json</button>
+          <button class="btn small" data-act="recipe-import">Importar .json</button>
+          <button class="btn small ghost" data-act="recipe-clear">Limpar etapas</button>
+          <input type="file" id="recipeFile" class="sr" accept=".json,application/json" tabindex="-1" aria-hidden="true">
+        </div>
+      </aside>
+
+      <section class="panel" aria-label="Resultado" style="min-width:0">
+        <div class="stats" id="stats"></div>
+        <div id="notice"></div>
+        <div class="toolbar">
+          <div class="seg" role="group" aria-label="Visualização">
+            <button data-act="view" data-view="result" aria-pressed="true">Resultado</button>
+            <button data-act="view" data-view="original" aria-pressed="false">Original</button>
+          </div>
+          <input class="input search" id="search" type="search" placeholder="Procurar na tabela" aria-label="Procurar na tabela">
+          <div class="exports">
+            <button class="btn small primary" data-act="export" data-fmt="xlsx">Baixar .xlsx</button>
+            <button class="btn small" data-act="export" data-fmt="csv">.csv</button>
+            <button class="btn small" data-act="export" data-fmt="json">.json</button>
+            <button class="btn small" data-act="copy-table" title="Copia o resultado para colar direto no Excel ou no Google Sheets">Copiar</button>
+          </div>
+        </div>
+        <div class="tablewrap" id="tablewrap"></div>
+        <div class="pager" id="pager"></div>
+      </section>
+    </div>
+  </section>
+
+  <!-- AUTOMATIZAR -->
+  <section id="view-automatizar" role="tabpanel" aria-labelledby="tab-automatizar" hidden>
+    <div class="cards">
+      <div class="panel">
+        <div class="panel-h"><div><div class="eyebrow">Agendamento</div><h2>Rodar sozinho no Google Sheets</h2></div></div>
+        <div class="card-b">
+          <p>Transforma a receita atual em um script do Google Apps Script. Ele roda na sua conta Google, no horário que você escolher, mesmo com o computador desligado. O resultado vai para uma aba separada e a aba original nunca é alterada.</p>
+          <div class="formrow">
+            <label class="field"><span>Aba com os dados</span><input class="input" id="gsSource" value="Dados"></label>
+            <label class="field"><span>Linha do cabeçalho</span><input class="input" id="gsHeader" type="number" min="1" max="50" value="1"></label>
+            <label class="field"><span>Aba do resultado</span><input class="input" id="gsOutput" value="Resultado"></label>
+          </div>
+          <div class="formrow">
+            <label class="field"><span>Frequência</span>
+              <select class="input" id="gsFreq">
+                <option value="daily">Todo dia</option>
+                <option value="hourly">A cada hora</option>
+                <option value="weekly">Toda semana</option>
+                <option value="edit">Sempre que a planilha for editada</option>
+                <option value="manual">Só quando eu mandar (menu)</option>
+              </select></label>
+            <label class="field" id="gsHourF"><span>Horário</span><select class="input" id="gsHour"></select></label>
+            <label class="field" id="gsDayF"><span>Dia da semana</span>
+              <select class="input" id="gsDay">
+                <option value="MONDAY">Segunda</option><option value="TUESDAY">Terça</option><option value="WEDNESDAY">Quarta</option><option value="THURSDAY">Quinta</option><option value="FRIDAY">Sexta</option><option value="SATURDAY">Sábado</option><option value="SUNDAY">Domingo</option>
+              </select></label>
+          </div>
+          <label class="check"><input type="checkbox" id="gsBackup" checked> Guardar o resultado anterior numa aba de backup antes de atualizar</label>
+          <label class="check"><input type="checkbox" id="gsLog" checked> Registrar cada execução numa aba de histórico</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn primary" data-act="gs-copy">Copiar script</button>
+            <button class="btn" data-act="gs-download">Baixar como .txt</button>
+          </div>
+          <pre class="code" id="gsCode" tabindex="0" aria-label="Código do Apps Script"></pre>
+          <div>
+            <h3 style="font-size:16px;margin-bottom:8px">Como instalar (5 minutos)</h3>
+            <ol class="howto">
+              <li>Abra sua planilha no Google Sheets e confira o nome da aba com os dados.</li>
+              <li>Vá em <b>Extensões → Apps Script</b>, apague o conteúdo do arquivo <code>Código.gs</code> e cole o script.</li>
+              <li>Clique em <b>Salvar</b>. No seletor de função escolha <code>ativarAutomacao</code> e clique em <b>Executar</b>.</li>
+              <li>Autorize o acesso quando o Google pedir. O script só usa a própria planilha.</li>
+              <li>Pronto. Volte à planilha: aparece o menu <b>Planilha Segura</b>, com “Executar agora” e “Desativar automação”.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-h"><div><div class="eyebrow">Lote</div><h2>Vários arquivos de uma vez</h2></div></div>
+        <div class="card-b">
+          <p>Aplica a mesma receita a todos os arquivos que você escolher, por exemplo as planilhas de cada mês ou de cada filial, e gera um único arquivo de saída.</p>
+          <div class="formrow">
+            <label class="field"><span>Saída</span>
+              <select class="input" id="batchMode">
+                <option value="merge">Juntar tudo em uma aba</option>
+                <option value="separate">Uma aba para cada arquivo</option>
+              </select></label>
+            <label class="field"><span>Qual aba ler de cada arquivo</span>
+              <select class="input" id="batchSheet">
+                <option value="same">Mesmo nome da aba atual, se existir</option>
+                <option value="first">Sempre a primeira aba</option>
+              </select></label>
+          </div>
+          <div class="dropzone">
+            <strong>Escolha os arquivos</strong>
+            <span class="muted">XLSX, XLS, ODS, CSV, TSV ou JSON. Linha do cabeçalho igual à da planilha atual.</span>
+            <button class="btn primary" data-act="batch-pick">Selecionar arquivos</button>
+          </div>
+          <input type="file" id="batchInput" class="sr" multiple accept=".xlsx,.xlsm,.xls,.ods,.csv,.tsv,.txt,.json" tabindex="-1" aria-hidden="true">
+          <div id="batchOut"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEGURANÇA -->
+  <section id="view-seguranca" role="tabpanel" aria-labelledby="tab-seguranca" hidden>
+    <div class="cards">
+      <div class="panel">
+        <div class="panel-h"><div><div class="eyebrow">Como seus dados são tratados</div><h2>Proteções</h2></div></div>
+        <ul class="sec-list" id="secList"></ul>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><div><div class="eyebrow">Limites</div><h2>Para o navegador não travar</h2></div></div>
+        <table class="limits"><tbody>
+          <tr><td>Tamanho por arquivo</td><td>50 MB</td></tr>
+          <tr><td>Células por aba</td><td>3.000.000</td></tr>
+          <tr><td>Abas lidas por arquivo</td><td>60</td></tr>
+          <tr><td>Arquivos por lote</td><td>40</td></tr>
+          <tr><td>Etapas por receita</td><td>60</td></tr>
+          <tr><td>Linhas exibidas por página</td><td>100</td></tr>
+        </tbody></table>
+        <div class="card-b"><p>Planilhas muito grandes funcionam, mas cada mudança na receita processa tudo de novo. Acima de algumas centenas de milhares de linhas, prefira o agendamento no Google Sheets.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="dropHint" class="drop-hint" hidden>Solte o arquivo para abrir</div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- Motor de limpeza: puro, sem acesso à página. O mesmo código é embutido no Apps Script gerado. -->
+<script id="engine">
+function PlanilhaEngine() {
+  'use strict';
+  var INVIS = /[​-‍⁠﻿­]/g;
+  var EMAIL = /^[^\s@]+@[^\s@.]+(\.[^\s@.]+)*\.[a-z]{2,}$/i;
+  var MESES = { jan:1, fev:2, mar:3, abr:4, mai:5, jun:6, jul:7, ago:8, set:9, out:10, nov:11, dez:12 };
+  var PARTICULAS = { de:1, da:1, do:1, das:1, dos:1, e:1, di:1, du:1, del:1, van:1, von:1 };
+
+  function S(v) { return v == null ? '' : String(v); }
+  function K(v) { return S(v).replace(INVIS, '').replace(/\s+/g, ' ').trim().toLocaleLowerCase('pt-BR'); }
+  function isEmpty(v) { return S(v).replace(INVIS, '').trim() === ''; }
+  function findCol(h, name) { var k = K(name); if (!k) return -1; for (var i = 0; i < h.length; i++) if (K(h[i]) === k) return i; return -1; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function escRe(s) { return S(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  function pick(ctx, names, allowAll) {
+    if (!names || !names.length) {
+      if (allowAll) return ctx.headers.map(function (_, i) { return i; });
+      ctx.rep.warn.push('Escolha pelo menos uma coluna.'); return [];
+    }
+    var out = [];
+    names.forEach(function (n) {
+      var i = findCol(ctx.headers, n);
+      if (i < 0) ctx.rep.warn.push('Coluna não encontrada: ' + n);
+      else if (out.indexOf(i) < 0) out.push(i);
+    });
+    return out;
+  }
+  function one(ctx, name) {
+    if (!S(name).trim()) { ctx.rep.warn.push('Escolha a coluna.'); return -1; }
+    var i = findCol(ctx.headers, name);
+    if (i < 0) ctx.rep.warn.push('Coluna não encontrada: ' + name);
+    return i;
+  }
+  function set(ctx, row, i, v) { if (row.v[i] !== v) { row.v[i] = v; row.ch[ctx.headers[i]] = 1; ctx.rep.changed++; } }
+  function drop(ctx, test) {
+    var keep = [];
+    ctx.rows.forEach(function (r) { if (test(r)) { ctx.removed[r.o] = ctx.si; ctx.rep.removed++; } else keep.push(r); });
+    ctx.rows = keep;
+  }
+  function uniqueName(h, name) { var base = S(name).trim() || 'Coluna', n = base, k = 2; while (findCol(h, n) >= 0) { n = base + ' (' + k + ')'; k++; } return n; }
+  function addCol(ctx, name, after) {
+    name = uniqueName(ctx.headers, name);
+    var at = after == null ? ctx.headers.length : after + 1;
+    ctx.headers.splice(at, 0, name);
+    ctx.rows.forEach(function (r) { r.v.splice(at, 0, ''); r.ch[name] = 1; });
+    ctx.rep.added++;
+    return at;
+  }
+
+  function parseNum(s, from) {
+    var t = S(s).replace(INVIS, '').trim();
+    if (!t) return null;
+    var neg = false;
+    if (/^\(.*\)$/.test(t)) { neg = true; t = t.slice(1, -1); }
+    t = t.replace(/R\$|US\$|\$|€|%/gi, '').replace(/[\s ]/g, '');
+    if (/^[-−]/.test(t)) { neg = !neg; t = t.slice(1); }
+    if (/-$/.test(t)) { neg = !neg; t = t.slice(0, -1); }
+    if (!/^[\d.,]+$/.test(t) || !/\d/.test(t)) return null;
+    var dec;
+    if (from === 'br') dec = ',';
+    else if (from === 'us') dec = '.';
+    else {
+      var lc = t.lastIndexOf(','), ld = t.lastIndexOf('.');
+      if (lc >= 0 && ld >= 0) dec = lc > ld ? ',' : '.';
+      else if (lc >= 0) dec = t.split(',').length > 2 ? '.' : ',';
+      else if (ld >= 0) dec = (t.split('.').length > 2 || /^\d{1,3}\.\d{3}$/.test(t)) ? ',' : '.';
+      else dec = '.';
+    }
+    var th = dec === ',' ? '.' : ',';
+    t = t.split(th).join('');
+    if (dec === ',') t = t.replace(',', '.');
+    if ((t.match(/\./g) || []).length > 1) return null;
+    var n = Number(t);
+    if (!isFinite(n)) return null;
+    return neg ? -n : n;
+  }
+  function fmtNum(n, to, dec) {
+    var d = (dec === 'auto' || dec == null || dec === '') ? null : Number(dec);
+    if (to === 'plain') return d == null ? String(n) : n.toFixed(d);
+    var o = { useGrouping: true };
+    if (to === 'brl') { o.style = 'currency'; o.currency = 'BRL'; }
+    if (d != null) { o.minimumFractionDigits = d; o.maximumFractionDigits = d; }
+    else if (to !== 'brl') o.maximumFractionDigits = 10;
+    return n.toLocaleString('pt-BR', o).replace(/ /g, ' ');
+  }
+
+  function ymd(y, m, d) {
+    if (y < 100) y += y < 50 ? 2000 : 1900;
+    var dt = new Date(Date.UTC(y, m - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== m - 1 || dt.getUTCDate() !== d) return null;
+    return { y: y, m: m, d: d };
+  }
+  function parseDate(s) {
+    var t = S(s).replace(INVIS, '').trim(), m;
+    if (!t) return null;
+    if ((m = t.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})(?:[ T].*)?$/))) return ymd(+m[1], +m[2], +m[3]);
+    if ((m = t.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2}|\d{4})(?:\s.*)?$/))) {
+      var a = +m[1], b = +m[2];
+      if (a <= 12 && b > 12) return ymd(+m[3], a, b);
+      return ymd(+m[3], b, a);
+    }
+    if ((m = t.match(/^(\d{5})(?:[.,]\d+)?$/))) {
+      var n = +m[1];
+      if (n >= 20000 && n <= 80000) {
+        var dt = new Date(Date.UTC(1899, 11, 30) + n * 86400000);
+        return { y: dt.getUTCFullYear(), m: dt.getUTCMonth() + 1, d: dt.getUTCDate() };
+      }
+    }
+    if ((m = t.toLowerCase().match(/^(\d{1,2})(?:\s+de\s+|[\s\/.\-]+)([a-zç]{3})[a-zç]*\.?(?:\s+de\s+|[\s\/.\-]+)(\d{2}|\d{4})$/))) {
+      var mm = MESES[m[2]];
+      if (mm) return ymd(+m[3], mm, +m[1]);
+    }
+    return null;
+  }
+  function fmtDate(o, to) { return to === 'iso' ? o.y + '-' + pad2(o.m) + '-' + pad2(o.d) : pad2(o.d) + '/' + pad2(o.m) + '/' + o.y; }
+
+  function fmtPhone(s, ddi) {
+    var d = S(s).replace(/\D/g, '');
+    if (!d) return null;
+    if ((d.length === 12 || d.length === 13) && d.slice(0, 2) === '55') d = d.slice(2);
+    if ((d.length === 11 || d.length === 12) && d.charAt(0) === '0') d = d.slice(1);
+    var out;
+    if (d.length === 11) out = '(' + d.slice(0, 2) + ') ' + d.slice(2, 7) + '-' + d.slice(7);
+    else if (d.length === 10) out = '(' + d.slice(0, 2) + ') ' + d.slice(2, 6) + '-' + d.slice(6);
+    else return null;
+    return ddi ? '+55 ' + out : out;
+  }
+
+  function cpfOk(d) {
+    if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+    for (var t = 9; t < 11; t++) {
+      var s = 0;
+      for (var i = 0; i < t; i++) s += +d.charAt(i) * (t + 1 - i);
+      if ((s * 10) % 11 % 10 !== +d.charAt(t)) return false;
+    }
+    return true;
+  }
+  function cnpjOk(d) {
+    if (d.length !== 14 || /^(\d)\1{13}$/.test(d)) return false;
+    var w = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+    for (var t = 12; t < 14; t++) {
+      var s = 0;
+      for (var i = 0; i < t; i++) s += +d.charAt(i) * w[i + 13 - t];
+      var r = s % 11; r = r < 2 ? 0 : 11 - r;
+      if (r !== +d.charAt(t)) return false;
+    }
+    return true;
+  }
+  function fmtCpf(d) { return d.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4'); }
+  function fmtCnpj(d) { return d.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5'); }
+
+  function titleCase(s) {
+    return S(s).toLocaleLowerCase('pt-BR').split(/(\s+)/).map(function (w, i) {
+      if (/^\s+$/.test(w) || !w) return w;
+      if (i > 0 && PARTICULAS[w]) return w;
+      return w.replace(/(^|[-'’])(\p{L})/gu, function (_, p, c) { return p + c.toLocaleUpperCase('pt-BR'); });
+    }).join('');
+  }
+
+  var STEPS = {
+    trim: function (ctx, p) {
+      var idx = pick(ctx, p.cols, true);
+      ctx.rows.forEach(function (r) {
+        idx.forEach(function (i) {
+          var v = S(r.v[i]).replace(INVIS, '').replace(/ /g, ' ');
+          if (p.collapse !== false) v = v.replace(/[ \t]{2,}/g, ' ');
+          set(ctx, r, i, v.trim());
+        });
+      });
+    },
+    removeEmptyRows: function (ctx) { drop(ctx, function (r) { return r.v.every(isEmpty); }); },
+    removeEmptyCols: function (ctx) {
+      var gone = [];
+      for (var i = ctx.headers.length - 1; i >= 0; i--) {
+        var all = ctx.rows.every(function (r) { return isEmpty(r.v[i]); });
+        if (all) gone.push(i);
+      }
+      gone.forEach(function (i) { ctx.headers.splice(i, 1); ctx.rows.forEach(function (r) { r.v.splice(i, 1); }); });
+      ctx.rep.cols += gone.length;
+    },
+    fillDown: function (ctx, p) {
+      pick(ctx, p.cols, false).forEach(function (i) {
+        var last = '';
+        ctx.rows.forEach(function (r) { if (isEmpty(r.v[i])) { if (last) set(ctx, r, i, last); } else last = r.v[i]; });
+      });
+    },
+    dedupe: function (ctx, p) {
+      var idx = pick(ctx, p.cols, true), seen = Object.create(null), dup = Object.create(null);
+      var list = p.keep === 'last' ? ctx.rows.slice().reverse() : ctx.rows;
+      list.forEach(function (r) {
+        var parts = idx.map(function (i) { var v = S(r.v[i]).replace(INVIS, '').replace(/\s+/g, ' ').trim(); return p.ignoreCase === false ? v : v.toLocaleLowerCase('pt-BR'); });
+        if (parts.every(function (x) { return x === ''; })) return;
+        var key = parts.join('\u0001');
+        if (seen[key]) dup[r.o] = 1; else seen[key] = 1;
+      });
+      drop(ctx, function (r) { return !!dup[r.o]; });
+    },
+    'case': function (ctx, p) {
+      var idx = pick(ctx, p.cols, false), mode = p.mode || 'title';
+      ctx.rows.forEach(function (r) {
+        idx.forEach(function (i) {
+          var v = S(r.v[i]), n;
+          if (mode === 'upper') n = v.toLocaleUpperCase('pt-BR');
+          else if (mode === 'lower') n = v.toLocaleLowerCase('pt-BR');
+          else if (mode === 'sentence') { n = v.toLocaleLowerCase('pt-BR'); n = n.replace(/^(\s*)(\p{L})/u, function (_, a, c) { return a + c.toLocaleUpperCase('pt-BR'); }); }
+          else n = titleCase(v);
+          set(ctx, r, i, n);
+        });
+      });
+    },
+    replace: function (ctx, p) {
+      if (!S(p.find)) { ctx.rep.warn.push('Informe o texto a localizar.'); return; }
+      var idx = pick(ctx, p.cols, true), src = p.regex ? S(p.find) : escRe(p.find), re;
+      if (p.whole) src = '^(?:' + src + ')$';
+      try { re = new RegExp(src, 'g' + (p.ignoreCase === false ? '' : 'i')); }
+      catch (e) { ctx.rep.warn.push('Expressão regular inválida.'); return; }
+      var repl = S(p.repl);
+      ctx.rows.forEach(function (r) {
+        idx.forEach(function (i) {
+          var v = S(r.v[i]);
+          re.lastIndex = 0;
+          var n = p.regex ? v.replace(re, repl) : v.replace(re, function () { return repl; });
+          set(ctx, r, i, n);
+        });
+      });
+    },
+    filter: function (ctx, p) {
+      var i = one(ctx, p.col);
+      if (i < 0) return;
+      var op = p.op || 'contains', val = S(p.value), kv = K(val);
+      var needsValue = ['empty', 'not_empty'].indexOf(op) < 0;
+      if (needsValue && val === '') { ctx.rep.warn.push('Informe o valor para comparar.'); return; }
+      var vd = parseDate(val), vn = parseNum(val, 'auto');
+      function cmp(x) {
+        if (vd && /[\/\-]|de /.test(val)) { var xd = parseDate(x); if (!xd) return null; var a = xd.y * 10000 + xd.m * 100 + xd.d, b = vd.y * 10000 + vd.m * 100 + vd.d; return a - b; }
+        if (vn != null) { var xn = parseNum(x, 'auto'); if (xn == null) return null; return xn - vn; }
+        return K(x).localeCompare(kv, 'pt-BR', { numeric: true });
+      }
+      function match(r) {
+        var x = r.v[i], kx = K(x), c;
+        switch (op) {
+          case 'contains': return kx.indexOf(kv) >= 0;
+          case 'not_contains': return kx.indexOf(kv) < 0;
+          case 'equals': return kx === kv;
+          case 'not_equals': return kx !== kv;
+          case 'starts': return kx.indexOf(kv) === 0;
+          case 'ends': return kx.slice(-kv.length) === kv;
+          case 'empty': return isEmpty(x);
+          case 'not_empty': return !isEmpty(x);
+          case 'gt': c = cmp(x); return c != null && c > 0;
+          case 'gte': c = cmp(x); return c != null && c >= 0;
+          case 'lt': c = cmp(x); return c != null && c < 0;
+          case 'lte': c = cmp(x); return c != null && c <= 0;
+        }
+        return false;
+      }
+      drop(ctx, function (r) { var m = match(r); return p.action === 'remove' ? m : !m; });
+    },
+    number: function (ctx, p) {
+      var bad = 0;
+      pick(ctx, p.cols, false).forEach(function (i) {
+        ctx.rows.forEach(function (r) {
+          if (isEmpty(r.v[i])) return;
+          var n = parseNum(r.v[i], p.from || 'auto');
+          if (n == null) { bad++; return; }
+          set(ctx, r, i, fmtNum(n, p.to || 'br', p.decimals));
+        });
+      });
+      if (bad) ctx.rep.warn.push(bad + ' valor(es) não reconhecido(s) como número; ficaram como estavam.');
+    },
+    date: function (ctx, p) {
+      var bad = 0;
+      pick(ctx, p.cols, false).forEach(function (i) {
+        ctx.rows.forEach(function (r) {
+          if (isEmpty(r.v[i])) return;
+          var d = parseDate(r.v[i]);
+          if (!d) { bad++; return; }
+          set(ctx, r, i, fmtDate(d, p.to || 'br'));
+        });
+      });
+      if (bad) ctx.rep.warn.push(bad + ' data(s) não reconhecida(s); ficaram como estavam.');
+    },
+    phone: function (ctx, p) {
+      var bad = 0;
+      pick(ctx, p.cols, false).forEach(function (i) {
+        ctx.rows.forEach(function (r) {
+          if (isEmpty(r.v[i])) return;
+          var f = fmtPhone(r.v[i], !!p.ddi);
+          if (!f) { bad++; return; }
+          set(ctx, r, i, f);
+        });
+      });
+      if (bad) ctx.rep.warn.push(bad + ' telefone(s) sem DDD ou com dígitos a mais; ficaram como estavam.');
+    },
+    validate: function (ctx, p) {
+      var i = one(ctx, p.col);
+      if (i < 0) return;
+      var kind = p.kind || 'email', action = p.action || 'mark', bad = 0;
+      function check(v) {
+        if (isEmpty(v)) return { empty: true };
+        if (kind === 'email') return { ok: EMAIL.test(S(v).trim()), f: S(v).trim() };
+        var d = S(v).replace(/\D/g, '');
+        var asCpf = kind === 'cpf' || (kind === 'doc' && d.length <= 11);
+        if (asCpf) {
+          if (d.length >= 8 && d.length < 11) d = ('00000000000' + d).slice(-11);
+          return cpfOk(d) ? { ok: true, f: fmtCpf(d) } : { ok: false };
+        }
+        if (d.length >= 12 && d.length < 14) d = ('00000000000000' + d).slice(-14);
+        return cnpjOk(d) ? { ok: true, f: fmtCnpj(d) } : { ok: false };
+      }
+      if (action === 'remove') drop(ctx, function (r) { var c = check(r.v[i]); return c.empty ? !!p.dropEmpty : !c.ok; });
+      var col = action === 'mark' ? addCol(ctx, ctx.headers[i] + ' válido?', i) : -1;
+      ctx.rows.forEach(function (r) {
+        var c = check(r.v[i]);
+        if (!c.empty && !c.ok) bad++;
+        if (p.format !== false && c.ok && c.f && kind !== 'email') set(ctx, r, i, c.f);
+        if (col >= 0) r.v[col] = c.empty ? 'Vazio' : (c.ok ? 'Sim' : 'Não');
+      });
+      if (action !== 'remove' && bad) ctx.rep.info.push(bad + ' inválido(s)');
+    },
+    select: function (ctx, p) {
+      var idx = pick(ctx, p.cols, false);
+      if (!idx.length) return;
+      var keep;
+      if (p.mode === 'keep') keep = ctx.headers.map(function (_, i) { return i; }).filter(function (i) { return idx.indexOf(i) >= 0; });
+      else keep = ctx.headers.map(function (_, i) { return i; }).filter(function (i) { return idx.indexOf(i) < 0; });
+      ctx.rep.cols += ctx.headers.length - keep.length;
+      ctx.headers = keep.map(function (i) { return ctx.headers[i]; });
+      ctx.rows.forEach(function (r) { r.v = keep.map(function (i) { return r.v[i]; }); });
+    },
+    rename: function (ctx, p) {
+      var i = one(ctx, p.from);
+      if (i < 0) return;
+      var to = S(p.to).trim();
+      if (!to) { ctx.rep.warn.push('Informe o novo nome.'); return; }
+      var j = findCol(ctx.headers, to);
+      if (j >= 0 && j !== i) { ctx.rep.warn.push('Já existe uma coluna chamada ' + to + '.'); return; }
+      var old = ctx.headers[i];
+      if (old === to) return;
+      ctx.headers[i] = to;
+      ctx.rows.forEach(function (r) { if (r.ch[old]) { delete r.ch[old]; r.ch[to] = 1; } });
+      ctx.rep.renamed = to;
+    },
+    sort: function (ctx, p) {
+      var i = one(ctx, p.col);
+      if (i < 0) return;
+      var vals = ctx.rows.map(function (r) { return r.v[i]; }).filter(function (v) { return !isEmpty(v); });
+      var nDate = vals.filter(function (v) { return parseDate(v); }).length;
+      var nNum = vals.filter(function (v) { return parseNum(v, 'auto') != null; }).length;
+      var type = vals.length && nDate >= vals.length * 0.8 && nDate >= nNum ? 'date' : (vals.length && nNum >= vals.length * 0.8 ? 'num' : 'text');
+      function keyOf(v) {
+        if (isEmpty(v)) return null;
+        if (type === 'date') { var d = parseDate(v); return d ? d.y * 10000 + d.m * 100 + d.d : null; }
+        if (type === 'num') return parseNum(v, 'auto');
+        return K(v);
+      }
+      var dir = p.dir === 'desc' ? -1 : 1;
+      var dec = ctx.rows.map(function (r, n) { return { r: r, k: keyOf(r.v[i]), n: n }; });
+      dec.sort(function (a, b) {
+        if (a.k == null && b.k == null) return a.n - b.n;
+        if (a.k == null) return 1;
+        if (b.k == null) return -1;
+        var c = type === 'text' ? a.k.localeCompare(b.k, 'pt-BR', { numeric: true }) : a.k - b.k;
+        return c ? c * dir : a.n - b.n;
+      });
+      ctx.rows = dec.map(function (x) { return x.r; });
+      ctx.rep.info.push('ordenado como ' + (type === 'date' ? 'data' : type === 'num' ? 'número' : 'texto'));
+    }
+  };
+
+  function run(input, steps) {
+    var headers = input.headers.map(function (h) { return S(h).trim(); });
+    var rows = input.rows.map(function (r, o) { return { v: headers.map(function (_, i) { return S(r[i]); }), o: o, ch: {} }; });
+    var removed = {}, report = [], headersAt = [];
+    (steps || []).forEach(function (st, si) {
+      headersAt.push(headers.slice());
+      if (!st || st.on === false) { report.push({ skip: true }); return; }
+      var fn = STEPS[st.type];
+      var rep = { changed: 0, removed: 0, added: 0, cols: 0, warn: [], info: [] };
+      if (!fn) { rep.warn.push('Etapa desconhecida: ' + st.type); report.push(rep); return; }
+      var ctx = { headers: headers, rows: rows, removed: removed, si: si, rep: rep };
+      try { fn(ctx, st.p || {}); } catch (e) { rep.warn.push('Erro nesta etapa: ' + (e && e.message ? e.message : e)); }
+      headers = ctx.headers; rows = ctx.rows;
+      report.push(rep);
+    });
+    return { headers: headers, rows: rows, removed: removed, report: report, headersAt: headersAt };
+  }
+  function toGrid(res) { return { headers: res.headers.slice(), rows: res.rows.map(function (r) { return r.v.slice(); }) }; }
+
+  return { run: run, toGrid: toGrid, parseNum: parseNum, parseDate: parseDate, fmtPhone: fmtPhone, cpfOk: cpfOk, cnpjOk: cnpjOk, titleCase: titleCase, STEP_TYPES: Object.keys(STEPS) };
+}
+</script>
+
+<script>
+(function () {
+'use strict';
+const E = PlanilhaEngine();
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => Number(n).toLocaleString('pt-BR');
+const LIMITS = { bytes: 50 * 1024 * 1024, cells: 3000000, sheets: 60, batch: 40, steps: 60, page: 100 };
+
+/* ---------- Catálogo de etapas ---------- */
+const COL_ALL = { t: 'cols', k: 'cols', l: 'Colunas', all: true };
+const COLS = { t: 'cols', k: 'cols', l: 'Colunas' };
+const CATALOG = {
+  trim: { label: 'Limpar espaços', desc: 'Tira espaços no início e no fim, espaços repetidos e caracteres invisíveis copiados da web.', p: { cols: [], collapse: true }, f: [COL_ALL, { t: 'check', k: 'collapse', l: 'Juntar espaços repetidos no meio do texto' }] },
+  removeEmptyRows: { label: 'Remover linhas vazias', desc: 'Apaga linhas sem nenhum dado.', p: {}, f: [] },
+  removeEmptyCols: { label: 'Remover colunas vazias', desc: 'Apaga colunas sem nenhum dado.', p: {}, f: [] },
+  fillDown: { label: 'Preencher vazios com o valor de cima', desc: 'Útil quando a planilha tinha células mescladas, como o vendedor só na primeira linha do grupo.', p: { cols: [] }, f: [COLS] },
+  dedupe: { label: 'Remover duplicadas', desc: 'Mantém uma linha por valor repetido.', p: { cols: [], keep: 'first', ignoreCase: true }, f: [{ t: 'cols', k: 'cols', l: 'Comparar pelas colunas', all: true }, { t: 'select', k: 'keep', l: 'Manter', o: [['first', 'A primeira ocorrência'], ['last', 'A última ocorrência']] }, { t: 'check', k: 'ignoreCase', l: 'Ignorar maiúsculas e espaços na comparação' }] },
+  case: { label: 'Maiúsculas e minúsculas', desc: 'Padroniza nomes, e-mails e códigos.', p: { cols: [], mode: 'title' }, f: [COLS, { t: 'select', k: 'mode', l: 'Formato', o: [['title', 'Nome Próprio (de, da e dos em minúscula)'], ['lower', 'tudo minúsculo'], ['upper', 'TUDO MAIÚSCULO'], ['sentence', 'Primeira letra maiúscula']] }] },
+  replace: { label: 'Localizar e substituir', desc: 'Troca um texto por outro.', p: { cols: [], find: '', repl: '', whole: false, ignoreCase: true, regex: false }, f: [COL_ALL, { t: 'text', k: 'find', l: 'Localizar' }, { t: 'text', k: 'repl', l: 'Substituir por' }, { t: 'check', k: 'whole', l: 'Só quando for a célula inteira' }, { t: 'check', k: 'ignoreCase', l: 'Ignorar maiúsculas' }, { t: 'check', k: 'regex', l: 'Usar expressão regular' }] },
+  filter: { label: 'Filtrar linhas', desc: 'Mantém ou remove linhas por uma condição.', p: { col: '', op: 'equals', value: '', action: 'remove' }, f: [{ t: 'col', k: 'col', l: 'Coluna' }, { t: 'select', k: 'op', l: 'Condição', o: [['contains', 'contém'], ['not_contains', 'não contém'], ['equals', 'é igual a'], ['not_equals', 'é diferente de'], ['starts', 'começa com'], ['ends', 'termina com'], ['empty', 'está vazia'], ['not_empty', 'não está vazia'], ['gt', 'maior que'], ['gte', 'maior ou igual a'], ['lt', 'menor que'], ['lte', 'menor ou igual a']] }, { t: 'text', k: 'value', l: 'Valor (número, data ou texto)' }, { t: 'select', k: 'action', l: 'O que fazer', o: [['remove', 'Remover as linhas que atendem'], ['keep', 'Manter só as linhas que atendem']] }] },
+  number: { label: 'Padronizar valores', desc: 'Entende R$ 1.234,56, 1234.56 e (150,00) e escreve tudo no mesmo formato.', p: { cols: [], from: 'auto', to: 'br', decimals: '2' }, f: [COLS, { t: 'select', k: 'from', l: 'Como os números estão escritos', o: [['auto', 'Detectar (padrão brasileiro)'], ['br', '1.234,56'], ['us', '1,234.56']] }, { t: 'select', k: 'to', l: 'Escrever como', o: [['br', '1.234,56'], ['brl', 'R$ 1.234,56'], ['plain', '1234.56 (para importar em sistemas)']] }, { t: 'select', k: 'decimals', l: 'Casas decimais', o: [['auto', 'Manter'], ['0', '0'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4']] }] },
+  date: { label: 'Padronizar datas', desc: 'Entende 5/3/25, 2025-03-05, 05 mar 2025 e datas numéricas do Excel.', p: { cols: [], to: 'br' }, f: [COLS, { t: 'select', k: 'to', l: 'Escrever como', o: [['br', 'dd/mm/aaaa'], ['iso', 'aaaa-mm-dd']] }] },
+  phone: { label: 'Padronizar telefones', desc: 'Formato (11) 98765-4321. Remove +55 e o zero da operadora.', p: { cols: [], ddi: false }, f: [COLS, { t: 'check', k: 'ddi', l: 'Incluir +55 na frente' }] },
+  validate: { label: 'Validar e-mail, CPF ou CNPJ', desc: 'Confere os dígitos verificadores e o formato do e-mail.', p: { col: '', kind: 'email', action: 'mark', format: true, dropEmpty: false }, f: [{ t: 'col', k: 'col', l: 'Coluna' }, { t: 'select', k: 'kind', l: 'Tipo', o: [['email', 'E-mail'], ['cpf', 'CPF'], ['cnpj', 'CNPJ'], ['doc', 'CPF ou CNPJ']] }, { t: 'select', k: 'action', l: 'O que fazer', o: [['mark', 'Criar coluna Sim / Não'], ['remove', 'Remover linhas inválidas'], ['none', 'Só formatar os válidos']] }, { t: 'check', k: 'format', l: 'Formatar documentos válidos (000.000.000-00)' }, { t: 'check', k: 'dropEmpty', l: 'Ao remover, tirar também as linhas vazias nesta coluna' }] },
+  select: { label: 'Manter ou remover colunas', desc: 'Tira colunas que não interessam.', p: { mode: 'remove', cols: [] }, f: [{ t: 'select', k: 'mode', l: 'Ação', o: [['remove', 'Remover estas colunas'], ['keep', 'Manter só estas colunas']] }, COLS] },
+  rename: { label: 'Renomear coluna', desc: 'Muda o nome de uma coluna.', p: { from: '', to: '' }, f: [{ t: 'col', k: 'from', l: 'Coluna' }, { t: 'text', k: 'to', l: 'Novo nome' }] },
+  sort: { label: 'Ordenar', desc: 'Ordena por data, número ou texto (detectado sozinho).', p: { col: '', dir: 'asc' }, f: [{ t: 'col', k: 'col', l: 'Coluna' }, { t: 'select', k: 'dir', l: 'Ordem', o: [['asc', 'Crescente (A→Z, menor primeiro, mais antiga primeiro)'], ['desc', 'Decrescente']] }] }
+};
+const GROUPS = [['Limpeza', ['trim', 'removeEmptyRows', 'removeEmptyCols', 'fillDown', 'dedupe']], ['Padronização', ['case', 'number', 'date', 'phone', 'replace']], ['Conferência', ['validate', 'filter']], ['Estrutura', ['select', 'rename', 'sort']]];
+
+let sid = 0;
+const mk = (type, p) => ({ id: 's' + (++sid), type, on: true, p: Object.assign(JSON.parse(JSON.stringify(CATALOG[type].p)), p || {}) });
+
+const TEMPLATES = {
+  vendas: () => ({ name: 'Vendas do mês', steps: [
+    mk('trim'), mk('removeEmptyRows'), mk('fillDown', { cols: ['Vendedor'] }),
+    mk('case', { cols: ['Cliente'], mode: 'title' }), mk('case', { cols: ['E-mail'], mode: 'lower' }),
+    mk('phone', { cols: ['Telefone'] }), mk('validate', { col: 'CPF', kind: 'cpf' }), mk('validate', { col: 'E-mail', kind: 'email' }),
+    mk('number', { cols: ['Valor'], to: 'brl' }), mk('date', { cols: ['Data'] }),
+    mk('filter', { col: 'Status', op: 'equals', value: 'Cancelado', action: 'remove' }),
+    mk('dedupe'), mk('sort', { col: 'Data', dir: 'asc' })] }),
+  clientes: () => ({ name: 'Lista de clientes', steps: [
+    mk('trim'), mk('removeEmptyRows'), mk('case', { cols: ['Cliente'], mode: 'title' }), mk('case', { cols: ['E-mail'], mode: 'lower' }),
+    mk('validate', { col: 'E-mail', kind: 'email' }), mk('phone', { cols: ['Telefone'] }), mk('validate', { col: 'CPF', kind: 'cpf' }),
+    mk('dedupe', { cols: ['E-mail'] }), mk('sort', { col: 'Cliente' })] }),
+  rapida: () => ({ name: 'Limpeza rápida', steps: [mk('trim'), mk('removeEmptyRows'), mk('removeEmptyCols'), mk('dedupe')] })
+};
+
+/* ---------- Exemplo ---------- */
+function cpf(base) {
+  const d = base.split('').map(Number);
+  for (let t = 9; t < 11; t++) { let s = 0; for (let i = 0; i < t; i++) s += d[i] * (t + 1 - i); d.push((s * 10) % 11 % 10); }
+  return d.join('');
+}
+function sampleAoa() {
+  const c1 = cpf('529982247'), c2 = cpf('111444777'), c3 = cpf('390533447'), c4 = cpf('012345678'), c5 = cpf('714602380'), c6 = cpf('453178287'), c7 = cpf('935411347'), c8 = cpf('276438509'), c9 = cpf('808152690');
+  const f = c => c.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  return [
+    ['Data', 'Cliente', 'CPF', 'E-mail', 'Telefone', 'Vendedor', 'Produto', 'Valor', 'Status'],
+    ['05/03/2025', '  ana   souza ', f(c1), 'ANA.SOUZA@EMAIL.COM ', '11987654321', 'Marina', 'Plano Essencial', 'R$ 149,90', 'Pago'],
+    ['2025-03-06', 'BRUNO LIMA', c2, 'bruno.lima@email', '(21) 3344-5566', '', 'Plano Profissional', '299.9', 'Pendente'],
+    ['45723', 'carla dias', f(c3), 'carla@empresa.com.br', '+55 31 99876-5432', '', 'Plano Essencial', '149,9', 'Pago'],
+    ['05/03/2025', '  ana   souza ', f(c1), 'ANA.SOUZA@EMAIL.COM ', '11987654321', 'Marina', 'Plano Essencial', 'R$ 149,90', 'Pago'],
+    ['', '', '', '', '', '', '', '', ''],
+    ['10/3/25', 'DIEGO ALVES DA SILVA', '111.111.111-11', 'diego.alves@email.com', '31 3222-1100', 'Rafael', 'Consultoria (hora)', '1.250,00', 'Pago'],
+    ['12 mar 2025', 'elisa costa', c4.replace(/^0+/, ''), 'ELISA@EMAIL.COM', '(11)2345-6789', '', 'Plano Profissional', 'R$ 299,90', 'Cancelado'],
+    ['14/03/2025', 'Felipe  Santos', f(c5), 'felipe@email.com', '021 98877-6655', '', 'Plano Essencial', '149,90', 'Pago'],
+    ['2025-03-17', 'gabriela rocha', f(c6), 'gabi.rocha@email.com', '11 9 8765-4321', 'Marina', 'Consultoria (hora)', '350', 'Pendente'],
+    ['18/03/2025', 'Henrique Prado​', f(c7), 'henrique@email.com', '1199887766', '', 'Plano Profissional', '299,90', 'Pago'],
+    ['45740', 'Isabela Nunes', f(c8), 'isabela.nunes@@email.com', '(41) 99123-4567', 'Rafael', 'Plano Essencial', '149,9', 'Pago'],
+    ['25/03/2025', 'JOÃO PEDRO DE OLIVEIRA', f(c9), 'joao.pedro@email.com', '11 3456-7890', '', 'Plano Essencial', '149,90', 'Cancelado']
+  ];
+}
+
+/* ---------- Estado ---------- */
+const state = {
+  src: null,          // {fileName, sheets:[{name, aoa}], sheet, headerRow, sample}
+  recipe: TEMPLATES.vendas(),
+  open: null, view: 'result', page: 0, search: '',
+  input: null, res: null
+};
+
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
+};
+
+/* ---------- Leitura de arquivos ---------- */
+function decodeText(buf) {
+  const u8 = new Uint8Array(buf);
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(u8).replace(/^﻿/, ''); }
+  catch (e) { return new TextDecoder('windows-1252').decode(u8); }
+}
+function parseDelimited(text) {
+  text = text.replace(/^﻿/, '');
+  const cands = [';', '\t', ',', '|'], counts = { ';': 0, '\t': 0, ',': 0, '|': 0 };
+  let q = false, lines = 0;
+  for (let i = 0; i < text.length && lines < 6; i++) {
+    const c = text[i];
+    if (c === '"') q = !q;
+    else if (!q && c === '\n') lines++;
+    else if (!q && c in counts) counts[c]++;
+  }
+  const delim = cands.reduce((a, b) => counts[b] > counts[a] ? b : a, ';');
+  const out = []; let row = [], val = '', inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"') { if (text[i + 1] === '"') { val += '"'; i++; } else inQ = false; }
+      else val += c;
+    } else if (c === '"' && val === '') inQ = true;
+    else if (c === delim) { row.push(val); val = ''; }
+    else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(val); out.push(row); row = []; val = ''; }
+    else val += c;
+  }
+  if (val !== '' || row.length) { row.push(val); out.push(row); }
+  while (out.length && out[out.length - 1].every(v => v === '')) out.pop();
+  return out;
+}
+function parseJsonText(text) {
+  const data = JSON.parse(text);
+  if (data && Array.isArray(data.headers) && Array.isArray(data.rows)) return [data.headers.map(String)].concat(data.rows.map(r => (r || []).map(v => v == null ? '' : String(v))));
+  if (!Array.isArray(data) || !data.length) throw new Error('Use uma lista de objetos, um por linha.');
+  if (Array.isArray(data[0])) return data.map(r => r.map(v => v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v)));
+  const keys = [];
+  data.forEach(o => { if (o && typeof o === 'object') Object.keys(o).forEach(k => { if (!keys.includes(k)) keys.push(k); }); });
+  return [keys].concat(data.map(o => keys.map(k => { const v = o ? o[k] : ''; return v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v); })));
+}
+async function readFile(file) {
+  if (file.size > LIMITS.bytes) throw new Error(file.name + ' tem ' + (file.size / 1048576).toFixed(1) + ' MB. O limite é 50 MB.');
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  const buf = await file.arrayBuffer();
+  if (['csv', 'tsv', 'txt'].includes(ext)) return [{ name: file.name.replace(/\.[^.]+$/, '') || 'Dados', aoa: parseDelimited(decodeText(buf)) }];
+  if (ext === 'json') {
+    try { return [{ name: 'Dados', aoa: parseJsonText(decodeText(buf)) }]; }
+    catch (e) { throw new Error('JSON inválido: ' + e.message); }
+  }
+  if (!['xlsx', 'xlsm', 'xls', 'ods'].includes(ext)) throw new Error('Formato não suportado: .' + ext + '. Use XLSX, XLS, ODS, CSV, TSV, TXT ou JSON.');
+  if (typeof XLSX === 'undefined') throw new Error('O leitor de Excel não carregou. Verifique a conexão e recarregue a página, ou salve como CSV.');
+  const wb = XLSX.read(new Uint8Array(buf), { type: 'array', cellFormula: false, cellHTML: false, cellStyles: false, bookVBA: false, dateNF: 'dd/mm/yyyy' });
+  if (!wb.SheetNames.length) throw new Error('O arquivo não tem abas.');
+  return wb.SheetNames.slice(0, LIMITS.sheets).map(name => {
+    const ws = wb.Sheets[name];
+    if (!ws || !ws['!ref']) return { name, aoa: [] };
+    const r = XLSX.utils.decode_range(ws['!ref']);
+    const cells = (r.e.r - r.s.r + 1) * (r.e.c - r.s.c + 1);
+    if (cells > LIMITS.cells) return { name, aoa: [], error: 'Aba com ' + fmt(cells) + ' células: acima do limite de 3 milhões.' };
+    const aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false, defval: '', blankrows: true, dateNF: 'dd/mm/yyyy' }).map(row => row.map(v => v == null ? '' : String(v)));
+    while (aoa.length && aoa[aoa.length - 1].every(v => v === '')) aoa.pop();
+    return { name, aoa };
+  });
+}
+function uniqHeaders(arr, width) {
+  const out = [];
+  for (let i = 0; i < width; i++) {
+    let base = String(arr[i] == null ? '' : arr[i]).replace(/[​-‍﻿]/g, '').replace(/\s+/g, ' ').trim() || 'Coluna ' + (i + 1);
+    let n = base, k = 2;
+    while (out.some(h => h.toLocaleLowerCase('pt-BR') === n.toLocaleLowerCase('pt-BR'))) n = base + ' (' + (k++) + ')';
+    out.push(n);
+  }
+  return out;
+}
+function aoaToGrid(aoa, headerRow) {
+  const hr = Math.max(1, headerRow | 0);
+  const body = aoa.slice(hr);
+  const width = Math.max(aoa[hr - 1] ? aoa[hr - 1].length : 0, ...body.map(r => r.length), 1);
+  return { headers: uniqHeaders(aoa[hr - 1] || [], width), rows: body.map(r => { const x = r.slice(0, width); while (x.length < width) x.push(''); return x; }) };
+}
+
+function loadSource(src) {
+  state.src = src; state.page = 0; state.view = 'result';
+  const sh = src.sheets[src.sheet];
+  if (sh && sh.error) toast(sh.error);
+  $('#gsSource').value = sh ? sh.name : 'Dados';
+  $('#gsHeader').value = src.headerRow;
+  refreshInput();
+}
+function refreshInput() {
+  const s = state.src, sh = s.sheets[s.sheet];
+  state.input = aoaToGrid(sh ? sh.aoa : [], s.headerRow);
+  recompute();
+  renderSource();
+}
+async function openFiles(files) {
+  const file = files && files[0];
+  if (!file) return;
+  try {
+    toast('Lendo ' + file.name + '…');
+    const sheets = await readFile(file);
+    let sheet = sheets.findIndex(s => s.aoa.length > 0);
+    if (sheet < 0) throw new Error('Nenhuma aba com dados.');
+    loadSource({ fileName: file.name, sheets, sheet, headerRow: 1, sample: false });
+    toast(file.name + ' aberto. Nada foi enviado: o arquivo continua só no seu computador.');
+  } catch (e) { toast(e.message || 'Não foi possível ler o arquivo.'); }
+}
+
+/* ---------- Processamento ---------- */
+let timer = null;
+function schedule(full) { clearTimeout(timer); timer = setTimeout(() => { recompute(); if (full) renderRecipe(); else updateBadges(); }, 140); }
+function recompute() {
+  if (!state.input) return;
+  state.res = E.run(state.input, state.recipe.steps);
+  try { store.set('ps.current', { name: state.recipe.name, steps: state.recipe.steps }); } catch (e) {}
+  renderResults();
+  renderScript();
+}
+
+/* ---------- Render: fonte ---------- */
+function renderSource() {
+  const s = state.src, sh = s.sheets[s.sheet];
+  const rows = state.input.rows.length, cols = state.input.headers.length;
+  $('#source').innerHTML = `
+    <div class="file"><span class="fileicon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h8"/></svg></span>
+      <div style="min-width:0"><strong>${esc(s.fileName)} ${s.sample ? '<span class="chip warn">Exemplo</span>' : ''}</strong>
+      <small class="num">${fmt(rows)} linhas · ${fmt(cols)} colunas${s.sample ? ' · dados fictícios para demonstração' : ''}</small></div></div>
+    ${s.sheets.length > 1 ? `<label class="field"><span>Aba</span><select class="input" id="sheetSel">${s.sheets.map((x, i) => `<option value="${i}" ${i === s.sheet ? 'selected' : ''}>${esc(x.name)}${x.error ? ' (grande demais)' : ''}</option>`).join('')}</select></label>` : ''}
+    <label class="field" style="min-width:110px;max-width:140px"><span>Cabeçalho na linha</span><input class="input" id="headerRow" type="number" min="1" max="${Math.max(1, Math.min(50, sh ? sh.aoa.length : 1))}" value="${s.headerRow}"></label>
+    <div class="actions">
+      <button class="btn primary" data-act="pick">Abrir arquivo</button>
+      <button class="btn" data-act="paste-open">Colar dados</button>
+      ${s.sample ? '' : '<button class="btn ghost" data-act="sample">Ver exemplo</button>'}
+    </div>`;
+}
+
+/* ---------- Render: receita ---------- */
+function summary(st) {
+  const p = st.p, c = CATALOG[st.type];
+  const list = a => a && a.length ? a.join(', ') : null;
+  switch (st.type) {
+    case 'trim': return list(p.cols) || 'Todas as colunas';
+    case 'dedupe': return 'Comparando ' + (list(p.cols) || 'todas as colunas');
+    case 'fillDown': case 'case': case 'number': case 'date': case 'phone': return list(p.cols) || 'Escolha as colunas';
+    case 'replace': return p.find ? `“${p.find}” → “${p.repl}”` + (list(p.cols) ? ' em ' + list(p.cols) : '') : 'Defina o texto';
+    case 'filter': { const op = c.f[1].o.find(o => o[0] === p.op); return p.col ? `${p.action === 'keep' ? 'Manter' : 'Remover'} se ${p.col} ${op ? op[1] : ''} ${['empty', 'not_empty'].includes(p.op) ? '' : '“' + p.value + '”'}` : 'Defina a condição'; }
+    case 'validate': return p.col ? `${p.col} como ${{ email: 'e-mail', cpf: 'CPF', cnpj: 'CNPJ', doc: 'CPF ou CNPJ' }[p.kind]}` : 'Escolha a coluna';
+    case 'select': return (p.mode === 'keep' ? 'Manter ' : 'Remover ') + (list(p.cols) || '…');
+    case 'rename': return p.from ? `${p.from} → ${p.to || '…'}` : 'Escolha a coluna';
+    case 'sort': return p.col ? `${p.col}, ${p.dir === 'desc' ? 'decrescente' : 'crescente'}` : 'Escolha a coluna';
+  }
+  return c.desc;
+}
+function badge(i) {
+  const rep = state.res && state.res.report[i];
+  if (!rep) return '';
+  if (rep.skip) return '<span class="muted">Desligada</span>';
+  const parts = [];
+  if (rep.changed) parts.push(`<span class="hl num">${fmt(rep.changed)} ${rep.changed === 1 ? 'célula alterada' : 'células alteradas'}</span>`);
+  if (rep.removed) parts.push(`<span class="num">${fmt(rep.removed)} ${rep.removed === 1 ? 'linha removida' : 'linhas removidas'}</span>`);
+  if (rep.cols) parts.push(`<span class="num">${fmt(rep.cols)} ${rep.cols === 1 ? 'coluna removida' : 'colunas removidas'}</span>`);
+  if (rep.added) parts.push('coluna criada');
+  if (rep.renamed) parts.push('renomeada');
+  rep.info.forEach(x => parts.push(esc(x)));
+  rep.warn.forEach(x => parts.push(`<span class="w">${esc(x)}</span>`));
+  return parts.length ? parts.join(' · ') : '<span class="muted">Nada a mudar</span>';
+}
+function fieldHtml(st, f, i) {
+  const v = st.p[f.k], id = `f-${st.id}-${f.k}`;
+  const headers = (state.res && state.res.headersAt[i]) || (state.input ? state.input.headers : []);
+  if (f.t === 'check') return `<label class="check"><input type="checkbox" id="${id}" data-act="field" data-id="${st.id}" data-k="${f.k}" ${v !== false && v ? 'checked' : ''}> ${esc(f.l)}</label>`;
+  if (f.t === 'select') return `<label class="field"><span>${esc(f.l)}</span><select class="input" id="${id}" data-act="field" data-id="${st.id}" data-k="${f.k}">${f.o.map(o => `<option value="${esc(o[0])}" ${String(v) === o[0] ? 'selected' : ''}>${esc(o[1])}</option>`).join('')}</select></label>`;
+  if (f.t === 'text') return `<label class="field"><span>${esc(f.l)}</span><input class="input" id="${id}" data-act="text" data-id="${st.id}" data-k="${f.k}" value="${esc(v)}" autocomplete="off"></label>`;
+  if (f.t === 'col') {
+    const known = headers.some(h => h === v);
+    return `<label class="field"><span>${esc(f.l)}</span><select class="input" id="${id}" data-act="field" data-id="${st.id}" data-k="${f.k}"><option value="">Escolha…</option>${!known && v ? `<option value="${esc(v)}" selected>${esc(v)} (não encontrada)</option>` : ''}${headers.map(h => `<option value="${esc(h)}" ${h === v ? 'selected' : ''}>${esc(h)}</option>`).join('')}</select></label>`;
+  }
+  if (f.t === 'cols') {
+    const sel = v || [];
+    const missing = sel.filter(x => !headers.some(h => h.toLocaleLowerCase('pt-BR') === String(x).toLocaleLowerCase('pt-BR')));
+    return `<div class="field"><span>${esc(f.l)}${f.all ? ' <span class="muted" style="font-weight:400">(nenhuma marcada = todas)</span>' : ''}</span><div class="cols" role="group" aria-label="${esc(f.l)}">
+      ${headers.map(h => `<button type="button" class="colbtn" data-act="col" data-id="${st.id}" data-k="${f.k}" data-col="${esc(h)}" aria-pressed="${sel.some(x => String(x).toLocaleLowerCase('pt-BR') === h.toLocaleLowerCase('pt-BR'))}">${esc(h)}</button>`).join('')}
+      ${missing.map(m => `<button type="button" class="colbtn missing" data-act="col" data-id="${st.id}" data-k="${f.k}" data-col="${esc(m)}" aria-pressed="true" title="Esta coluna não existe nesta planilha">${esc(m)} ✕</button>`).join('')}
+    </div></div>`;
+  }
+  return '';
+}
+function renderRecipe() {
+  $('#recipeName').value = state.recipe.name;
+  const steps = state.recipe.steps;
+  $('#steps').innerHTML = steps.length ? steps.map((st, i) => {
+    const c = CATALOG[st.type], open = state.open === st.id;
+    return `<li class="step${open ? ' open' : ''}${st.on ? '' : ' off'}" data-id="${st.id}">
+      <div class="step-head">
+        <span class="step-n" aria-hidden="true">${i + 1}</span>
+        <button class="step-title" data-act="open" data-id="${st.id}" aria-expanded="${open}">${esc(c.label)}<small>${esc(summary(st))}</small></button>
+        <label class="switch" title="Ligar ou desligar a etapa"><input type="checkbox" data-act="onoff" data-id="${st.id}" ${st.on ? 'checked' : ''} aria-label="Etapa ${i + 1} ligada"><span></span></label>
+      </div>
+      <div class="step-badge has" id="b-${st.id}">${badge(i)}</div>
+      ${open ? `<div class="step-body"><p class="muted" style="font-size:13px">${esc(c.desc)}</p>${c.f.map(f => fieldHtml(st, f, i)).join('')}
+        <div class="step-tools"><button class="btn small" data-act="up" data-id="${st.id}" ${i === 0 ? 'disabled' : ''}>Subir</button><button class="btn small" data-act="down" data-id="${st.id}" ${i === steps.length - 1 ? 'disabled' : ''}>Descer</button><button class="btn small" data-act="dup" data-id="${st.id}">Duplicar</button><button class="btn small ghost" data-act="del" data-id="${st.id}" style="color:var(--danger)">Excluir</button></div></div>` : ''}
+    </li>`;
+  }).join('') : '<li class="muted" style="padding:12px 8px">Nenhuma etapa. Escolha uma abaixo ou abra uma receita pronta.</li>';
+  renderRecipeList();
+}
+function updateBadges() {
+  state.recipe.steps.forEach((st, i) => { const el = document.getElementById('b-' + st.id); if (el) el.innerHTML = badge(i); });
+  state.recipe.steps.forEach(st => { const li = document.querySelector(`.step[data-id="${st.id}"] .step-title small`); if (li) li.textContent = summary(st); });
+}
+function renderRecipeList() {
+  const saved = store.get('ps.recipes', []);
+  $('#recipeLoad').innerHTML = `<option value="">Abrir receita…</option><optgroup label="Prontas">${Object.entries(TEMPLATES).map(([k, f]) => `<option value="t:${k}">${esc(f().name)}</option>`).join('')}</optgroup>${saved.length ? `<optgroup label="Salvas neste navegador">${saved.map((r, i) => `<option value="s:${i}">${esc(r.name)}</option>`).join('')}</optgroup>` : ''}`;
+}
+function renderAddStep() {
+  $('#addStep').innerHTML = '<option value="">Escolha uma etapa…</option>' + GROUPS.map(([g, list]) => `<optgroup label="${g}">${list.map(t => `<option value="${t}">${esc(CATALOG[t].label)}</option>`).join('')}</optgroup>`).join('');
+}
+
+/* ---------- Render: resultado ---------- */
+function stepLabel(si) { const st = state.recipe.steps[si]; return st ? (si + 1) + '. ' + CATALOG[st.type].label : ''; }
+function renderResults() {
+  const res = state.res, inp = state.input;
+  if (!res) return;
+  let changedCells = 0;
+  res.rows.forEach(r => { changedCells += Object.keys(r.ch).length; });
+  const removedRows = inp.rows.length - res.rows.length;
+  $('#stats').innerHTML = `
+    <div class="stat"><b class="num">${fmt(inp.rows.length)} → ${fmt(res.rows.length)}</b><span>linhas antes e depois</span></div>
+    <div class="stat"><b class="num"><span class="hl">${fmt(changedCells)}</span></b><span>células alteradas</span></div>
+    <div class="stat"><b class="num">${fmt(Math.max(0, removedRows))}</b><span>linhas removidas</span></div>
+    <div class="stat"><b class="num">${fmt(inp.headers.length)} → ${fmt(res.headers.length)}</b><span>colunas</span></div>`;
+  const warns = res.report.reduce((n, r) => n + (r.warn ? r.warn.length : 0), 0);
+  $('#notice').innerHTML = warns ? `<div class="notice">${warns} ${warns === 1 ? 'aviso' : 'avisos'} na receita. Confira as etapas marcadas em laranja.</div>` : '';
+  document.querySelectorAll('[data-act="view"]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === state.view)));
+  renderTable();
+}
+function renderTable() {
+  const res = state.res, inp = state.input, hr = state.src.headerRow;
+  const q = state.search.trim().toLocaleLowerCase('pt-BR');
+  let headers, rows;
+  if (state.view === 'result') {
+    headers = res.headers;
+    rows = res.rows.map(r => ({ v: r.v, ln: r.o + hr + 1, ch: r.ch }));
+  } else {
+    headers = inp.headers;
+    rows = inp.rows.map((v, o) => ({ v, ln: o + hr + 1, gone: res.removed[o] }));
+  }
+  if (q) rows = rows.filter(r => r.v.some(x => String(x).toLocaleLowerCase('pt-BR').includes(q)));
+  const pages = Math.max(1, Math.ceil(rows.length / LIMITS.page));
+  state.page = Math.min(state.page, pages - 1);
+  const slice = rows.slice(state.page * LIMITS.page, (state.page + 1) * LIMITS.page);
+  const addedCols = new Set();
+  if (state.view === 'result') res.headers.forEach(h => { if (!inp.headers.includes(h)) addedCols.add(h); });
+  const valCols = new Set(res.headers.filter(h => / válido\?$/.test(h)));
+  const head = `<thead><tr><th class="ln" title="Linha na planilha original">Linha</th>${headers.map(h => `<th class="${addedCols.has(h) ? 'chg' : ''}" scope="col">${esc(h)}</th>`).join('')}</tr></thead>`;
+  const body = slice.map(r => {
+    const title = r.gone != null ? ` title="Removida na etapa ${esc(stepLabel(r.gone))}"` : '';
+    return `<tr${r.gone != null ? ' class="gone"' : ''}${title}><td class="ln num">${r.ln}</td>${r.v.map((x, i) => {
+      const h = headers[i], cls = [];
+      if (r.ch && r.ch[h]) cls.push('chg');
+      if (x === '') cls.push('empty');
+      if (state.view === 'result' && valCols.has(h)) cls.push(x === 'Sim' ? 'ok' : x === 'Não' ? 'bad' : '');
+      return `<td${cls.length ? ` class="${cls.join(' ')}"` : ''}>${esc(x)}</td>`;
+    }).join('')}</tr>`;
+  }).join('');
+  $('#tablewrap').innerHTML = `<table class="grid">${head}<tbody>${body || `<tr><td class="ln"></td><td colspan="${headers.length || 1}" style="padding:20px">${q ? 'Nada encontrado para essa busca.' : 'Nenhuma linha restou depois da receita.'}</td></tr>`}</tbody></table>`;
+  $('#pager').innerHTML = `
+    <div class="legend"><span><i class="m"></i>alterada pela receita</span>${state.view === 'original' ? '<span><i class="g"></i>linha removida (passe o mouse para ver a etapa)</span>' : ''}</div>
+    <div style="display:flex;gap:8px;align-items:center"><span class="num">${fmt(rows.length)} ${rows.length === 1 ? 'linha' : 'linhas'}${pages > 1 ? ` · página ${state.page + 1} de ${pages}` : ''}</span>
+    ${pages > 1 ? `<button class="btn small" data-act="page" data-d="-1" ${state.page === 0 ? 'disabled' : ''}>Anterior</button><button class="btn small" data-act="page" data-d="1" ${state.page >= pages - 1 ? 'disabled' : ''}>Próxima</button>` : ''}</div>`;
+}
+
+/* ---------- Exportação ---------- */
+const isNumeric = v => /^-?\d+([.,]\d+)?$/.test(v);
+const safeCell = v => (/^[=+\-@\t\r]/.test(v) && !isNumeric(v)) ? "'" + v : v;
+function resultGrid() { return E.toGrid(state.res); }
+function baseName() { return (state.src.fileName || 'planilha').replace(/\.[^.]+$/, '') + ' - limpa'; }
+function toCsv(g, sep) {
+  const q = v => { v = safeCell(String(v)); return /["\n\r]/.test(v) || v.includes(sep) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  return '﻿' + [g.headers].concat(g.rows).map(r => r.map(q).join(sep)).join('\r\n');
+}
+function sheetFrom(g) { return XLSX.utils.aoa_to_sheet([g.headers].concat(g.rows)); }
+function cleanSheetName(n, used) {
+  let s = String(n).replace(/[\[\]:*?\/\\]/g, ' ').trim().slice(0, 31) || 'Aba';
+  let k = 2, base = s;
+  while (used.has(s.toLowerCase())) { const suf = ' (' + (k++) + ')'; s = base.slice(0, 31 - suf.length) + suf; }
+  used.add(s.toLowerCase());
+  return s;
+}
+let dlNs;
+async function downloadsNs() {
+  if (dlNs !== undefined) return dlNs;
+  if (!(window.claude && typeof window.claude.use === 'function')) { dlNs = null; return null; }
+  try { dlNs = await window.claude.use('downloads'); } catch (e) { dlNs = null; }
+  return dlNs;
+}
+async function saveFile(name, data) {
+  const ns = await downloadsNs();
+  if (ns) {
+    try { await ns.save({ filename: name, data }); toast('Arquivo salvo: ' + name); }
+    catch (e) {
+      const code = e && e.code;
+      if (code === 'declined') toast('Download cancelado.');
+      else if (code === 'rate_limited') toast('Já existe um pedido de download aberto. Responda a ele primeiro.');
+      else toast('O download não está disponível aqui. Use “Copiar” e cole no Excel.');
+    }
+    return;
+  }
+  if (window.claude) { toast('O download não está disponível aqui. Use “Copiar” e cole no Excel.'); return; }
+  const blob = data instanceof Blob ? data : new Blob([data]);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  toast('Download iniciado: ' + name);
+}
+async function exportResult(fmtName) {
+  const g = resultGrid();
+  if (fmtName === 'csv') return saveFile(baseName() + '.csv', toCsv(g, ';'));
+  if (fmtName === 'json') return saveFile(baseName() + '.json', JSON.stringify(g.rows.map(r => Object.fromEntries(g.headers.map((h, i) => [h, r[i]]))), null, 2));
+  if (typeof XLSX === 'undefined') { toast('O gerador de Excel não carregou. Exporte como CSV.'); return; }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, sheetFrom(g), cleanSheetName(state.src.sheets[state.src.sheet].name || 'Resultado', new Set()));
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  return saveFile(baseName() + '.xlsx', new Blob([buf]));
+}
+async function copyText(text, okMsg) {
+  try { await navigator.clipboard.writeText(text); toast(okMsg); }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand('copy'); } catch (_) {}
+    ta.remove();
+    toast(ok ? okMsg : 'Não foi possível copiar. Selecione o texto e use Ctrl+C.');
+  }
+}
+
+/* ---------- Lote ---------- */
+async function runBatch(files) {
+  files = Array.from(files || []).slice(0, LIMITS.batch);
+  if (!files.length) return;
+  const mode = $('#batchMode').value, which = $('#batchSheet').value;
+  const curName = state.src.sheets[state.src.sheet].name;
+  const out = $('#batchOut');
+  out.innerHTML = '<p class="muted">Processando…</p>';
+  const results = [];
+  for (const f of files) {
+    try {
+      const sheets = await readFile(f);
+      let sh = which === 'same' ? sheets.find(s => s.name.toLocaleLowerCase('pt-BR') === curName.toLocaleLowerCase('pt-BR')) : null;
+      if (!sh) sh = sheets.find(s => s.aoa.length) || sheets[0];
+      const inp = aoaToGrid(sh.aoa, state.src.headerRow);
+      const res = E.run(inp, state.recipe.steps);
+      const warns = [...new Set(res.report.flatMap(r => r.warn || []))];
+      results.push({ file: f.name, sheet: sh.name, before: inp.rows.length, after: res.rows.length, grid: E.toGrid(res), warns });
+    } catch (e) { results.push({ file: f.name, error: e.message }); }
+  }
+  state.batch = { results, mode };
+  const okN = results.filter(r => !r.error).length;
+  out.innerHTML = `<div class="batch-wrap"><table class="batch-table"><thead><tr><th>Arquivo</th><th>Aba</th><th style="text-align:right">Antes</th><th style="text-align:right">Depois</th><th>Situação</th></tr></thead><tbody>
+    ${results.map(r => r.error ? `<tr><td>${esc(r.file)}</td><td colspan="3"></td><td style="color:var(--danger)">${esc(r.error)}</td></tr>` : `<tr><td>${esc(r.file)}</td><td>${esc(r.sheet)}</td><td class="n">${fmt(r.before)}</td><td class="n">${fmt(r.after)}</td><td>${r.warns.length ? `<span style="color:var(--warn)">${esc(r.warns[0])}${r.warns.length > 1 ? ' (+' + (r.warns.length - 1) + ')' : ''}</span>` : '<span style="color:var(--ok)">OK</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    ${okN ? `<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button class="btn primary" data-act="batch-save">Baixar resultado (.xlsx)</button></div>` : ''}`;
+}
+async function saveBatch() {
+  const b = state.batch;
+  if (!b) return;
+  if (typeof XLSX === 'undefined') { toast('O gerador de Excel não carregou.'); return; }
+  const ok = b.results.filter(r => !r.error);
+  const wb = XLSX.utils.book_new(), used = new Set();
+  if (b.mode === 'merge') {
+    const headers = ['Arquivo de origem'];
+    ok.forEach(r => r.grid.headers.forEach(h => { if (!headers.includes(h)) headers.push(h); }));
+    const rows = [];
+    ok.forEach(r => r.grid.rows.forEach(row => rows.push(headers.map((h, i) => i === 0 ? r.file : (row[r.grid.headers.indexOf(h)] ?? '')))));
+    XLSX.utils.book_append_sheet(wb, sheetFrom({ headers, rows }), cleanSheetName('Consolidado', used));
+  } else {
+    ok.forEach(r => XLSX.utils.book_append_sheet(wb, sheetFrom(r.grid), cleanSheetName(r.file.replace(/\.[^.]+$/, ''), used)));
+  }
+  const resumo = [['Arquivo', 'Aba lida', 'Linhas antes', 'Linhas depois', 'Situação']].concat(b.results.map(r => r.error ? [r.file, '', '', '', r.error] : [r.file, r.sheet, r.before, r.after, r.warns.join(' | ') || 'OK']));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumo), cleanSheetName('Resumo', used));
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  saveFile('Lote - ' + state.recipe.name + '.xlsx', new Blob([buf]));
+}
+
+/* ---------- Apps Script ---------- */
+function renderScript() {
+  const freq = $('#gsFreq').value;
+  $('#gsHourF').hidden = !['daily', 'weekly'].includes(freq);
+  $('#gsDayF').hidden = freq !== 'weekly';
+  const cfg = {
+    abaOrigem: $('#gsSource').value.trim() || 'Dados',
+    linhaCabecalho: Math.max(1, parseInt($('#gsHeader').value, 10) || 1),
+    abaResultado: $('#gsOutput').value.trim() || 'Resultado',
+    abaBackup: $('#gsBackup').checked ? ($('#gsOutput').value.trim() || 'Resultado') + ' (anterior)' : '',
+    abaHistorico: $('#gsLog').checked ? 'Planilha Segura - histórico' : '',
+    frequencia: freq, hora: parseInt($('#gsHour').value, 10) || 0, diaSemana: $('#gsDay').value,
+    receita: state.recipe.steps.filter(s => s.on).map(s => ({ type: s.type, p: s.p }))
+  };
+  const today = new Date().toLocaleDateString('pt-BR');
+  const code = `/**
+ * Planilha Segura — automação gerada em ${today}
+ * Receita: ${state.recipe.name.replace(/\*\//g, '')} (${cfg.receita.length} etapas)
+ *
+ * O que faz: lê a aba "${cfg.abaOrigem}", aplica a receita e grava o resultado na aba
+ * "${cfg.abaResultado}". A aba original nunca é alterada.
+ * Não envia dados para fora da sua conta Google: não usa UrlFetch nem serviços externos.
+ *
+ * Instalação: cole este código em Extensões > Apps Script, salve e execute
+ * a função ativarAutomacao uma vez. Para parar, use o menu Planilha Segura.
+ */
+const CONFIG = ${JSON.stringify(cfg, null, 2)};
+
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Planilha Segura')
+    .addItem('Executar agora', 'executar')
+    .addItem('Ativar automação', 'ativarAutomacao')
+    .addItem('Desativar automação', 'desativarAutomacao')
+    .addToUi();
+}
+
+function executar() {
+  const lock = LockService.getDocumentLock();
+  if (!lock.tryLock(30000)) throw new Error('Já existe uma execução em andamento.');
+  const inicio = new Date();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  try {
+    if (CONFIG.abaOrigem === CONFIG.abaResultado) throw new Error('A aba de origem e a de resultado precisam ser diferentes.');
+    const origem = ss.getSheetByName(CONFIG.abaOrigem);
+    if (!origem) throw new Error('Aba de origem não encontrada: ' + CONFIG.abaOrigem);
+    const valores = origem.getDataRange().getDisplayValues();
+    const h = CONFIG.linhaCabecalho;
+    if (valores.length < h) throw new Error('A aba de origem não tem a linha de cabeçalho ' + h + '.');
+    const motor = PlanilhaEngine();
+    const res = motor.run({ headers: valores[h - 1], rows: valores.slice(h) }, CONFIG.receita);
+    const saida = motor.toGrid(res);
+    const avisos = [];
+    res.report.forEach(function (r, i) { (r.warn || []).forEach(function (w) { avisos.push('Etapa ' + (i + 1) + ': ' + w); }); });
+
+    let destino = ss.getSheetByName(CONFIG.abaResultado);
+    if (destino && CONFIG.abaBackup && destino.getLastRow() > 0) {
+      const antigo = ss.getSheetByName(CONFIG.abaBackup);
+      if (antigo) ss.deleteSheet(antigo);
+      destino.copyTo(ss).setName(CONFIG.abaBackup);
+    }
+    if (!destino) destino = ss.insertSheet(CONFIG.abaResultado);
+    destino.clearContents();
+    const matriz = [saida.headers].concat(saida.rows).map(function (linha) {
+      return linha.map(function (v) {
+        v = String(v);
+        // Impede que um texto vindo da planilha vire fórmula.
+        return /^[=+\\-@]/.test(v) && !/^-?\\d+([.,]\\d+)?$/.test(v) ? "'" + v : v;
+      });
+    });
+    if (matriz.length && matriz[0].length) {
+      if (destino.getMaxRows() < matriz.length) destino.insertRowsAfter(destino.getMaxRows(), matriz.length - destino.getMaxRows());
+      if (destino.getMaxColumns() < matriz[0].length) destino.insertColumnsAfter(destino.getMaxColumns(), matriz[0].length - destino.getMaxColumns());
+      destino.getRange(1, 1, matriz.length, matriz[0].length).setValues(matriz);
+      destino.getRange(1, 1, 1, matriz[0].length).setFontWeight('bold');
+      destino.setFrozenRows(1);
+    }
+    registrar(ss, inicio, 'OK', valores.length - h, saida.rows.length, avisos.join(' | '));
+  } catch (e) {
+    registrar(ss, inicio, 'ERRO', '', '', String(e && e.message || e));
+    throw e; // o Google envia um e-mail avisando da falha
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function registrar(ss, inicio, situacao, antes, depois, obs) {
+  if (!CONFIG.abaHistorico) return;
+  let aba = ss.getSheetByName(CONFIG.abaHistorico);
+  if (!aba) {
+    aba = ss.insertSheet(CONFIG.abaHistorico);
+    aba.appendRow(['Quando', 'Situação', 'Linhas lidas', 'Linhas no resultado', 'Duração (s)', 'Observações']);
+    aba.setFrozenRows(1);
+  }
+  aba.appendRow([inicio, situacao, antes, depois, ((new Date() - inicio) / 1000).toFixed(1), obs]);
+  if (aba.getLastRow() > 1001) aba.deleteRows(2, aba.getLastRow() - 1001);
+}
+
+function ativarAutomacao() {
+  desativarAutomacao();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const t = ScriptApp.newTrigger('executar');
+  if (CONFIG.frequencia === 'hourly') t.timeBased().everyHours(1).create();
+  else if (CONFIG.frequencia === 'daily') t.timeBased().everyDays(1).atHour(CONFIG.hora).create();
+  else if (CONFIG.frequencia === 'weekly') t.timeBased().onWeekDay(ScriptApp.WeekDay[CONFIG.diaSemana]).atHour(CONFIG.hora).create();
+  else if (CONFIG.frequencia === 'edit') ScriptApp.newTrigger('aoEditar').forSpreadsheet(ss).onEdit().create();
+  executar();
+  ss.toast('Automação ativada. A primeira execução já foi feita.', 'Planilha Segura', 6);
+}
+
+function aoEditar(e) {
+  // Só reage a mudanças na aba de origem, com uma pausa para juntar edições seguidas.
+  if (!e || !e.range || e.range.getSheet().getName() !== CONFIG.abaOrigem) return;
+  Utilities.sleep(2000);
+  executar();
+}
+
+function desativarAutomacao() {
+  ScriptApp.getProjectTriggers().forEach(function (t) {
+    const f = t.getHandlerFunction();
+    if (f === 'executar' || f === 'aoEditar') ScriptApp.deleteTrigger(t);
+  });
+}
+
+// ---- Motor de limpeza (o mesmo usado no site Planilha Segura) ----
+${PlanilhaEngine.toString()}
+`;
+  $('#gsCode').textContent = code;
+  state.script = code;
+}
+
+/* ---------- Receitas: salvar, importar ---------- */
+function sanitizeRecipe(obj) {
+  if (!obj || !Array.isArray(obj.steps)) throw new Error('Arquivo de receita inválido.');
+  const steps = obj.steps.slice(0, LIMITS.steps).map(s => {
+    if (!s || !CATALOG[s.type]) throw new Error('Etapa desconhecida: ' + (s && s.type));
+    const def = CATALOG[s.type].p, p = {};
+    Object.keys(def).forEach(k => {
+      const v = s.p ? s.p[k] : undefined;
+      if (Array.isArray(def[k])) p[k] = Array.isArray(v) ? v.filter(x => typeof x === 'string').slice(0, 200).map(x => x.slice(0, 200)) : [];
+      else if (typeof def[k] === 'boolean') p[k] = typeof v === 'boolean' ? v : def[k];
+      else p[k] = typeof v === 'string' ? v.slice(0, 500) : def[k];
+    });
+    const st = mk(s.type, p); st.on = s.on !== false; return st;
+  });
+  return { name: String(obj.name || 'Receita importada').slice(0, 80), steps };
+}
+function setRecipe(r) { state.recipe = r; state.open = null; recompute(); renderRecipe(); }
+
+/* ---------- Abas ---------- */
+function showTab(name) {
+  ['limpar', 'automatizar', 'seguranca'].forEach(t => {
+    $('#view-' + t).hidden = t !== name;
+    $('#tab-' + t).setAttribute('aria-selected', String(t === name));
+  });
+  try { history.replaceState(null, '', '#' + name); } catch (e) {}
+}
+
+/* ---------- Avisos ---------- */
+let toastTimer;
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 4200); }
+
+/* ---------- Eventos ---------- */
+const findStep = id => state.recipe.steps.find(s => s.id === id);
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) {
+    const tab = e.target.closest('[data-tab]');
+    if (tab) showTab(tab.dataset.tab);
+    return;
+  }
+  const act = el.dataset.act, st = el.dataset.id ? findStep(el.dataset.id) : null, steps = state.recipe.steps;
+  switch (act) {
+    case 'open': state.open = state.open === st.id ? null : st.id; renderRecipe(); break;
+    case 'col': {
+      const arr = st.p[el.dataset.k] || (st.p[el.dataset.k] = []);
+      const name = el.dataset.col, at = arr.findIndex(x => x.toLocaleLowerCase('pt-BR') === name.toLocaleLowerCase('pt-BR'));
+      if (at >= 0) arr.splice(at, 1); else arr.push(name);
+      recompute(); renderRecipe(); break;
+    }
+    case 'up': case 'down': {
+      const i = steps.indexOf(st), j = act === 'up' ? i - 1 : i + 1;
+      if (j < 0 || j >= steps.length) break;
+      [steps[i], steps[j]] = [steps[j], steps[i]]; recompute(); renderRecipe(); break;
+    }
+    case 'dup': { const c = mk(st.type, JSON.parse(JSON.stringify(st.p))); steps.splice(steps.indexOf(st) + 1, 0, c); state.open = c.id; recompute(); renderRecipe(); break; }
+    case 'del': steps.splice(steps.indexOf(st), 1); recompute(); renderRecipe(); break;
+    case 'view': state.view = el.dataset.view; state.page = 0; renderResults(); break;
+    case 'page': state.page += Number(el.dataset.d); renderTable(); break;
+    case 'pick': $('#fileInput').click(); break;
+    case 'sample': loadSample(); break;
+    case 'paste-open': $('#pastePanel').hidden = false; $('#pasteText').focus(); break;
+    case 'paste-close': $('#pastePanel').hidden = true; break;
+    case 'paste-load': loadPasted($('#pasteText').value); break;
+    case 'export': exportResult(el.dataset.fmt); break;
+    case 'copy-table': { const g = resultGrid(); copyText([g.headers].concat(g.rows).map(r => r.map(v => String(v).replace(/[\t\r\n]+/g, ' ')).join('\t')).join('\n'), 'Resultado copiado. Cole no Excel ou no Google Sheets com Ctrl+V.'); break; }
+    case 'recipe-save': {
+      const list = store.get('ps.recipes', []);
+      const data = { name: state.recipe.name, steps: state.recipe.steps.map(s => ({ type: s.type, on: s.on, p: s.p })) };
+      const at = list.findIndex(r => r.name === data.name);
+      if (at >= 0) list[at] = data; else list.push(data);
+      toast(store.set('ps.recipes', list.slice(-50)) ? 'Receita “' + data.name + '” salva neste navegador.' : 'Este navegador não permite salvar. Use “Exportar .json”.');
+      renderRecipeList(); break;
+    }
+    case 'recipe-export': saveFile((state.recipe.name || 'receita') + '.json', JSON.stringify({ app: 'Planilha Segura', versao: 1, name: state.recipe.name, steps: state.recipe.steps.map(s => ({ type: s.type, on: s.on, p: s.p })) }, null, 2)); break;
+    case 'recipe-import': $('#recipeFile').click(); break;
+    case 'recipe-clear': setRecipe({ name: state.recipe.name, steps: [] }); break;
+    case 'gs-copy': copyText(state.script, 'Script copiado. Cole em Extensões → Apps Script.'); break;
+    case 'gs-download': saveFile('Planilha Segura - Apps Script.txt', state.script); break;
+    case 'batch-pick': $('#batchInput').click(); break;
+    case 'batch-save': saveBatch(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.dataset.act === 'field') { const st = findStep(el.dataset.id); st.p[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value; recompute(); renderRecipe(); return; }
+  if (el.dataset.act === 'onoff') { findStep(el.dataset.id).on = el.checked; recompute(); renderRecipe(); return; }
+  switch (el.id) {
+    case 'fileInput': openFiles(el.files); el.value = ''; break;
+    case 'batchInput': runBatch(el.files); el.value = ''; break;
+    case 'recipeFile': {
+      const f = el.files[0]; el.value = '';
+      if (!f) break;
+      if (f.size > 1024 * 1024) { toast('Arquivo de receita grande demais.'); break; }
+      f.text().then(t => { setRecipe(sanitizeRecipe(JSON.parse(t))); toast('Receita importada.'); }).catch(err => toast(err.message || 'Arquivo de receita inválido.'));
+      break;
+    }
+    case 'sheetSel': state.src.sheet = Number(el.value); state.page = 0; $('#gsSource').value = state.src.sheets[state.src.sheet].name; refreshInput(); renderRecipe(); break;
+    case 'headerRow': state.src.headerRow = Math.max(1, Math.min(50, parseInt(el.value, 10) || 1)); $('#gsHeader').value = state.src.headerRow; state.page = 0; refreshInput(); renderRecipe(); break;
+    case 'addStep': if (el.value && state.recipe.steps.length < LIMITS.steps) { const s = mk(el.value); state.recipe.steps.push(s); state.open = s.id; el.value = ''; recompute(); renderRecipe(); } break;
+    case 'recipeLoad': {
+      const v = el.value; el.value = '';
+      if (v.startsWith('t:')) setRecipe(TEMPLATES[v.slice(2)]());
+      else if (v.startsWith('s:')) { const r = store.get('ps.recipes', [])[Number(v.slice(2))]; if (r) try { setRecipe(sanitizeRecipe(r)); } catch (err) { toast(err.message); } }
+      break;
+    }
+    case 'gsFreq': case 'gsHour': case 'gsDay': case 'gsBackup': case 'gsLog': renderScript(); break;
+  }
+});
+document.addEventListener('input', e => {
+  const el = e.target;
+  if (el.dataset.act === 'text') { findStep(el.dataset.id).p[el.dataset.k] = el.value; schedule(false); return; }
+  if (el.id === 'recipeName') { state.recipe.name = el.value.slice(0, 80) || 'Minha receita'; clearTimeout(timer); timer = setTimeout(renderScript, 300); }
+  if (el.id === 'search') { state.search = el.value; state.page = 0; renderTable(); }
+  if (['gsSource', 'gsHeader', 'gsOutput'].includes(el.id)) { clearTimeout(timer); timer = setTimeout(renderScript, 200); }
+});
+
+/* colar direto do Excel na página */
+function loadPasted(text) {
+  if (!text || !text.trim()) { toast('Nada para carregar. Cole as células primeiro.'); return; }
+  const aoa = parseDelimited(text);
+  if (!aoa.length) { toast('Não encontrei linhas no texto colado.'); return; }
+  $('#pastePanel').hidden = true; $('#pasteText').value = '';
+  loadSource({ fileName: 'Dados colados', sheets: [{ name: 'Dados', aoa }], sheet: 0, headerRow: 1, sample: false });
+  toast(fmt(aoa.length - 1) + ' linhas carregadas da área de transferência.');
+}
+document.addEventListener('paste', e => {
+  const t = e.target;
+  if (t && (t.closest('input, textarea, select, [contenteditable]'))) return;
+  const text = e.clipboardData && e.clipboardData.getData('text/plain');
+  if (text && /\t/.test(text) && /\n/.test(text.trim())) { e.preventDefault(); showTab('limpar'); loadPasted(text); }
+});
+
+/* arrastar e soltar */
+let dragDepth = 0;
+window.addEventListener('dragenter', e => { if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) { dragDepth++; $('#dropHint').hidden = false; } });
+window.addEventListener('dragleave', () => { dragDepth = Math.max(0, dragDepth - 1); if (!dragDepth) $('#dropHint').hidden = true; });
+window.addEventListener('dragover', e => e.preventDefault());
+window.addEventListener('drop', e => {
+  e.preventDefault(); dragDepth = 0; $('#dropHint').hidden = true;
+  const files = e.dataTransfer && e.dataTransfer.files;
+  if (!files || !files.length) return;
+  if (!$('#view-automatizar').hidden && files.length > 1) runBatch(files);
+  else { showTab('limpar'); openFiles(files); }
+});
+
+/* ---------- Segurança ---------- */
+const SHIELD = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>';
+$('#secList').innerHTML = [
+  ['Seus arquivos não saem do computador', 'A leitura, a limpeza e a exportação acontecem dentro do navegador. Não existe servidor recebendo planilhas, nem conta para criar. A página só baixa a biblioteca que lê arquivos do Excel.'],
+  ['O original nunca é alterado', 'A receita gera uma cópia nova. Na visão “Original” você vê cada linha removida riscada e, ao passar o mouse, em qual etapa ela saiu.'],
+  ['Macros e fórmulas não são executadas', 'Arquivos .xlsm e .xls são lidos só como valores. Macros VBA são ignoradas e fórmulas entram pelo valor já calculado.'],
+  ['Proteção contra fórmulas maliciosas no CSV', 'Células que começam com =, +, - ou @ ganham um apóstrofo na exportação CSV, para o Excel não executá-las. Números negativos como -150 continuam números.'],
+  ['Nada da planilha vira código na página', 'Todo conteúdo é exibido como texto. Um HTML ou script escondido numa célula aparece como texto e não é executado.'],
+  ['Só a receita fica salva, nunca os dados', 'Ao salvar uma receita, apenas os nomes das etapas e colunas ficam neste navegador. Os dados somem quando você fecha a página.'],
+  ['Agendamento dentro da sua conta Google', 'O script gerado é legível, roda na sua conta, não envia dados para fora, bloqueia execuções simultâneas, guarda o resultado anterior e registra cada execução numa aba de histórico.']
+].map(([t, d]) => `<li>${SHIELD}<div><strong>${esc(t)}</strong><p>${esc(d)}</p></div></li>`).join('');
+
+/* ---------- Início ---------- */
+function loadSample() {
+  loadSource({ fileName: 'Vendas de março (exemplo).xlsx', sheets: [{ name: 'Vendas', aoa: sampleAoa() }], sheet: 0, headerRow: 1, sample: true });
+  renderRecipe();
+}
+$('#gsHour').innerHTML = Array.from({ length: 24 }, (_, h) => `<option value="${h}" ${h === 6 ? 'selected' : ''}>${String(h).padStart(2, '0')}h às ${String(h + 1).padStart(2, '0')}h</option>`).join('');
+renderAddStep();
+const prev = store.get('ps.current', null);
+if (prev) { try { state.recipe = sanitizeRecipe(prev); } catch (e) {} }
+loadSample();
+const hash = (location.hash || '').slice(1);
+if (['limpar', 'automatizar', 'seguranca'].includes(hash)) showTab(hash);
+downloadsNs();
+})();
+</script>
+
+</body>
+</html>
