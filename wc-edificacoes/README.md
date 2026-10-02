@@ -3,6 +3,9 @@
 Site completo para construtora/edificadora: páginas públicas, portfólio de obras com filtros,
 simulador de custo de obra, formulário de orçamento e painel administrativo com login.
 
+> **Vai vender ou entregar este site?** Veja o [GUIA-DE-VENDA.md](GUIA-DE-VENDA.md): o que o produto
+> entrega, o que pedir ao cliente, hospedagem, checklist de entrega e questões legais.
+
 | Camada | Tecnologia |
 |---|---|
 | Front-end | React 19 + TypeScript + Vite + Tailwind CSS |
@@ -18,7 +21,7 @@ wc-edificacoes/
 ├── server/          API, banco, uploads
 │   ├── migrations/  schema SQL
 │   ├── src/         código da API
-│   └── test/        testes de API e segurança (24 testes)
+│   └── test/        testes de API e segurança (27 testes)
 └── deploy/          exemplos de Nginx, Docker e PM2
 ```
 
@@ -94,13 +97,18 @@ Painel: `http://localhost:5173/admin`
 
 **Demonstração sem servidor:** `cd client && npm run build:demo` gera `dist-demo/index.html`,
 um arquivo único com dados fictícios (login demo preenchido na tela). Útil para mostrar ao cliente.
+Abra **no navegador** — visualizadores de arquivo do celular não executam JavaScript. Para ter um link
+público (bom para testar no celular), use o workflow `.github/workflows/demo-pages.yml` (GitHub Pages).
 
 ---
 
 ## 2. Personalizar para o cliente
 
-1. **`client/src/config/site.ts`** — nome, CNPJ, CREA, telefone, WhatsApp, e-mail, endereço,
-   redes sociais, ano de fundação, encarregado LGPD. Os campos marcados `PREENCHER` estão provisórios.
+1. **`client/src/config/site.ts`** — nome, endereço do site (`url`), CNPJ, CREA, telefone, WhatsApp, e-mail,
+   endereço, redes sociais, ano de fundação, encarregado LGPD. Os campos marcados `PREENCHER` estão provisórios;
+   `npm run check:config` lista os que faltam (o build também avisa). Título, descrição, Open Graph e dados
+   estruturados (JSON-LD) do `index.html` são gerados a partir deste arquivo (`client/build/siteHtml.ts`).
+   Depois de trocar logo/nome, rode `npm run assets` (Node 22+) para gerar ícones e `og-image.png`.
 2. **`client/src/data/services.ts`** — textos de serviços, etapas e compromissos.
 3. **`client/src/index.css`** (`:root`) — cores da marca. `client/public/favicon.svg` — ícone.
 4. **Política de privacidade** — `client/src/pages/Privacidade.tsx` é um modelo; peça revisão jurídica.
@@ -143,6 +151,10 @@ Coloque um proxy com HTTPS na frente (Nginx, Caddy ou Cloudflare).
 `DATABASE_URL`, `IP_HASH_SECRET` (≥ 32 caracteres aleatórios), `ALLOWED_ORIGINS` (só `https://`),
 `TRUST_PROXY` (nº de proxies na frente). A API **não inicia** se faltarem.
 
+Recomendadas: `SITE_URL` (usado no `sitemap.xml`, `robots.txt` e nos e-mails) e o bloco `SMTP_*` + `NOTIFY_EMAIL`
+para receber **um e-mail a cada novo pedido de orçamento** (funciona com o e-mail do domínio, Google Workspace
+com senha de app, Brevo, Resend etc.). Sem SMTP o site funciona normalmente — os pedidos ficam só no painel.
+
 ---
 
 ## 4. Segurança implementada
@@ -165,6 +177,7 @@ Coloque um proxy com HTTPS na frente (Nginx, Caddy ou Cloudflare).
 | Vazamento de erros | Stack traces nunca vão ao cliente (só um `requestId` para achar no log); logs com redação de cookies, senhas, e-mail e telefone |
 | DoS | Limite de JSON 32 KB, timeouts de consulta (10 s) e de conexão HTTP (anti slowloris), rate limit geral |
 | LGPD | Consentimento registrado com data/hora; IP guardado só como HMAC; exclusão definitiva pelo painel; política de privacidade; sem cookies de rastreamento |
+| E-mail de aviso | Enviado depois de responder ao visitante (falha no SMTP nunca perde o pedido); assunto sem quebras de linha (anti header injection); dados pessoais não vão para o log |
 | Auditoria | Log de logins, falhas, bloqueios, exportações e alterações (visível em *Conta e segurança*) |
 
 ### Front-end
@@ -175,20 +188,31 @@ Coloque um proxy com HTTPS na frente (Nginx, Caddy ou Cloudflare).
 - Código do painel e do three.js carregados sob demanda (visitantes não baixam o admin); build sem source maps.
 - Nenhuma dependência que injete `<style>`/scripts inline — por isso a CSP pode ser estrita.
 
+### Compatibilidade e "nunca tela branca"
+- Código compilado para **iOS 14+ / Safari 14+, Chrome/Android 87+, Firefox 78+** (`build.target` em `vite.config.ts`).
+  Antes, o build saía só para navegadores de 2023+ e iPhones com iOS < 16.4 abriam uma página em branco.
+- Se o JavaScript não rodar (visualizador de arquivos, navegador antigo, bloqueio), aparece uma página com nome,
+  descrição e botões de WhatsApp/telefone/e-mail. Se algo quebrar durante o uso, uma tela de erro com os contatos.
+- Cenas 3D: sem WebGL, mostram o desenho técnico em SVG.
+
 ### Testes
 ```bash
 cd server
 TEST_DATABASE_URL=postgres://wc:senha@localhost:5432/wc_test npm test
 ```
-24 testes cobrindo: cabeçalhos, SQL injection, XSS armazenado, CSRF, enumeração de usuários,
+27 testes cobrindo: cabeçalhos, SQL injection, XSS armazenado, CSRF, enumeração de usuários,
 bloqueio de conta, cookie seguro, upload malicioso (SVG disfarçado, EXIF), path traversal,
-CSV injection, limites de tamanho, política de senha e rate limit. `npm audit`: 0 vulnerabilidades.
+CSV injection, limites de tamanho, política de senha, rate limit, sitemap/robots e aviso por e-mail
+(inclusive falha do SMTP sem perder o pedido). `npm audit`: 0 vulnerabilidades.
 
 ---
 
 ## 5. Checklist antes de entregar ao cliente
 
-- [ ] `site.ts` preenchido (sem nenhum `PREENCHER`)
+- [ ] `site.ts` preenchido — `npm run check:config -- --strict` passa
+- [ ] Ícones e imagem de compartilhamento gerados com a marca do cliente (`npm run assets`)
+- [ ] SMTP configurado e um orçamento de teste recebido por e-mail
+- [ ] Sitemap enviado no Google Search Console (`https://dominio/sitemap.xml`)
 - [ ] Obras de exemplo removidas e obras reais cadastradas com fotos
 - [ ] Valores do simulador revisados com o cliente
 - [ ] Política de privacidade revisada
@@ -207,5 +231,5 @@ CSV injection, limites de tamanho, política de senha e rate limit. `npm audit`:
 - **Backup:** `pg_dump -Fc wc_edificacoes > backup-$(date +%F).dump` + cópia de `server/uploads/`.
 
 ## 7. Próximos passos sugeridos (não incluídos)
-Aviso por e-mail/WhatsApp a cada novo orçamento (SMTP ou API), autenticação em dois fatores no
-painel, sitemap.xml gerado a partir das obras, e Google Analytics/Meta Pixel (exigiria banner de cookies e ajuste da CSP).
+Aviso por WhatsApp (API oficial) a cada novo orçamento, autenticação em dois fatores no painel e
+Google Analytics/Meta Pixel (exigiria banner de cookies e ajuste da CSP). Aviso por e-mail e sitemap.xml já estão incluídos.

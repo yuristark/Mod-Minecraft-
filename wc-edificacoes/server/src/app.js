@@ -13,6 +13,7 @@ import { noStore, permissionsPolicy, requireJson, securityHeaders, verifyOrigin 
 import { adminRouter } from './routes/admin.js';
 import { authRouter } from './routes/auth.js';
 import { publicRouter } from './routes/public.js';
+import { seoRouter } from './routes/seo.js';
 
 export function createApp() {
   const app = express();
@@ -55,6 +56,9 @@ export function createApp() {
   api.use(notFoundApi);
 
   app.use('/api', api);
+
+  /* ------------------- SEO: sitemap.xml e robots.txt ------------------- */
+  app.use(seoRouter);
 
   /* ---------------------------- Uploads ---------------------------- */
   app.use('/uploads', express.static(config.uploadDir, {

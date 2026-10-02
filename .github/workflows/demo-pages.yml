@@ -1,0 +1,53 @@
+# Publica a demonstração do site (dados fictícios, sem servidor) no GitHub Pages.
+# Para ativar uma vez: Settings → Pages → Build and deployment → Source: "GitHub Actions".
+# Depois, rode em Actions → "Demonstração no GitHub Pages" → Run workflow
+# (ou ela roda sozinha a cada push na branch principal).
+name: Demonstração no GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["wc-edificacoes/client/**", ".github/workflows/demo-pages.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: wc-edificacoes/client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: wc-edificacoes/client/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:demo
+      - run: mkdir -p ../../_site && cp dist-demo/index.html ../../_site/index.html && cp public/*.png public/*.svg public/manifest.webmanifest ../../_site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

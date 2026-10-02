@@ -311,6 +311,7 @@ export default function createHeroScene(canvas: HTMLCanvasElement, opts: HeroOpt
   const target = new Vector3(1.8, 7.6, -0.8);
   let lightTimer = 0;
   let weldOn = 0;
+  let panesSettled = false;
 
   /* ---------------- Quadro a quadro ---------------- */
   function frame(t: number, dt: number) {
@@ -338,8 +339,10 @@ export default function createHeroScene(canvas: HTMLCanvasElement, opts: HeroOpt
     rebars.visible = T > INTRO_START + BUILT * STEP + 0.6;
 
     // painéis surgem junto com o núcleo de cada pavimento; janelas acendem/apagam
+    // Atualiza as matrizes dos painéis durante a entrada e uma última vez ao terminar
     const introGlass = T < INTRO_START + GLAZED * STEP + 2.2;
-    if (introGlass || still) {
+    if (introGlass || !panesSettled) {
+      if (!introGlass) panesSettled = true;
       panes.forEach((p, idx) => {
         const start = INTRO_START + p.floor * STEP + 1.3;
         const s = interval(T, start, start + 0.6, curveFns.easeOutBack);

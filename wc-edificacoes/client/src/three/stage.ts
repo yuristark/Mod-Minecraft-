@@ -56,6 +56,9 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
   const camera = new PerspectiveCamera(fov, 1, 0.1, 200);
 
   const timer = new Timer();
+  // Tempo da cena: só avança enquanto ela está sendo desenhada. Assim, se a cena começar fora da
+  // tela (celular) ou a aba for trocada, a animação continua de onde parou em vez de "pular".
+  let elapsed = 0;
   let raf = 0;
   let visible = true;
   let pageVisible = !document.hidden;
@@ -77,7 +80,7 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
 
   const renderOnce = () => {
     timer.update();
-    onFrame(timer.getElapsed(), 0);
+    onFrame(elapsed, 0);
     renderer.render(scene, camera);
   };
 
@@ -85,7 +88,8 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
     raf = requestAnimationFrame(loop);
     timer.update();
     const dt = Math.min(timer.getDelta(), 1 / 20); // evita "saltos" após a aba voltar
-    onFrame(timer.getElapsed(), dt);
+    elapsed += dt;
+    onFrame(elapsed, dt);
     renderer.render(scene, camera);
   };
 

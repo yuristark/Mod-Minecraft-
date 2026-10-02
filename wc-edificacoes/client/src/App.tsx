@@ -1,19 +1,18 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Outlet, ScrollRestoration, type RouteObject } from "react-router-dom";
 import { MotionConfig } from "motion/react";
+import { ErrorScreen } from "@/components/ErrorBoundary";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { IS_DEMO } from "@/lib/api";
 import { installRipple } from "@/lib/ripple";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import Home from "@/pages/Home";
-import Obras from "@/pages/Obras";
-import ObraDetalhe from "@/pages/ObraDetalhe";
-import Orcamento from "@/pages/Orcamento";
-import Servicos from "@/pages/Servicos";
-import Simulador from "@/pages/Simulador";
-import Empresa from "@/pages/Empresa";
-import Privacidade from "@/pages/Privacidade";
 import NotFound from "@/pages/NotFound";
+
+// A página inicial vem no pacote principal; as demais são baixadas quando o visitante navega
+// (menos JavaScript no primeiro acesso — diferença grande em 4G).
+const page = (load: () => Promise<{ default: React.ComponentType }>) => async () => ({ Component: (await load()).default });
 
 // O painel é carregado sob demanda: visitantes do site não baixam o código do admin
 const AdminApp = lazy(() => import("@/admin/AdminApp"));
@@ -43,6 +42,7 @@ function PublicLayout() {
         <Outlet />
       </main>
       <SiteFooter />
+      <WhatsAppButton />
     </div>
   );
 }
@@ -50,18 +50,19 @@ function PublicLayout() {
 export const routes: RouteObject[] = [
   {
     element: <Root />,
+    errorElement: <ErrorScreen />,
     children: [
       {
         element: <PublicLayout />,
         children: [
           { index: true, element: <Home /> },
-          { path: "obras", element: <Obras /> },
-          { path: "obras/:slug", element: <ObraDetalhe /> },
-          { path: "servicos", element: <Servicos /> },
-          { path: "simulador", element: <Simulador /> },
-          { path: "orcamento", element: <Orcamento /> },
-          { path: "empresa", element: <Empresa /> },
-          { path: "privacidade", element: <Privacidade /> },
+          { path: "obras", lazy: page(() => import("@/pages/Obras")) },
+          { path: "obras/:slug", lazy: page(() => import("@/pages/ObraDetalhe")) },
+          { path: "servicos", lazy: page(() => import("@/pages/Servicos")) },
+          { path: "simulador", lazy: page(() => import("@/pages/Simulador")) },
+          { path: "orcamento", lazy: page(() => import("@/pages/Orcamento")) },
+          { path: "empresa", lazy: page(() => import("@/pages/Empresa")) },
+          { path: "privacidade", lazy: page(() => import("@/pages/Privacidade")) },
           { path: "*", element: <NotFound /> },
         ],
       },

@@ -41,6 +41,13 @@ if (isProd && allowedOrigins.some((o) => !o.startsWith('https://'))) {
 const reportTimezone = process.env.REPORT_TIMEZONE || 'America/Sao_Paulo';
 try { new Intl.DateTimeFormat('pt-BR', { timeZone: reportTimezone }); } catch { throw new Error('REPORT_TIMEZONE inválido'); }
 
+const siteUrl = (process.env.SITE_URL || allowedOrigins[0] || '').trim().replace(/\/$/, '');
+if (isProd && !siteUrl.startsWith('https://')) {
+  throw new Error('Em produção, SITE_URL (ou o primeiro item de ALLOWED_ORIGINS) deve começar com https://');
+}
+
+const smtpPort = int('SMTP_PORT', 587);
+
 export const config = Object.freeze({
   env,
   isProd,
@@ -62,4 +69,16 @@ export const config = Object.freeze({
   // Fuso usado em relatórios do painel (gráfico por dia, datas do CSV)
   reportTimezone,
   logLevel: process.env.LOG_LEVEL || (isProd ? 'info' : 'debug'),
+  // Endereço público do site (sitemap.xml, robots.txt, links nos e-mails)
+  siteUrl,
+  // Aviso por e-mail a cada novo pedido de orçamento (opcional — só ativa com SMTP_HOST e NOTIFY_EMAIL)
+  mail: {
+    host: process.env.SMTP_HOST?.trim() || '',
+    port: smtpPort,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : smtpPort === 465,
+    user: process.env.SMTP_USER?.trim() || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.SMTP_FROM?.trim() || '',
+    notifyTo: (process.env.NOTIFY_EMAIL || '').split(',').map((e) => e.trim()).filter(Boolean),
+  },
 });

@@ -13,6 +13,7 @@ import { config } from '../src/config.js';
 import { migrate } from '../src/scripts/migrate.js';
 import { ensureUploadDir } from '../src/lib/uploads.js';
 import { ARGON_OPTS } from '../src/routes/auth.js';
+import { setMailTransport } from '../src/lib/mailer.js';
 
 const ORIGIN = 'http://localhost:5173';
 const ADMIN = { email: 'admin@teste.com', password: 'SenhaMuitoForte2026' };
@@ -287,6 +288,42 @@ describe('painel administrativo', () => {
     expect((await s1.agent.get('/api/auth/me')).body.admin.email).toBe(ADMIN.email);
     const audit = await s1.agent.get('/api/admin/audit');
     expect(audit.body.items.map((a) => a.action)).toContain('password.changed');
+  });
+});
+
+describe('SEO e avisos', () => {
+  it('gera sitemap.xml só com obras publicadas e robots.txt apontando para ele', async () => {
+    const sm = await request(app).get('/sitemap.xml');
+    expect(sm.status).toBe(200);
+    expect(sm.headers['content-type']).toContain('xml');
+    expect(sm.text).toContain('/obras/obra-publica</loc>');
+    expect(sm.text).not.toContain('obra-rascunho');
+    const rb = await request(app).get('/robots.txt');
+    expect(rb.text).toContain('Disallow: /admin');
+    expect(rb.text).toMatch(/Sitemap: http.+\/sitemap\.xml/);
+  });
+
+  it('envia aviso por e-mail de novo orçamento sem quebras de linha no assunto', async () => {
+    const sent = [];
+    setMailTransport({ sendMail: async (m) => { sent.push(m); } });
+    const res = await request(app).post('/api/quotes').set('Origin', ORIGIN).send(validQuote({ name: 'Ana Souza', email: 'ana@exemplo.com' }));
+    expect(res.status).toBe(201);
+    await new Promise((r) => setTimeout(r, 50));
+    setMailTransport(null);
+    expect(sent).toHaveLength(1);
+    expect(sent[0].subject).toContain(res.body.protocol);
+    expect(sent[0].subject).not.toMatch(/[\r\n]/);
+    expect(sent[0].replyTo).toBe('ana@exemplo.com');
+    expect(sent[0].text).toContain('Ana Souza');
+  });
+
+  it('falha no envio do e-mail não impede o pedido de ser salvo', async () => {
+    setMailTransport({ sendMail: async () => { throw new Error('SMTP fora do ar'); } });
+    const res = await request(app).post('/api/quotes').set('Origin', ORIGIN).send(validQuote({ name: 'Carlos Lima' }));
+    setMailTransport(null);
+    expect(res.status).toBe(201);
+    const { rows } = await query('SELECT 1 FROM quotes WHERE protocol = $1', [res.body.protocol]);
+    expect(rows).toHaveLength(1);
   });
 });
 

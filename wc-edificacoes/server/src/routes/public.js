@@ -6,6 +6,7 @@ import { computeEstimate } from '../lib/estimate.js';
 import { hashIp, makeProtocol } from '../lib/security.js';
 import { imageUrls } from '../lib/uploads.js';
 import { logger } from '../lib/logger.js';
+import { notifyNewQuote } from '../lib/mailer.js';
 import { quoteLimiter } from '../middleware/rateLimits.js';
 import { projectListQuery, quoteCreate, slugParam } from '../schemas.js';
 
@@ -138,4 +139,6 @@ publicRouter.post('/quotes', quoteLimiter, async (req, res) => {
       data.message, hashIp(req.ip)],
   );
   res.status(201).json({ protocol });
+  // Depois de responder: o visitante não espera o e-mail, e uma falha de envio não perde o pedido
+  void notifyNewQuote({ ...data, protocol, estimateMin: estimate?.min ?? null, estimateMax: estimate?.max ?? null });
 });

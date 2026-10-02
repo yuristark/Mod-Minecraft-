@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/check-config.mjs && tsc -b && vite build",
     "build:demo": "tsc -b && vite build --mode demo",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets": "node --experimental-strip-types scripts/generate-assets.ts",
+    "check:config": "node scripts/check-config.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -28,6 +30,7 @@
     "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.6.1",
     "oxlint": "^1.81.0",
+    "playwright": "1.56.1",
     "postcss": "^8.5.28",
     "tailwindcss": "3.4.1",
     "tailwindcss-animate": "^1.0.7",

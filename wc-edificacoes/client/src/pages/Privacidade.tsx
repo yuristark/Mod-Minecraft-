@@ -31,6 +31,7 @@ export default function Privacidade() {
         <S n="03" t="Finalidade e base legal">
           <p>Os dados são usados exclusivamente para responder ao seu pedido e elaborar propostas comerciais, com base no seu consentimento (art. 7º, I) e em procedimentos preliminares a contrato (art. 7º, V) da LGPD.</p>
           <p>Não vendemos, alugamos ou compartilhamos seus dados com terceiros para fins de marketing.</p>
+          <p>Para operar o site usamos fornecedores que tratam os dados apenas em nosso nome, como a empresa de hospedagem e o serviço de e-mail que nos avisa sobre novos pedidos de orçamento.</p>
         </S>
         <S n="04" t="Cookies">
           <p>O site público não usa cookies de rastreamento nem de publicidade. A área restrita usa apenas um cookie técnico de sessão, essencial para o login de administradores.</p>

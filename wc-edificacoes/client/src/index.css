@@ -239,6 +239,12 @@
   .text-pretty { text-wrap: pretty; }
 }
 
+/* Tela de reserva (build/siteHtml.ts): só aparece se o JavaScript não montar o site em 2,5 s.
+   Sem depender de JS — é CSS puro. Com JS, o React substitui o conteúdo antes disso. */
+.boot-fallback { opacity: 0; animation: boot-show 0.4s ease-out 2.5s forwards; }
+@keyframes boot-show { to { opacity: 1; } }
+@media (scripting: none) { .boot-fallback { opacity: 1; animation: none; } }
+
 /* ---------- Animações (respeitam prefers-reduced-motion) ---------- */
 @property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
 
@@ -327,13 +333,18 @@
   @keyframes sheen { 0%, 55% { background-position: 100% 0; } 100% { background-position: -50% 0; } }
 
   /* Borda com gradiente cônico girando (cartão de destaque) */
-  .conic-border { position: relative; isolation: isolate; }
+  .conic-border { position: relative; }
   .conic-border::before {
     content: "";
     position: absolute;
-    inset: -1px;
-    z-index: -1;
+    inset: 0;
+    z-index: 1;
+    padding: 1.5px; /* espessura da borda: a máscara recorta o miolo e só o contorno aparece */
+    pointer-events: none;
     background: conic-gradient(from var(--angle), transparent 0 70%, var(--signal) 85%, transparent 100%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
     animation: spin-angle 5s linear infinite;
   }
   @keyframes spin-angle { to { --angle: 360deg; } }

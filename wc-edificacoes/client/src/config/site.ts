@@ -8,6 +8,8 @@
  */
 export const site = {
   name: "WC Edificações",
+  // Endereço público do site, sem barra no final (usado em SEO, compartilhamento e sitemap)
+  url: "https://www.wcedificacoes.com.br", // PREENCHER
   shortName: "WC",
   legalName: "WC Edificações Ltda", // PREENCHER: razão social
   cnpj: "00.000.000/0001-00", // PREENCHER
