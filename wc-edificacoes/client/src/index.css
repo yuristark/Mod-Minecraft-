@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fontes hospedadas no próprio site (sem Google Fonts): mais rápido, sem rastreio de terceiros e CSP mais estrita */
+@font-face {
+  font-family: "Archivo";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  src: url("./assets/fonts/archivo-var.woff2") format("woff2-variations"), url("./assets/fonts/archivo-var.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("./assets/fonts/plex-mono-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("./assets/fonts/plex-mono-500.woff2") format("woff2");
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --ink: #17181a;
+    --ink-2: #2a2c30;
+    --ink-3: #5c5f66;
+    --concrete: #eeebe5;
+    --concrete-2: #e4e0d8;
+    --concrete-3: #d3cdc2;
+    --paper: #f8f6f2;
+    --line: #cfc9be;
+    --line-dark: #3a3d42;
+    --signal: #e8642c;        /* laranja de sinalização — destaque sobre fundo escuro */
+    --signal-strong: #b9461a; /* versão com contraste AA para texto/botões sobre fundo claro */
+    --signal-soft: #f6dccd;
+    --ok: #2f6b45;
+    --danger: #b3261e;
+    --header-h: 72px;
+    --c-ink: 23 24 26;
+    --c-ink-2: 42 44 48;
+    --c-ink-3: 92 95 102;
+    --c-concrete: 238 235 229;
+    --c-concrete-2: 228 224 216;
+    --c-concrete-3: 211 205 194;
+    --c-paper: 248 246 242;
+    --c-line: 207 201 190;
+    --c-line-dark: 58 61 66;
+    --c-signal: 232 100 44;
+    --c-signal-strong: 185 70 26;
+    --c-signal-soft: 246 220 205;
+    --c-ok: 47 107 69;
+    --c-danger: 179 38 30;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+    scroll-padding-top: calc(var(--header-h) + 16px);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    @apply bg-concrete text-ink font-sans antialiased;
+    font-stretch: 100%;
+    min-height: 100dvh;
+  }
+  ::selection { background: var(--signal); color: #fff; }
+
+  :focus-visible {
+    outline: 2px solid var(--signal-strong);
+    outline-offset: 3px;
+  }
+  .on-dark :focus-visible { outline-color: var(--signal); }
+
+  h1, h2, h3, .font-display { font-stretch: 112%; font-weight: 700; overflow-wrap: break-word; }
+  img { max-width: 100%; height: auto; }
+}
+
+@layer components {
+  .label-mono {
+    @apply font-mono text-[0.72rem] uppercase tracking-[0.14em];
+  }
+  .section-pad { @apply py-20 md:py-28; }
+
+  /* Botões: cantos retos, peso de obra */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 px-5 h-12 text-[0.95rem] font-semibold transition-[background-color,color,border-color,transform] duration-150 select-none whitespace-nowrap;
+    font-stretch: 108%;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { @apply opacity-60 cursor-not-allowed; }
+  .btn-signal { @apply bg-signal-strong text-white hover:bg-ink; }
+  .on-dark .btn-signal { @apply bg-signal text-ink hover:bg-paper; }
+  .btn-ink { @apply bg-ink text-paper hover:bg-signal-strong; }
+  .btn-ghost { @apply border border-ink/80 text-ink hover:bg-ink hover:text-paper; }
+  .on-dark .btn-ghost { @apply border-paper/50 text-paper hover:bg-paper hover:text-ink; }
+  .btn-sm { @apply h-9 px-3 text-sm; }
+
+  /* Campos de formulário — erros só aparecem depois da interação (:user-invalid) */
+  .field-label { @apply block text-sm font-semibold mb-1.5; }
+  .field-hint { @apply block text-xs text-ink-3 mb-1.5; }
+  .field {
+    @apply w-full bg-paper border border-line px-3.5 h-12 text-[0.98rem] text-ink placeholder:text-ink-3/70 transition-colors;
+    border-radius: 2px;
+  }
+  textarea.field { @apply h-auto py-3 min-h-[120px] resize-y; }
+  select.field { @apply pr-9 appearance-none bg-no-repeat; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%2317181a' stroke-width='1.6'/%3E%3C/svg%3E"); background-position: right 0.9rem center; }
+  .field:hover { @apply border-ink-3; }
+  .field:focus { @apply border-ink outline-none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--signal) 28%, transparent); }
+  .field:user-invalid, .field[aria-invalid="true"] { border-color: var(--danger); background-color: #fbefed; }
+  .field-error { @apply hidden text-sm mt-1.5 font-medium; color: var(--danger); }
+  .field:user-invalid ~ .field-error, .field[aria-invalid="true"] ~ .field-error, .field-error[data-show="true"] { display: block; }
+
+  /* Grade de prancha técnica */
+  .blueprint-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, currentColor 9%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, currentColor 9%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .blueprint-grid-fine {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, currentColor 6%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, currentColor 6%, transparent) 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  .link-underline {
+    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
+    transition: background-size 0.25s ease;
+  }
+  .link-underline:hover, .link-underline[aria-current="page"] { background-size: 100% 1px; }
+
+  /* Dialog nativo */
+  dialog.wc-dialog { @apply p-0 bg-transparent max-w-none max-h-none; }
+  dialog.wc-dialog::backdrop { background: rgb(17 18 20 / 0.82); backdrop-filter: blur(2px); }
+}
+
+@layer utilities {
+  .tabular { font-variant-numeric: tabular-nums; }
+  .stretch-wide { font-stretch: 125%; }
+  .stretch-normal { font-stretch: 100%; }
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+}
+
+/* ---------- Animações (respeitam prefers-reduced-motion) ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Traço sendo "desenhado" nas pranchas */
+  .draw-path {
+    stroke-dasharray: var(--len, 1200);
+    stroke-dashoffset: var(--len, 1200);
+    animation: draw 2.4s cubic-bezier(0.6, 0.1, 0.2, 1) forwards;
+    animation-delay: var(--d, 0s);
+  }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+
+  .fade-up { animation: fade-up 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; animation-delay: var(--d, 0s); }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(18px); } }
+
+  /* Revelação ao rolar — CSS nativo (scroll-driven); sem suporte, o conteúdo apenas aparece estático */
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    .reveal {
+      animation: reveal-in linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+    @keyframes reveal-in { from { opacity: 0; transform: translateY(32px); } }
+
+    .reveal-x {
+      animation: reveal-x linear both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+    @keyframes reveal-x { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+  }
+
+  .marquee-track { animation: marquee 38s linear infinite; }
+  @keyframes marquee { to { transform: translateX(-50%); } }
+}

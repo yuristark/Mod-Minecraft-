@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: wc_edificacoes
+      POSTGRES_USER: wc
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?defina DB_PASSWORD}
+    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+    # sem "ports": o banco não fica exposto fora da rede do Docker
+
+  app:
+    build: { context: .., dockerfile: deploy/Dockerfile }
+    restart: unless-stopped
+    env_file: ../server/.env
+    environment:
+      DATABASE_URL: postgres://wc:${DB_PASSWORD}@db:5432/wc_edificacoes
+    depends_on: [ db ]
+    ports: [ "127.0.0.1:3000:3000" ]   # só acessível pelo proxy local
+    volumes: [ "uploads:/app/server/uploads" ]
+    read_only: true
+    tmpfs: [ /tmp ]
+    security_opt: [ "no-new-privileges:true" ]
+
+volumes:
+  pgdata:
+  uploads:
