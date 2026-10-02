@@ -116,6 +116,24 @@ form{display:grid;gap:14px}
 .quem{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
 @media (max-width:900px){.split{grid-template-columns:minmax(0,1fr)}.pitch{padding:28px 20px;gap:18px}.pitch h1{margin-top:8px;font-size:26px}.pitch .feats,.pitch .foot{display:none}.lado{padding:24px 16px 40px;place-items:start center}}
 
+.formas{display:grid;gap:8px}
+.forma{display:flex;gap:12px;align-items:center;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:12px 14px;transition:border-color .15s,background .15s}
+.forma:hover{border-color:color-mix(in srgb,var(--primary) 40%,var(--line))}
+.forma[aria-checked="true"]{border-color:var(--primary);background:var(--primary-soft)}
+.forma .fi{width:36px;height:36px;border-radius:10px;background:var(--soft);display:grid;place-items:center;color:var(--primary);flex:none}
+.forma b{display:block;font-size:14px}
+.forma small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.pixbox{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;margin-top:12px;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.pixbox .kv{grid-template-columns:auto minmax(0,1fr)}
+.pixbox .passos,.pixbox>button{grid-column:1/-1}
+.qr{background:#fff;border-radius:12px;padding:8px;line-height:0;width:220px;max-width:100%;justify-self:center}
+.qr svg{width:100%;height:auto}
+.passos{margin:0;padding-left:20px;display:grid;gap:4px;font-size:13px;color:var(--ink2)}
+.bancos{display:grid;gap:6px;justify-items:center;text-align:center}
+.bancos small{color:var(--muted);font-size:11.5px}
+.bancos div{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.bancos span{font-size:11.5px;font-weight:600;color:var(--ink2);background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:2px 9px}
+
 /* ---------- aplicativo ---------- */
 #appFrame{position:fixed;inset:0;width:100%;height:100%;border:0;background:var(--bg)}
 
@@ -266,15 +284,50 @@ tbody tr.clic:hover td{background:var(--hover)}
     <div class="caixa" id="p-comprar" hidden>
       <div><h2>Libere seu acesso</h2><p class="sub" id="descricaoProduto">Pague uma vez e use para sempre.</p></div>
       <div id="blocoVenda" class="preco"><small>Acesso vitalício</small><b class="num" id="precoProduto">—</b><small>Pagamento único · sem mensalidade</small></div>
-      <div class="garantias">
-        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Pagamento pelo Mercado Pago</div>
-        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>7 dias para desistir</div>
-        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Liberação automática</div>
-      </div>
       <div class="aviso" id="avisoCompra" hidden></div>
-      <button class="btn primary largo" data-act="comprar" id="btnComprar" style="min-height:48px;font-size:15px">Comprar acesso</button>
+      <div id="formas" class="formas" role="radiogroup" aria-label="Forma de pagamento">
+        <button type="button" class="forma" data-forma="mp" role="radio" aria-checked="true" id="formaMp">
+          <span class="fi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span>
+          <span><b>Pix, cartão ou boleto</b><small>Pelo Mercado Pago · cartão em até 12x · acesso liberado na hora</small></span>
+        </button>
+        <button type="button" class="forma" data-forma="pix" role="radio" aria-checked="false" id="formaPix">
+          <span class="fi"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 2 12l10 10 10-10z"/><path d="m8 12 4-4 4 4-4 4z"/></svg></span>
+          <span><b>Pix direto, de qualquer banco</b><small>Sem cadastro em outro site · liberado após a conferência do pagamento</small></span>
+        </button>
+      </div>
+      <div id="pagMp">
+        <button class="btn primary largo" data-act="comprar" id="btnComprar" style="min-height:48px;font-size:15px">Comprar acesso</button>
+      </div>
+      <div id="pagPix" hidden>
+        <button class="btn primary largo" data-act="gerar-pix" id="btnGerarPix" style="min-height:48px;font-size:15px">Gerar Pix</button>
+        <div id="pixBox" class="pixbox" hidden>
+          <div class="qr" id="pixQr" role="img" aria-label="QR Code do Pix"></div>
+          <div style="display:grid;gap:10px;min-width:0">
+            <dl class="kv" id="pixInfo"></dl>
+            <label class="field"><span>Pix copia e cola</span><textarea class="input" id="pixCodigo" readonly rows="3" style="font-family:var(--mono);font-size:11.5px"></textarea></label>
+            <button class="btn" data-act="copiar-pix">Copiar código Pix</button>
+          </div>
+          <ol class="passos">
+            <li>Abra o aplicativo do seu banco e entre em <b>Pix</b>.</li>
+            <li>Escolha <b>Pagar com QR Code</b> e aponte a câmera, ou <b>Pix copia e cola</b> e cole o código.</li>
+            <li>Confira o valor e o nome do recebedor e confirme.</li>
+            <li>Volte aqui e clique em <b>Já fiz o Pix</b>.</li>
+          </ol>
+          <button class="btn primary largo" data-act="informar-pix" id="btnInformarPix" style="min-height:46px">Já fiz o Pix</button>
+        </div>
+      </div>
+      <div class="bancos" id="bancos">
+        <small>Pix de qualquer banco</small>
+        <div><span>Nubank</span><span>Inter</span><span>Itaú</span><span>Bradesco</span><span>Caixa</span><span>Banco do Brasil</span><span>Santander</span><span>C6 Bank</span><span>PicPay</span><span>Mercado Pago</span><span>e outros</span></div>
+        <small id="bancosCartao">Cartão de crédito: Visa, Mastercard, Elo, American Express e Hipercard</small>
+      </div>
       <p class="muted" id="vendasFechadas" hidden></p>
-      <p class="muted" style="font-size:12px;text-align:center">Pix ou cartão. O acesso é liberado assim que o pagamento é confirmado. <button class="link" data-act="ja-paguei" style="font-size:12px">Já paguei e não liberou</button></p>
+      <div class="garantias">
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Pagamento seguro</div>
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>7 dias para desistir</div>
+        <div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Sem mensalidade</div>
+      </div>
+      <p class="muted" style="font-size:12px;text-align:center">Ao comprar, você concorda com os <button class="link" data-act="termos" style="font-size:12px">Termos de Uso</button> e a <button class="link" data-act="privacidade" style="font-size:12px">Política de Privacidade</button>. <button class="link" data-act="ja-paguei" style="font-size:12px" id="linkJaPaguei">Já paguei e não liberou</button></p>
       <div class="quem"><span id="quemCompra"></span><span style="display:flex;gap:14px"><button class="link" data-act="perfil">Meu perfil</button><button class="link" data-act="sair">Sair</button></span></div>
     </div>
   </section>
@@ -392,6 +445,7 @@ tbody tr.clic:hover td{background:var(--hover)}
       <div style="display:grid;grid-template-columns:minmax(0,1fr);gap:18px;min-width:0">
         <!-- geral -->
         <section data-sec="geral" style="display:grid;grid-template-columns:minmax(0,1fr);gap:18px">
+          <div class="aviso" id="alertaPix" hidden></div>
           <div class="metricas" id="metricas"></div>
           <div class="card"><div class="card-h"><div><h2>Vendas dos últimos 30 dias</h2><p id="graficoLeg">Receita por dia.</p></div></div><div class="grafico" id="grafico"></div></div>
           <div class="card"><div class="card-h"><div><h2><span class="dot on" style="margin-right:8px"></span>Online agora</h2><p>Quem está com o site aberto neste momento (atualiza a cada 30 segundos).</p></div><button class="link" data-psec="usuarios">Ver todos os usuários ›</button></div><div class="online-list" id="onlineList"></div></div>
@@ -409,8 +463,8 @@ tbody tr.clic:hover td{background:var(--hover)}
         </section>
         <!-- vendas -->
         <section data-sec="vendas" hidden class="card">
-          <div class="card-h"><div><h2>Vendas</h2><p>Reembolsos são feitos no painel do Mercado Pago; o acesso é retirado automaticamente.</p></div><button class="btn small" data-act="baixar-vendas">Baixar .csv</button></div>
-          <div class="tabela-w" style="max-height:640px"><table><thead><tr><th>Data</th><th>E-mail</th><th class="n">Valor</th><th>Situação</th><th>Pagamento no Mercado Pago</th></tr></thead><tbody id="tabVendas"></tbody></table></div>
+          <div class="card-h"><div><h2>Vendas</h2><p>Pix direto aparece aqui para você confirmar depois de conferir no extrato (pelo código da compra e pelo valor). Reembolsos do Mercado Pago retiram o acesso automaticamente.</p></div><button class="btn small" data-act="baixar-vendas">Baixar .csv</button></div>
+          <div class="tabela-w" style="max-height:640px"><table><thead><tr><th>Data</th><th>E-mail</th><th class="n">Valor</th><th>Situação</th><th>Forma</th><th>Código / pagamento</th></tr></thead><tbody id="tabVendas"></tbody></table></div>
         </section>
         <!-- loja -->
         <section data-sec="loja" hidden class="grade">
@@ -426,6 +480,20 @@ tbody tr.clic:hover td{background:var(--hover)}
               <label class="check"><input type="checkbox" id="cfgVendas"> Vendas abertas (desmarque para que só você e quem você liberar possam entrar)</label>
               <p class="msg" id="msgLoja" role="alert"></p>
               <div><button class="btn primary" type="submit">Salvar</button></div>
+            </form>
+          </div>
+          <div class="card" style="grid-column:1/-1">
+            <div class="card-h"><div><h2>Formas de pagamento</h2><p>Mercado Pago libera o acesso sozinho. Pix direto cai na sua conta de qualquer banco, sem taxa, e você confirma o recebimento aqui no painel.</p></div></div>
+            <form class="card-b" id="formPagamentos" novalidate>
+              <label class="check"><input type="checkbox" id="pgMp"> <span><b>Mercado Pago</b>: Pix, cartão de crédito em até 12x e boleto. Tem taxa por venda; o acesso é liberado automaticamente.</span></label>
+              <label class="check"><input type="checkbox" id="pgPix"> <span><b>Pix direto</b> para a sua chave, de qualquer banco (Nubank, Inter, Itaú, Bradesco, Caixa, BB, Santander, C6, PicPay…). Sem taxa; você confere no extrato e confirma em “Vendas”.</span></label>
+              <div class="linha2" id="pgPixCampos">
+                <label class="field"><span>Chave Pix</span><input class="input" id="pgChave" maxlength="77" autocomplete="off" placeholder="CPF/CNPJ só números, e-mail, +5511999998888 ou chave aleatória"></label>
+                <label class="field"><span>Nome do recebedor (como no banco, sem acento)</span><input class="input" id="pgNome" maxlength="25" autocomplete="off"></label>
+                <label class="field"><span>Cidade (sem acento)</span><input class="input" id="pgCidade" maxlength="15" autocomplete="off"></label>
+              </div>
+              <p class="msg" id="msgPagamentos" role="alert"></p>
+              <div><button class="btn primary" type="submit">Salvar formas de pagamento</button></div>
             </form>
           </div>
           <div class="card">
@@ -471,6 +539,28 @@ tbody tr.clic:hover td{background:var(--hover)}
   </aside>
 </div>
 
+<!-- termos de uso -->
+<div id="termos" hidden>
+  <div class="veu" data-act="fechar-termos"></div>
+  <aside class="gaveta" role="dialog" aria-modal="true" aria-labelledby="termosTitulo">
+    <div class="cab"><b id="termosTitulo" style="flex:1">Termos de Uso</b><button class="btn small" data-act="fechar-termos">Fechar</button></div>
+    <div class="corpo" style="line-height:1.7;font-size:13.5px">
+      <h2>1. O que você compra</h2>
+      <p>Uma licença de uso pessoal ou da sua empresa do aplicativo <b class="nomeProduto">Planilha Segura</b>, com pagamento único, sem mensalidade. O acesso é por tempo indeterminado, enquanto o serviço for oferecido, e inclui as melhorias publicadas nesse período.</p>
+      <h2>2. Sua conta</h2>
+      <p>A conta é pessoal: não compartilhe a senha. Contas usadas em muitos aparelhos de pessoas diferentes podem ser desconectadas.</p>
+      <h2>3. Direito de arrependimento</h2>
+      <p>Você pode desistir em até 7 dias após a compra e recebe o valor de volta (Código de Defesa do Consumidor, art. 49). Basta pedir pelo e-mail de suporte.</p>
+      <h2>4. Suas planilhas</h2>
+      <p>O processamento acontece no seu navegador. Você é responsável pelos arquivos que abre e por conferir o resultado antes de usá-lo. Recomendamos guardar sempre o arquivo original (o aplicativo nunca o altera).</p>
+      <h2>5. O que não é permitido</h2>
+      <p>Revender, redistribuir, copiar ou disponibilizar o aplicativo para terceiros, ou tentar burlar a verificação de acesso.</p>
+      <h2>6. Suporte</h2>
+      <p id="termosContato">Pelo e-mail de suporte informado na página.</p>
+    </div>
+  </aside>
+</div>
+
 <!-- política de privacidade -->
 <div id="privacidade" hidden>
   <div class="veu" data-act="fechar-privacidade"></div>
@@ -502,5 +592,9 @@ tbody tr.clic:hover td{background:var(--hover)}
 <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
 
 {{SUPABASE}}
+
+{{QR}}
+
+{{PIX}}
 
 {{LOJA}}

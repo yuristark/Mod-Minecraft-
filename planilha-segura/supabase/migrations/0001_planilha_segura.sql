@@ -25,6 +25,13 @@ create table if not exists public.configuracao (
   constraint vendas_exigem_preco check (not vendas_abertas or preco_centavos is not null)
 );
 insert into public.configuracao (id) values (true) on conflict (id) do nothing;
+-- Formas de pagamento: Mercado Pago (Pix, cartão e boleto, liberação automática) e/ou Pix direto
+-- para a chave do dono (qualquer banco, sem taxa, liberação confirmada pelo dono no painel).
+alter table public.configuracao add column if not exists aceita_mp  boolean not null default true;
+alter table public.configuracao add column if not exists aceita_pix boolean not null default false;
+alter table public.configuracao add column if not exists pix_chave  text check (pix_chave is null or char_length(pix_chave) between 5 and 77);
+alter table public.configuracao add column if not exists pix_nome   text check (pix_nome is null or char_length(pix_nome) between 2 and 25);
+alter table public.configuracao add column if not exists pix_cidade text check (pix_cidade is null or char_length(pix_cidade) between 2 and 15);
 
 create table if not exists public.compras (
   id             uuid primary key default gen_random_uuid(),
@@ -44,6 +51,10 @@ alter table public.compras alter column user_id drop not null;
 alter table public.compras drop constraint if exists compras_user_id_fkey;
 alter table public.compras add constraint compras_user_id_fkey foreign key (user_id) references auth.users (id) on delete set null;
 update public.compras c set email_comprador = u.email from auth.users u where u.id = c.user_id and c.email_comprador is null;
+alter table public.compras add column if not exists metodo text not null default 'mercadopago';
+alter table public.compras drop constraint if exists compras_metodo_check;
+alter table public.compras add constraint compras_metodo_check check (metodo in ('mercadopago', 'pix_manual'));
+alter table public.compras add column if not exists pix_informado_em timestamptz;
 alter table public.compras drop constraint if exists compras_status_check;
 alter table public.compras add constraint compras_status_check
   check (status in ('pendente', 'aprovada', 'recusada', 'cancelada', 'reembolsada', 'contestada', 'divergente', 'duplicada'));
@@ -127,7 +138,11 @@ returns jsonb language sql stable security definer set search_path = '' as $$
     'preco_centavos', c.preco_centavos,
     'vendas_abertas', c.vendas_abertas and c.preco_centavos is not null,
     'email_suporte',  c.email_suporte,
-    'tem_dono',       c.dono_id is not null
+    'tem_dono',       c.dono_id is not null,
+    'aceita_mp',      c.aceita_mp,
+    'aceita_pix',     c.aceita_pix and c.pix_chave is not null,
+    'pix', case when c.aceita_pix and c.pix_chave is not null
+                then jsonb_build_object('chave', c.pix_chave, 'nome', c.pix_nome, 'cidade', c.pix_cidade) end
   ) from public.configuracao c;
 $$;
 
@@ -198,7 +213,9 @@ begin
     'vendas_aprovadas', (select count(*) from public.compras where status = 'aprovada'),
     'receita_centavos', (select coalesce(sum(valor_centavos), 0) from public.compras where status = 'aprovada'),
     'acessos_ativos',   (select count(*) from public.acessos where ativo),
+    'pix_aguardando',   (select count(*) from public.compras where metodo = 'pix_manual' and status = 'pendente' and pix_informado_em is not null),
     'pendencias',       (select count(*) from public.compras where status in ('divergente', 'contestada'))
+                      + (select count(*) from public.compras where metodo = 'pix_manual' and status = 'pendente' and pix_informado_em is not null)
                       + (select count(*) from public.eventos where tipo = 'pagamento_duplicado' and quando > now() - interval '30 days'),
     'usuarios',         (select count(*) from auth.users),
     'novos_7d',         (select count(*) from auth.users where created_at > now() - interval '7 days'),
@@ -212,22 +229,25 @@ begin
                  'nome_produto', c.nome_produto, 'descricao', c.descricao, 'preco_centavos', c.preco_centavos,
                  'vendas_abertas', c.vendas_abertas, 'email_suporte', c.email_suporte,
                  'dono_email', public._email_de(c.dono_id),
-                 'dono_pendente_email', c.dono_pendente_email, 'dono_pendente_expira', c.dono_pendente_expira)
+                 'dono_pendente_email', c.dono_pendente_email, 'dono_pendente_expira', c.dono_pendente_expira,
+                 'aceita_mp', c.aceita_mp, 'aceita_pix', c.aceita_pix, 'pix_chave', c.pix_chave, 'pix_nome', c.pix_nome, 'pix_cidade', c.pix_cidade)
                from public.configuracao c)
   ) into v;
   return v;
 end;
 $$;
 
+drop function if exists public.admin_listar_compras(integer);
 create or replace function public.admin_listar_compras(p_limite integer default 200)
-returns table (id uuid, email text, valor_centavos integer, status text, mp_payment_id text, criado_em timestamptz)
+returns table (id uuid, email text, valor_centavos integer, status text, mp_payment_id text, criado_em timestamptz, metodo text, pix_informado_em timestamptz, codigo text)
 language plpgsql stable security definer set search_path = '' as $$
 begin
   perform public._exigir_dono();
   return query
-    select c.id, coalesce(u.email::text, c.email_comprador || ' (conta excluída)', '(conta excluída)'), c.valor_centavos, c.status, c.mp_payment_id, c.criado_em
+    select c.id, coalesce(u.email::text, c.email_comprador || ' (conta excluída)', '(conta excluída)'), c.valor_centavos, c.status, c.mp_payment_id, c.criado_em,
+           c.metodo, c.pix_informado_em, public._codigo_compra(c.id)
       from public.compras c left join auth.users u on u.id = c.user_id
-     where c.status <> 'pendente' or c.criado_em > now() - interval '2 days'
+     where c.status <> 'pendente' or c.criado_em > now() - interval '2 days' or c.pix_informado_em is not null
      order by c.criado_em desc
      limit least(greatest(coalesce(p_limite, 200), 1), 1000);
 end;
@@ -337,7 +357,7 @@ declare
   v_compra uuid;
 begin
   select * into v_conf from public.configuracao;
-  if not v_conf.vendas_abertas or v_conf.preco_centavos is null then
+  if not v_conf.vendas_abertas or v_conf.preco_centavos is null or not v_conf.aceita_mp then
     raise exception 'vendas_fechadas';
   end if;
   if public.tem_acesso(p_user) then
@@ -428,7 +448,7 @@ $$;
 create or replace function public.compras_pendentes(p_user uuid)
 returns setof uuid language sql stable security definer set search_path = '' as $$
   select id from public.compras
-   where user_id = p_user and status = 'pendente' and criado_em > now() - interval '30 days'
+   where user_id = p_user and status = 'pendente' and metodo = 'mercadopago' and criado_em > now() - interval '30 days'
    order by criado_em desc limit 5;
 $$;
 
@@ -583,7 +603,7 @@ begin
     'acesso', case when v_conf.dono_id = p_user then jsonb_build_object('ativo', true, 'origem', 'dono')
                    when v_ac.user_id is not null then jsonb_build_object('ativo', v_ac.ativo, 'origem', v_ac.origem, 'desde', v_ac.atualizado_em)
                    else jsonb_build_object('ativo', false) end,
-    'compras', (select coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'valor_centavos', c.valor_centavos, 'status', c.status,
+    'compras', (select coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'valor_centavos', c.valor_centavos, 'status', c.status, 'metodo', c.metodo, 'codigo', public._codigo_compra(c.id),
                   'mp_payment_id', c.mp_payment_id, 'criado_em', c.criado_em) order by c.criado_em desc), '[]'::jsonb)
                 from public.compras c where c.user_id = p_user and (c.status <> 'pendente' or c.criado_em > now() - interval '2 days')),
     'sessoes', public._sessoes(p_user),
@@ -700,6 +720,120 @@ begin
 end;
 $$;
 
+
+-- ---------------------------------------------------------------- Pix direto (qualquer banco)
+
+-- Código curto que o comprador vê e que vai na identificação do Pix (ajuda o dono a conferir no extrato).
+create or replace function public._codigo_compra(p_id uuid)
+returns text language sql immutable set search_path = '' as $$
+  select upper(left(replace(p_id::text, '-', ''), 10));
+$$;
+
+-- O dono define as formas de pagamento.
+create or replace function public.admin_salvar_pagamentos(
+  p_aceita_mp boolean, p_aceita_pix boolean, p_pix_chave text, p_pix_nome text, p_pix_cidade text)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  v_chave text := nullif(trim(coalesce(p_pix_chave, '')), '');
+  v_nome  text := nullif(trim(coalesce(p_pix_nome, '')), '');
+  v_cid   text := nullif(trim(coalesce(p_pix_cidade, '')), '');
+begin
+  perform public._exigir_dono();
+  if not coalesce(p_aceita_mp, false) and not coalesce(p_aceita_pix, false) then
+    raise exception 'Escolha pelo menos uma forma de pagamento.';
+  end if;
+  if coalesce(p_aceita_pix, false) then
+    if v_chave is null or v_nome is null or v_cid is null then raise exception 'Para aceitar Pix direto, preencha a chave Pix, o nome e a cidade do recebedor.'; end if;
+    if v_chave !~ '^(\d{11}|\d{14}|\+55\d{10,11}|[^@\s]+@[^@\s]+\.[^@\s]+|[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$' then
+      raise exception 'Chave Pix inválida. Use CPF ou CNPJ só com números, e-mail, telefone no formato +5511999998888 ou chave aleatória.';
+    end if;
+    if v_chave ~ '[^\x20-\x7E]' or v_nome ~ '[^\x20-\x7E]' or v_cid ~ '[^\x20-\x7E]' then
+      raise exception 'Use a chave, o nome e a cidade sem acentos.';
+    end if;
+  end if;
+  update public.configuracao
+     set aceita_mp = coalesce(p_aceita_mp, false), aceita_pix = coalesce(p_aceita_pix, false),
+         pix_chave = v_chave, pix_nome = left(v_nome, 25), pix_cidade = left(v_cid, 15), atualizado_em = now();
+  perform public._registrar_evento('pagamentos_alterados', auth.uid(),
+    jsonb_build_object('mercadopago', coalesce(p_aceita_mp, false), 'pix', coalesce(p_aceita_pix, false)));
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
+-- O comprador pede para pagar por Pix direto: cria (ou reaproveita) a compra pendente com o preço atual.
+create or replace function public.solicitar_pix()
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  v_uid  uuid := auth.uid();
+  v_conf public.configuracao;
+  v_c    public.compras;
+begin
+  if v_uid is null then raise exception 'Entre na sua conta primeiro.' using errcode = '42501'; end if;
+  select * into v_conf from public.configuracao;
+  if not v_conf.vendas_abertas or v_conf.preco_centavos is null or not v_conf.aceita_pix or v_conf.pix_chave is null then
+    raise exception 'O pagamento por Pix direto não está disponível no momento.';
+  end if;
+  if public.tem_acesso(v_uid) then raise exception 'Você já tem acesso. Recarregue a página.'; end if;
+  if not exists (select 1 from auth.users where id = v_uid and email_confirmed_at is not null) then
+    raise exception 'Confirme seu e-mail antes de comprar.';
+  end if;
+  select * into v_c from public.compras
+   where user_id = v_uid and metodo = 'pix_manual' and status = 'pendente' and valor_centavos = v_conf.preco_centavos
+     and criado_em > now() - interval '3 days'
+   order by criado_em desc limit 1;
+  if not found then
+    if (select count(*) from public.compras where user_id = v_uid and criado_em > now() - interval '1 hour') >= 10 then
+      raise exception 'Muitas tentativas seguidas. Aguarde alguns minutos.';
+    end if;
+    insert into public.compras (user_id, email_comprador, valor_centavos, metodo)
+    values (v_uid, public._email_de(v_uid), v_conf.preco_centavos, 'pix_manual')
+    returning * into v_c;
+  end if;
+  return jsonb_build_object('compra_id', v_c.id, 'codigo', public._codigo_compra(v_c.id), 'valor_centavos', v_c.valor_centavos,
+                            'informado', v_c.pix_informado_em is not null);
+end;
+$$;
+
+-- O comprador avisa que fez o Pix. O dono confere no extrato e confirma no painel.
+create or replace function public.informar_pix(p_compra uuid)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_uid uuid := auth.uid(); v_c public.compras;
+begin
+  select * into v_c from public.compras where id = p_compra and user_id = v_uid and metodo = 'pix_manual' for update;
+  if not found then raise exception 'Compra não encontrada.' using errcode = '42501'; end if;
+  if v_c.status <> 'pendente' then return jsonb_build_object('ok', true, 'status', v_c.status); end if;
+  if v_c.pix_informado_em is null then
+    update public.compras set pix_informado_em = now(), atualizado_em = now() where id = p_compra;
+    perform public._registrar_evento('pix_informado', v_uid, jsonb_build_object('compra', p_compra, 'codigo', public._codigo_compra(p_compra), 'valor_centavos', v_c.valor_centavos));
+  end if;
+  return jsonb_build_object('ok', true, 'status', 'pendente');
+end;
+$$;
+
+-- O dono confirma (libera o acesso) ou recusa um Pix direto.
+create or replace function public.admin_confirmar_pix(p_compra uuid, p_aprovar boolean)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare v_c public.compras;
+begin
+  perform public._exigir_dono();
+  select * into v_c from public.compras where id = p_compra and metodo = 'pix_manual' for update;
+  if not found then raise exception 'Compra não encontrada.'; end if;
+  if v_c.status <> 'pendente' then raise exception 'Esta compra já foi resolvida.'; end if;
+  if coalesce(p_aprovar, false) then
+    update public.compras set status = 'aprovada', atualizado_em = now() where id = p_compra;
+    if v_c.user_id is not null then
+      insert into public.acessos (user_id, ativo, origem, compra_id) values (v_c.user_id, true, 'compra', p_compra)
+      on conflict (user_id) do update set ativo = true, origem = 'compra', compra_id = excluded.compra_id, atualizado_em = now();
+    end if;
+    perform public._registrar_evento('compra_aprovada', v_c.user_id, jsonb_build_object('compra', p_compra, 'metodo', 'pix_manual', 'por', public._email_de(auth.uid())));
+  else
+    update public.compras set status = 'recusada', atualizado_em = now() where id = p_compra;
+    perform public._registrar_evento('compra_recusada', v_c.user_id, jsonb_build_object('compra', p_compra, 'metodo', 'pix_manual', 'por', public._email_de(auth.uid())));
+  end if;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+
 -- ---------------------------------------------------------------- permissões das funções
 
 revoke execute on all functions in schema public from public, anon, authenticated, service_role;
@@ -725,6 +859,10 @@ grant execute on function public.excluir_minha_conta(text)        to authenticat
 grant execute on function public.admin_listar_usuarios(text, integer) to authenticated;
 grant execute on function public.admin_detalhe_usuario(uuid)      to authenticated;
 grant execute on function public.admin_encerrar_sessoes(uuid)     to authenticated;
+grant execute on function public.admin_salvar_pagamentos(boolean, boolean, text, text, text) to authenticated;
+grant execute on function public.solicitar_pix()                  to authenticated;
+grant execute on function public.informar_pix(uuid)               to authenticated;
+grant execute on function public.admin_confirmar_pix(uuid, boolean) to authenticated;
 grant execute on function public.criar_compra(uuid)              to service_role;
 grant execute on function public.registrar_pagamento(uuid, text, text, integer, text) to service_role;
 grant execute on function public.compras_pendentes(uuid)         to service_role;

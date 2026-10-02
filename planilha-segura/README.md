@@ -2,12 +2,22 @@
 
 Aplicação web de uma página para limpar, padronizar e automatizar planilhas. Todo o processamento acontece no navegador de quem usa, sem servidor recebendo arquivos e sem conta para criar.
 
-Versão atual: **1.1.1**
+Versão atual: **1.2.0**. Para começar a vender, leia **[PRONTO-PARA-VENDER.md](PRONTO-PARA-VENDER.md)**.
 
 ## Duas formas de usar
 
 - **Aberto (sem login):** `dist/aberto/index.html`. Serve para uso próprio ou demonstração. Funciona abrindo o arquivo no navegador ou hospedando a pasta.
 - **Loja (venda com pagamento único):** login, compra pelo Mercado Pago com acesso vitalício, painel do dono e troca de dono. Usa Supabase como back-end. A instalação completa, o uso diário e a transferência para outro dono estão no **[MANUAL-DO-DONO.md](MANUAL-DO-DONO.md)**.
+
+## Pacotes de entrega
+
+`python3 build.py` também gera os arquivos em `dist/pacotes/`:
+
+- **`…-arquivo.zip`**: o aplicativo num único `.html` (abre com dois cliques, funciona sem internet), LEIA-ME e licença de uso. É o que você manda para o cliente que comprou.
+- **`…-loja-completa.zip`**: tudo para instalar a loja, em pastas numeradas, com o manual. É para quem compra o negócio.
+- **Pacote com o nome do cliente:** `python3 build.py --cliente "Nome" --email cliente@email.com`. O nome aparece dentro do aplicativo e na licença.
+
+O nome do produto, o slogan, o vendedor e o e-mail de suporte ficam em `marca.json`.
 
 ## Estrutura
 
@@ -35,6 +45,9 @@ Comandos:
 ## Back-end da loja
 
 - **Pagamento único:** cada compra é uma preferência do Mercado Pago Checkout Pro (Pix ou cartão). Quando o pagamento é aprovado, o acesso vitalício é liberado. Reembolso ou contestação retiram o acesso automaticamente.
+- **Formas de pagamento:**
+  - Mercado Pago: Pix de qualquer banco, cartão de crédito em até 12x e boleto, com liberação automática e nome na fatura para evitar contestação;
+  - Pix direto para a chave do dono, com QR Code e "copia e cola" no padrão BR Code do Banco Central. Funciona com Nubank, Inter e todos os bancos, sem taxa; o acesso é liberado quando o dono confirma no painel.
 - **Proteção do comprador:**
   - se a mesma pessoa pagar duas compras (por exemplo, abriu o pagamento em duas abas) ou pagar um valor diferente do preço, o pagamento é devolvido automaticamente pela API do Mercado Pago, com chave de idempotência;
   - o botão "Já paguei e não liberou" confere direto no Mercado Pago os pagamentos das compras pendentes da própria pessoa, caso o aviso automático atrase ou falhe;

@@ -91,6 +91,11 @@ export async function tratar(req: Request, env: Ambiente, buscar: typeof fetch =
     notification_url: `${env.SUPABASE_URL}/functions/v1/webhook-mp`,
     back_urls: { success: voltar('aprovado'), pending: voltar('pendente'), failure: voltar('falhou') },
     auto_return: 'approved',
+    // Aceita tudo o que a conta do Mercado Pago tiver habilitado: Pix de qualquer banco, cartões de crédito
+    // (Visa, Mastercard, Elo, Amex, Hipercard) em até 12x, boleto e saldo Mercado Pago.
+    payment_methods: { installments: 12 },
+    // Nome que aparece na fatura do cartão: evita "não reconheço esta compra" (contestação).
+    statement_descriptor: String(compra.nome_produto).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9 ]/g, '').trim().toUpperCase().slice(0, 22) || 'LOJA',
   };
   const rp = await buscar('https://api.mercadopago.com/checkout/preferences', {
     method: 'POST',

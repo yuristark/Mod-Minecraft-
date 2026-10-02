@@ -43,6 +43,7 @@ assert.equal(r.status, 200); assert.match((await r.json()).url, /^https:\/\/www\
 const chRpc = f.chamadas.find(c => c.url.includes('criar_compra'));
 assert.equal(JSON.parse(chRpc.init.body).p_user, 'u1'); ok('compra é criada para o usuário do token, não para um id enviado pelo navegador');
 const pref = JSON.parse(f.chamadas.find(c => c.url.includes('preferences')).init.body);
+assert.equal(pref.statement_descriptor, 'PLANILHA SEGURA'); assert.equal(pref.payment_methods.installments, 12);
 assert.equal(pref.items[0].unit_price, 49.9); assert.equal(pref.items[0].currency_id, 'BRL'); assert.equal(pref.external_reference, compra.compra_id);
 assert.equal(pref.notification_url, SB + '/functions/v1/webhook-mp'); assert.equal(pref.back_urls.success, 'https://loja.exemplo.com.br/?pagamento=aprovado');
 assert.equal(f.chamadas.find(c => c.url.includes('preferences')).init.headers['X-Idempotency-Key'], compra.compra_id); ok('preferência com preço do banco, retorno ao site e aviso no webhook');

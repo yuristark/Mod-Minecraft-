@@ -1,12 +1,12 @@
 {
   "name": "planilha-segura",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "Planilha Segura: limpeza e automação de planilhas no navegador, com loja de pagamento único",
   "scripts": {
     "build": "python3 build.py",
-    "test": "node tests/engine.test.cjs && node tests/xlsx.test.mjs && node tests/banco.test.mjs && node tests/funcoes.test.mjs"
+    "test": "node tests/engine.test.cjs && node tests/pix.test.cjs && node tests/xlsx.test.mjs && node tests/banco.test.mjs && node tests/funcoes.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",

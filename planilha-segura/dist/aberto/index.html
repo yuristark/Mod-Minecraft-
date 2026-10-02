@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-DdUU7AfCxQjfck25s3yW5JJVYKMiFpZD7sa6e8WmiWs='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; manifest-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'sha256-l3HmAEnOLqCRmKVLDwLTDT+I1tVv6jDxy9yZjJfUnq0=' 'sha256-gksvKTEwbualvDsSRFU67IEuOFNSeYvh2ZxZ4Z9ibiE=' 'sha256-sa2iN87lyISEo1gckzNU+XXZnExEc971HyX1rYVtc40='; worker-src blob:; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; manifest-src 'none'">
 <meta name="referrer" content="no-referrer">
 <meta name="description" content="Limpe, padronize e automatize planilhas sem enviar seus dados para nenhum servidor.">
 <meta name="color-scheme" content="light dark">
@@ -411,7 +411,7 @@ code{font-family:var(--mono);font-size:12px;background:var(--soft);padding:1px 6
       <div class="side-note" id="sideNote">
         <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>Seus dados, seu computador.</strong>
         <p>As planilhas são lidas e limpas aqui no navegador. Nada é enviado para servidores.</p>
-        <p class="ver">Versão 1.1.1</p>
+        <p class="ver">Versão 1.2.0</p>
       </div>
       <div class="umenu" id="userBox" hidden>
         <div class="pop" id="userPop" hidden role="menu">
@@ -1559,7 +1559,7 @@ function PlanilhaXlsx() {
 <script>
 (function () {
 'use strict';
-const VERSION = '1.1.1';
+const VERSION = '1.2.0';
 const E = PlanilhaEngine();
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

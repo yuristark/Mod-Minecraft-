@@ -39,6 +39,7 @@ O dinheiro cai direto na conta Mercado Pago do dono. Ninguém mais tem acesso a 
 
 | Pasta ou arquivo | Para que serve |
 | --- | --- |
+| `dist/pacotes/...-loja-completa.zip` | Tudo de que você precisa, já separado em pastas numeradas na ordem da instalação |
 | `dist/loja/` | Site que vai para a hospedagem |
 | `dist/enviar-ao-supabase/planilha-segura.html` | Aplicativo protegido, que vai para o Supabase |
 | `supabase/migrations/0001_planilha_segura.sql` | Estrutura do banco de dados |
@@ -81,6 +82,20 @@ O dinheiro cai direto na conta Mercado Pago do dono. Ninguém mais tem acesso a 
    - URL de produção: `https://SUA_REFERENCIA.supabase.co/functions/v1/webhook-mp`, usando o Project URL do passo A;
    - evento: marque **Pagamentos**;
    - salve e copie a **assinatura secreta** que aparece.
+
+### Passo B2 (opcional) — Aceitar Pix direto na sua conta
+
+O Pix direto aceita pagamento de qualquer banco (Nubank, Inter, Itaú, Bradesco, Caixa, BB, Santander, C6, PicPay…) e não tem taxa. A diferença: o acesso só é liberado quando você confirma o recebimento no painel.
+
+1. Depois de assumir a loja (passo E), abra **Painel do dono → Loja e preço → Formas de pagamento**.
+2. Marque **Pix direto** e preencha:
+   - a chave Pix (CPF/CNPJ só com números, e-mail, telefone no formato `+5511999998888` ou chave aleatória);
+   - o nome do recebedor como aparece no banco, sem acento;
+   - a cidade, sem acento.
+3. Se quiser **só** Pix direto, desmarque Mercado Pago. Nesse caso, os passos B e C (Mercado Pago e funções) podem ser pulados.
+4. Faça uma compra de teste pagando de outra conta sua e confira se o nome e o valor aparecem certos no aplicativo do banco.
+
+O cliente vê um QR Code e um código "Pix copia e cola", com o valor e um código de 10 letras/números da compra (ele aparece na identificação do Pix). Depois de pagar, ele clica em **Já fiz o Pix**.
 
 ### Passo C — Publicar as funções no Supabase
 
@@ -152,6 +167,7 @@ Se o site mostrar "o config.json está com a chave SECRETA", você colou a chave
 | Ver vendas e receita | Painel do dono → Vendas (dá para baixar em .csv) |
 | Cliente pagou por Pix fora do site, ou é cortesia | Peça para criar a conta no site → Painel → Liberar acesso |
 | Pedido de reembolso (o cliente tem 7 dias pelo Código de Defesa do Consumidor) | Reembolse no painel do Mercado Pago; o acesso é retirado sozinho |
+| Cliente avisou que fez Pix direto | O painel mostra "Pix aguardando sua confirmação". Confira no extrato do banco o valor e, se possível, o código da compra. Depois: Vendas → **Confirmar** (libera o acesso) ou **Recusar** (o Pix não caiu) |
 | Cliente pagou em dobro (abriu o pagamento duas vezes) | Nada: o sistema devolve a segunda cobrança automaticamente e o acesso continua. Confira no Histórico e no Mercado Pago se a devolução saiu |
 | Cliente pagou, mas o acesso não liberou | Peça para ele clicar em **"Já paguei e não liberou"** na tela de compra: o site confere o pagamento direto no Mercado Pago. Se ainda assim não liberar, o aviso automático (webhook) está mal configurado: veja a seção 7 e libere manualmente enquanto isso |
 | "Para conferir" maior que zero | Veja o Histórico. Pagamento com valor diferente do preço ou em dobro já é devolvido automaticamente: confirme no Mercado Pago. Contestação no cartão retira o acesso e precisa ser respondida no Mercado Pago |

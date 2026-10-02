@@ -186,4 +186,34 @@ const restantes = await como('authenticated', C, 'select * from public.admin_lis
 assert.equal(restantes.length, 3); assert.ok(restantes.every(r => /cliente@teste.local \(conta excluída\)/.test(r.email)));
 assert.equal((await db.query('select count(*)::int n from public.acessos_log where user_id is null')).rows[0].n, 2); ok('conta excluída: dados pessoais apagados, compras e registro de acesso guardados sem vínculo');
 
+
+// Pix direto (qualquer banco)
+const D = await novo('pix@teste.local', true, 'Comprador Pix');
+await falha(como('authenticated', D, 'select public.solicitar_pix()'), /não está disponível/); ok('Pix direto começa desligado');
+await falha(como('authenticated', D, `select public.admin_salvar_pagamentos(true, true, 'chave errada', 'Loja', 'SP')`), /Apenas o dono/);
+await falha(como('authenticated', C, `select public.admin_salvar_pagamentos(false, false, null, null, null)`), /pelo menos uma/);
+await falha(como('authenticated', C, `select public.admin_salvar_pagamentos(true, true, null, null, null)`), /preencha a chave/);
+await falha(como('authenticated', C, `select public.admin_salvar_pagamentos(true, true, 'abc', 'LOJA', 'SAO PAULO')`), /Chave Pix inválida/);
+await falha(como('authenticated', C, `select public.admin_salvar_pagamentos(true, true, '52998224725', 'JOSÉ', 'SAO PAULO')`), /sem acentos/);
+await como('authenticated', C, `select public.admin_salvar_pagamentos(false, true, '+5511987654321', 'LOJA TESTE', 'SAO PAULO')`);
+pub = await um('anon', null, 'select public.config_publica()');
+assert.equal(pub.aceita_pix, true); assert.equal(pub.aceita_mp, false); assert.equal(pub.pix.chave, '+5511987654321'); ok('dono configura Pix direto e a vitrine mostra a chave');
+await falha(como('service_role', null, 'select public.criar_compra($1)', [D]), /vendas_fechadas/); ok('com Mercado Pago desligado não cria checkout');
+const px = await um('authenticated', D, 'select public.solicitar_pix()');
+assert.equal(px.valor_centavos, 4990); assert.equal(px.codigo.length, 10);
+assert.equal((await um('authenticated', D, 'select public.solicitar_pix()')).compra_id, px.compra_id); ok('pedido de Pix reaproveita a mesma compra');
+await falha(como('authenticated', A, 'select public.informar_pix($1)', [px.compra_id]), /Compra não encontrada/); ok('ninguém informa Pix da compra dos outros');
+await como('authenticated', D, 'select public.informar_pix($1)', [px.compra_id]);
+assert.equal((await um('authenticated', D, 'select public.meu_status()')).tem_acesso, false); ok('avisar que pagou não libera sozinho');
+let r3 = await um('authenticated', C, 'select public.admin_resumo()');
+assert.equal(r3.pix_aguardando, 1);
+const lc = (await como('authenticated', C, 'select * from public.admin_listar_compras(50)')).find(c => c.id === px.compra_id);
+assert.equal(lc.metodo, 'pix_manual'); assert.equal(lc.codigo, px.codigo); assert.ok(lc.pix_informado_em); ok('painel mostra o Pix aguardando confirmação com o código');
+await falha(como('authenticated', D, 'select public.admin_confirmar_pix($1, true)', [px.compra_id]), /Apenas o dono/);
+await como('authenticated', C, 'select public.admin_confirmar_pix($1, true)', [px.compra_id]);
+assert.equal((await um('authenticated', D, 'select public.meu_status()')).tem_acesso, true);
+await falha(como('authenticated', C, 'select public.admin_confirmar_pix($1, false)', [px.compra_id]), /já foi resolvida/); ok('dono confirma o Pix e o acesso é liberado');
+await falha(como('authenticated', D, 'select public.solicitar_pix()'), /já tem acesso/);
+assert.equal((await um('authenticated', C, 'select public.admin_resumo()')).pix_aguardando, 0); ok('quem já tem acesso não paga de novo por Pix');
+
 console.log(`banco: ${n} verificações OK`);

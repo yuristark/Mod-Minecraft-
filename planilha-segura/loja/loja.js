@@ -136,6 +136,7 @@ function preencherVitrine() {
   if (vitrine.descricao) { $('#descricaoProduto').textContent = vitrine.descricao; $('#pitchDescricao').textContent = vitrine.descricao; }
   $('#precoProduto').textContent = vitrine.preco_centavos ? brl(vitrine.preco_centavos) : '—';
   $('#semDono').hidden = !!vitrine.tem_dono;
+  $('#termosContato').textContent = vitrine.email_suporte ? 'Pelo e-mail ' + vitrine.email_suporte + '.' : 'Pelo e-mail de suporte informado pelo vendedor.';
   $('#privContato').textContent = vitrine.email_suporte ? 'Dúvidas ou pedidos sobre seus dados: ' + vitrine.email_suporte + '.' : '';
 }
 
@@ -241,11 +242,28 @@ async function sair() {
 }
 
 /* ---------- compra ---------- */
+const aceitaMp = () => vitrine.aceita_mp !== false;
+const aceitaPix = () => !!(vitrine.aceita_pix && vitrine.pix && vitrine.pix.chave);
+let forma = 'mp', pixAtual = null;
+function escolherForma(f) {
+  forma = f;
+  $('#formaMp').setAttribute('aria-checked', String(f === 'mp'));
+  $('#formaPix').setAttribute('aria-checked', String(f === 'pix'));
+  $('#pagMp').hidden = f !== 'mp';
+  $('#pagPix').hidden = f !== 'pix';
+}
 function mostrarCompra() {
-  const abertas = !!vitrine.vendas_abertas;
+  const abertas = !!vitrine.vendas_abertas && (aceitaMp() || aceitaPix());
   $('#blocoVenda').hidden = !abertas;
-  $('#btnComprar').hidden = !abertas;
-  $('#btnComprar').textContent = abertas ? 'Comprar por ' + brl(vitrine.preco_centavos) : 'Comprar acesso';
+  $('#formas').hidden = !abertas || !(aceitaMp() && aceitaPix());
+  $('#formaMp').hidden = !aceitaMp(); $('#formaPix').hidden = !aceitaPix();
+  $('#bancos').hidden = !abertas;
+  $('#bancosCartao').hidden = !aceitaMp();
+  $('#linkJaPaguei').hidden = !aceitaMp();
+  $('#btnComprar').textContent = 'Pagar ' + (abertas ? brl(vitrine.preco_centavos) : '') + ' com Pix, cartão ou boleto';
+  $('#btnGerarPix').textContent = 'Gerar Pix de ' + (abertas ? brl(vitrine.preco_centavos) : '');
+  if (abertas) escolherForma(aceitaMp() ? (forma === 'pix' && aceitaPix() ? 'pix' : 'mp') : 'pix');
+  else { $('#pagMp').hidden = true; $('#pagPix').hidden = true; }
   $('#vendasFechadas').hidden = abertas;
   $('#vendasFechadas').textContent = 'As vendas estão fechadas no momento.' + (vitrine.email_suporte ? ' Fale com ' + vitrine.email_suporte + '.' : '');
   $('#quemCompra').textContent = 'Conectado como ' + (status && status.email || '');
@@ -261,6 +279,49 @@ function mostrarCompra() {
     av.textContent = 'O pagamento não foi concluído. Nada foi cobrado. Você pode tentar de novo.';
   } else av.hidden = true;
   porta('comprar');
+  if (aceitaPix() && !pixAtual) retomarPix();
+}
+// Se a pessoa já tinha gerado um Pix (e talvez avisado que pagou), mostra de novo ao voltar.
+async function retomarPix() {
+  try {
+    const p = await rpc('meu_perfil');
+    const c = (p.compras || []).find(x => x.metodo === 'pix_manual' && x.status === 'pendente');
+    if (c) { escolherForma('pix'); await gerarPix(); }
+  } catch (e) {}
+}
+async function gerarPix() {
+  const btn = $('#btnGerarPix'); btn.disabled = true;
+  try {
+    const r = await rpc('solicitar_pix');
+    pixAtual = r;
+    const pix = vitrine.pix;
+    const codigo = PixBRCode().payload({ chave: pix.chave, nome: pix.nome, cidade: pix.cidade, valorCentavos: r.valor_centavos, txid: 'PS' + r.codigo });
+    const qr = qrcode(0, 'M'); qr.addData(codigo); qr.make();
+    $('#pixQr').innerHTML = qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    $('#pixCodigo').value = codigo;
+    $('#pixInfo').innerHTML = [['Valor', esc(brl(r.valor_centavos))], ['Recebedor', esc(pix.nome)], ['Código da compra', `<b class="num">${esc(r.codigo)}</b>`]].map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+    $('#pixBox').hidden = false; btn.hidden = true;
+    if (r.informado) avisoPixInformado();
+  } catch (e) { const av = $('#avisoCompra'); av.className = 'aviso'; av.hidden = false; av.textContent = traduzir(e); }
+  finally { btn.disabled = false; }
+}
+function avisoPixInformado() {
+  const av = $('#avisoCompra');
+  av.className = 'aviso ok'; av.hidden = false;
+  av.textContent = 'Recebemos seu aviso de pagamento. Assim que o Pix for conferido, seu acesso é liberado e esta página abre o aplicativo sozinha. Pode fechar e voltar depois: é só entrar de novo.' + (vitrine.email_suporte ? ' Dúvidas: ' + vitrine.email_suporte + '.' : '');
+  $('#btnInformarPix').textContent = 'Aviso enviado. Aguardando conferência';
+  $('#btnInformarPix').disabled = true;
+  esperarLiberacao();
+}
+async function informarPix() {
+  if (!pixAtual) return;
+  try { await rpc('informar_pix', { p_compra: pixAtual.compra_id }); avisoPixInformado(); }
+  catch (e) { toast(traduzir(e)); }
+}
+async function copiarPix() {
+  const t = $('#pixCodigo');
+  try { await navigator.clipboard.writeText(t.value); toast('Código Pix copiado. Cole no aplicativo do seu banco.'); }
+  catch (e) { t.select(); toast('Selecione o código e copie com Ctrl+C.'); }
 }
 // Pede ao servidor para conferir no Mercado Pago os pagamentos deste usuário (caso o aviso automático atrase ou falhe).
 async function verificarPagamento() {
@@ -292,10 +353,10 @@ async function jaPaguei(el) {
 function esperarLiberacao() {
   if (espera) return;
   let tentativas = 0;
-  verificarPagamento().catch(() => {});
+  if (aceitaMp()) verificarPagamento().catch(() => {});
   const passo = async () => {
     tentativas++;
-    if (tentativas % 8 === 0) await verificarPagamento().catch(() => {});
+    if (tentativas % 8 === 0 && aceitaMp()) await verificarPagamento().catch(() => {});
     try {
       const s = await rpc('meu_status');
       if (s.tem_acesso) { status = s; retornoPagamento = null; pararEspera(); toast('Acesso liberado. Bom trabalho!'); await rotear(); return; }
@@ -372,6 +433,7 @@ function voltar() {
 
 /* ---------- meu perfil ---------- */
 const TIPO_ACESSO = { login: 'Entrou', app: 'Abriu o aplicativo', perfil: 'Alterou o perfil', senha: 'Alterou a senha', saida: 'Saiu' };
+const FORMA = { mercadopago: 'Mercado Pago', pix_manual: 'Pix direto' };
 const SITUACAO = { aprovada: 'Aprovada', pendente: 'Aguardando', recusada: 'Recusada', cancelada: 'Cancelada', reembolsada: 'Reembolsada', contestada: 'Contestada', divergente: 'Valor diferente (devolvido)', duplicada: 'Em dobro (devolvida)' };
 async function idSessaoAtual() {
   const { data: { session } } = await sb.auth.getSession();
@@ -390,7 +452,7 @@ function htmlAcessos(lista) {
     : '<tr class="vazio"><td colspan="4">Nenhum acesso registrado ainda.</td></tr>';
 }
 function htmlCompras(lista) {
-  return lista.length ? lista.map(c => `<tr><td class="num">${esc(data(c.criado_em))}</td><td class="n num">${esc(brl(c.valor_centavos))}</td><td><span class="tag ${esc(c.status)}">${esc(SITUACAO[c.status] || c.status)}</span></td><td class="num">${esc(c.mp_payment_id || '—')}</td></tr>`).join('')
+  return lista.length ? lista.map(c => `<tr><td class="num">${esc(data(c.criado_em))}</td><td class="n num">${esc(brl(c.valor_centavos))}</td><td><span class="tag ${esc(c.status)}">${esc(SITUACAO[c.status] || c.status)}</span></td><td class="num">${esc(c.metodo === 'pix_manual' ? 'Pix ' + (c.codigo || '') : (c.mp_payment_id || '—'))}</td></tr>`).join('')
     : '<tr class="vazio"><td colspan="4">Nenhuma compra.</td></tr>';
 }
 function tagAcesso(p) {
@@ -509,6 +571,7 @@ const EVENTO = {
   compra_aprovada: ['Venda aprovada', 'aprovada'], compra_recusada: ['Pagamento recusado', ''], compra_cancelada: ['Pagamento cancelado', ''],
   compra_reembolsada: ['Reembolso: acesso retirado', 'reembolsada'], compra_contestada: ['Contestação no cartão: acesso retirado', 'contestada'],
   compra_divergente: ['Valor pago diferente do preço: devolução automática solicitada', 'divergente'], compra_pendente: ['Pagamento aguardando', ''],
+  pix_informado: ['Comprador avisou que fez o Pix: confira no extrato e confirme em Vendas', 'warn'], pagamentos_alterados: ['Formas de pagamento alteradas', ''],
   pagamento_duplicado: ['Cobrança em dobro: devolução automática solicitada (confira no Mercado Pago)', 'divergente'],
   acesso_liberado: ['Acesso liberado manualmente', 'aprovada'], acesso_bloqueado: ['Acesso bloqueado manualmente', 'cancelada'],
   config_alterada: ['Configuração da loja alterada', ''], transferencia_iniciada: ['Transferência de dono iniciada', ''],
@@ -557,14 +620,22 @@ async function carregarPainel(silencio) {
       + metrica('Vendas aprovadas', Number(res.vendas_aprovadas).toLocaleString('pt-BR'), `${res.acessos_ativos} acesso(s) ativo(s)`)
       + metrica('Receita bruta', brl(res.receita_centavos), `${brl(total30)} nos últimos 30 dias`)
       + metrica('Para conferir', res.pendencias, res.pendencias ? 'Veja o histórico' : 'Nenhuma pendência', res.pendencias ? 'alerta' : '');
+    const al = $('#alertaPix');
+    al.hidden = !res.pix_aguardando;
+    al.innerHTML = res.pix_aguardando ? `<b>${esc(res.pix_aguardando)} Pix aguardando sua confirmação.</b> Confira no extrato do banco e confirme em <button class="link" data-psec="vendas">Vendas</button>.` : '';
     $('#grafico').innerHTML = total30 ? grafico(res.vendas_30d || []) : '<p class="muted" style="padding:30px 0;text-align:center">Nenhuma venda nos últimos 30 dias.</p>';
     const on = usuarios.filter(u => u.online);
     $('#onlineList').innerHTML = on.length ? on.map(u => `<span><span class="avatar">${esc(iniciais(u.nome, u.email))}</span>${esc(u.nome || u.email)}</span>`).join('') : '<p class="muted">Ninguém online agora.</p>';
     $('#cUsuarios').textContent = usuarios.length;
     $('#cPend').hidden = !res.pendencias; $('#cPend').textContent = res.pendencias;
     renderUsuarios();
-    $('#tabVendas').innerHTML = vendas.length ? vendas.map(v => `<tr><td class="num">${esc(data(v.criado_em))}</td><td>${esc(v.email)}</td><td class="n num">${esc(brl(v.valor_centavos))}</td><td><span class="tag ${esc(v.status)}">${esc(SITUACAO[v.status] || v.status)}</span></td><td class="num">${esc(v.mp_payment_id || '')}</td></tr>`).join('')
-      : '<tr class="vazio"><td colspan="5">Nenhuma venda ainda.</td></tr>';
+    $('#tabVendas').innerHTML = vendas.length ? vendas.map(v => {
+      const pixPend = v.metodo === 'pix_manual' && v.status === 'pendente';
+      const sit = pixPend ? (v.pix_informado_em ? '<span class="tag warn">Pix informado: conferir</span>' : '<span class="tag">Pix gerado, não pago</span>') : `<span class="tag ${esc(v.status)}">${esc(SITUACAO[v.status] || v.status)}</span>`;
+      const acoes = pixPend ? `<button class="btn small primary" data-act="confirmar-pix" data-id="${esc(v.id)}" data-codigo="${esc(v.codigo)}" data-valor="${esc(brl(v.valor_centavos))}">Confirmar</button> <button class="btn small danger" data-act="recusar-pix" data-id="${esc(v.id)}">Recusar</button>` : '';
+      return `<tr><td class="num">${esc(data(v.criado_em))}</td><td>${esc(v.email)}</td><td class="n num">${esc(brl(v.valor_centavos))}</td><td><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${sit}${acoes}</div></td><td>${esc(FORMA[v.metodo] || 'Mercado Pago')}</td><td class="num">${esc(v.metodo === 'pix_manual' ? v.codigo : (v.mp_payment_id || ''))}</td></tr>`;
+    }).join('')
+      : '<tr class="vazio"><td colspan="6">Nenhuma venda ainda.</td></tr>';
     $('#tabEventos').innerHTML = (evs || []).length ? evs.map(ev => {
       const t = EVENTO[ev.tipo] || [ev.tipo, ''];
       const d = ev.detalhe || {};
@@ -577,6 +648,8 @@ async function carregarPainel(silencio) {
       $('#cfgPreco').value = c.preco_centavos ? (c.preco_centavos / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : '';
       $('#cfgSuporte').value = c.email_suporte || '';
       $('#cfgVendas').checked = !!c.vendas_abertas;
+      $('#pgMp').checked = c.aceita_mp !== false; $('#pgPix').checked = !!c.aceita_pix;
+      $('#pgChave').value = c.pix_chave || ''; $('#pgNome').value = c.pix_nome || ''; $('#pgCidade').value = c.pix_cidade || '';
     }
     const pend = $('#transferenciaPendente');
     if (c.dono_pendente_email) {
@@ -652,6 +725,22 @@ async function salvarLoja(e) {
     await carregarPainel(true);
   } catch (err) { msg('#msgLoja', traduzir(err), 'erro'); }
 }
+function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+async function salvarPagamentos(e) {
+  e.preventDefault();
+  let chave = $('#pgChave').value.trim();
+  const so = chave.replace(/\D/g, '');
+  if (/^[\d.\-\/\s]+$/.test(chave) && (so.length === 11 || so.length === 14)) chave = so; // CPF/CNPJ só com números
+  else if (/^\(?\+?\d[\d\s()\-]{9,}$/.test(chave)) chave = '+' + (so.startsWith('55') ? so : '55' + so); // telefone
+  const nome = semAcento($('#pgNome').value).replace(/[^A-Za-z0-9 ]/g, '').trim().toUpperCase().slice(0, 25);
+  const cidade = semAcento($('#pgCidade').value).replace(/[^A-Za-z0-9 ]/g, '').trim().toUpperCase().slice(0, 15);
+  try {
+    await rpc('admin_salvar_pagamentos', { p_aceita_mp: $('#pgMp').checked, p_aceita_pix: $('#pgPix').checked, p_pix_chave: chave || null, p_pix_nome: nome || null, p_pix_cidade: cidade || null });
+    $('#pgChave').value = chave; $('#pgNome').value = nome; $('#pgCidade').value = cidade;
+    msg('#msgPagamentos', 'Salvo.' + ($('#pgPix').checked ? ' Antes de vender, faça uma compra de teste por Pix (pagando de outra conta sua) para conferir o nome e o valor no aplicativo do banco.' : ''), 'ok');
+    vitrine = await rpc('config_publica'); preencherVitrine();
+  } catch (err) { msg('#msgPagamentos', traduzir(err), 'erro'); }
+}
 async function definirAcesso(email, ativo, onde) {
   try {
     await rpc('admin_definir_acesso', { p_email: email, p_ativo: ativo });
@@ -682,12 +771,14 @@ async function transferir(e) {
 }
 function csvSeguro(v) { v = String(v == null ? '' : v); if (/^[=+\-@\t\r]/.test(v)) v = "'" + v; return /[;"\n\r]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
 function baixarVendas() {
-  const linhas = [['Data', 'E-mail', 'Valor', 'Situação', 'Pagamento Mercado Pago']].concat(vendas.map(v => [data(v.criado_em), v.email, (v.valor_centavos / 100).toFixed(2).replace('.', ','), SITUACAO[v.status] || v.status, v.mp_payment_id || '']));
+  const linhas = [['Data', 'E-mail', 'Valor', 'Forma', 'Situação', 'Código / pagamento']].concat(vendas.map(v => [data(v.criado_em), v.email, (v.valor_centavos / 100).toFixed(2).replace('.', ','), FORMA[v.metodo] || 'Mercado Pago', SITUACAO[v.status] || v.status, v.metodo === 'pix_manual' ? v.codigo : (v.mp_payment_id || '')]));
   baixar('vendas.csv', '\uFEFF' + linhas.map(l => l.map(csvSeguro).join(';')).join('\r\n'), 'text/csv;charset=utf-8');
 }
 
 /* ---------- eventos ---------- */
 document.addEventListener('click', async e => {
+  const formaBtn = e.target.closest('[data-forma]');
+  if (formaBtn) { escolherForma(formaBtn.dataset.forma); return; }
   const modoBtn = e.target.closest('[data-modo]');
   if (modoBtn) { definirModo(modoBtn.dataset.modo); return; }
   const sec = e.target.closest('[data-psec]');
@@ -702,6 +793,18 @@ document.addEventListener('click', async e => {
     case 'sair': sair(); break;
     case 'comprar': comprar(); break;
     case 'ja-paguei': jaPaguei(el); break;
+    case 'gerar-pix': gerarPix(); break;
+    case 'informar-pix': informarPix(); break;
+    case 'copiar-pix': copiarPix(); break;
+    case 'termos': $('#termos').hidden = false; break;
+    case 'fechar-termos': $('#termos').hidden = true; break;
+    case 'confirmar-pix': case 'recusar-pix': {
+      const aprovar = el.dataset.act === 'confirmar-pix';
+      if (!confirm(aprovar ? 'Confirmar que o Pix de ' + el.dataset.valor + ' (código ' + el.dataset.codigo + ') caiu na sua conta? O acesso será liberado.' : 'Recusar este Pix? Faça isso só se o pagamento não caiu na sua conta.')) break;
+      try { await rpc('admin_confirmar_pix', { p_compra: el.dataset.id, p_aprovar: aprovar }); toast(aprovar ? 'Pix confirmado. Acesso liberado.' : 'Pix recusado.'); carregarPainel(true); }
+      catch (err) { toast(traduzir(err)); }
+      break;
+    }
     case 'privacidade': $('#privacidade').hidden = false; break;
     case 'fechar-privacidade': $('#privacidade').hidden = true; break;
     case 'perfil': abrirPerfil(); break;
@@ -737,7 +840,7 @@ document.addEventListener('click', async e => {
 });
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape' && !$('#detalhe').hidden) fecharDetalhe();
-  if (e.key === 'Escape') $('#privacidade').hidden = true;
+  if (e.key === 'Escape') { $('#privacidade').hidden = true; $('#termos').hidden = true; }
   if (e.key === 'Enter' && e.target.matches && e.target.matches('tr[data-act="ver-usuario"]')) verUsuario(e.target.dataset.uid);
 });
 $('#senha').addEventListener('input', () => {
@@ -754,6 +857,7 @@ $('#formSenha').addEventListener('submit', trocarSenha);
 $('#formEmail').addEventListener('submit', trocarEmail);
 $('#formExcluir').addEventListener('submit', excluirConta);
 $('#formLoja').addEventListener('submit', salvarLoja);
+$('#formPagamentos').addEventListener('submit', salvarPagamentos);
 $('#formAcesso').addEventListener('submit', enviarAcesso);
 $('#formTransferir').addEventListener('submit', transferir);
 
