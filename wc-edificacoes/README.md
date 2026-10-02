@@ -6,6 +6,7 @@ simulador de custo de obra, formulário de orçamento e painel administrativo co
 | Camada | Tecnologia |
 |---|---|
 | Front-end | React 19 + TypeScript + Vite + Tailwind CSS |
+| 3D e animação | three.js (cenas 3D) · Motion (animações de UI) · CSS (keyframes, scroll-driven, View Transitions) |
 | Back-end | Node.js 20+ + Express 5 |
 | Banco | PostgreSQL 14+ |
 | Imagens | sharp (reprocessamento e remoção de metadados) |
@@ -20,6 +21,48 @@ wc-edificacoes/
 │   └── test/        testes de API e segurança (24 testes)
 └── deploy/          exemplos de Nginx, Docker e PM2
 ```
+
+---
+
+## Animações e 3D
+
+Todo o movimento do site segue um **sistema de motion design** único — as mesmas curvas e durações
+em CSS, em React e na cena 3D:
+
+| Arquivo | O que tem |
+|---|---|
+| `client/src/motion/tokens.ts` | Curvas (nomenclatura `Curves.*` do Flutter e Material 3), durações, molas (`SpringDescription`) e `interval()` para animações escalonadas |
+| `client/src/index.css` (`:root`) | Os mesmos tokens como variáveis CSS (`--ease-*`, `--dur-*`) e todas as animações em CSS |
+| `client/src/motion/flutter.tsx` | Widgets inspirados no Flutter: `AnimatedSwitcher`, `Staggered`/`StaggerItem` (Interval), `TweenNumber` (TweenAnimationBuilder) e `heroName()` (Hero) |
+| `client/src/motion/ui.tsx` | Micro-interações: `Reveal`, `SplitWords` (título palavra por palavra), `Magnetic`, `TiltCard` (inclinação 3D + brilho), `ScrollProgress`, `Parallax`, `ScrollLine`, inclinação pela velocidade de rolagem |
+| `client/src/three/hero.ts` | Cena 3D da página inicial: edifício erguido pavimento a pavimento, grua içando vigas, solda, janelas acendendo |
+| `client/src/three/model.ts` | Maquete 3D do simulador: volumetria muda com tipo, padrão e área; arraste para girar |
+| `client/src/lib/ripple.ts` | Onda de toque nos botões (InkWell do Material/Flutter) |
+
+O que o visitante vê:
+- **Página inicial** — cena three.js em tempo real (com HUD de pavimentos/estrutura), título revelado palavra por
+  palavra, botões magnéticos, contadores animados, letreiro que inclina com a velocidade da rolagem, linha do
+  processo que se desenha ao rolar, cartões com inclinação 3D.
+- **Troca de página** — View Transitions API: a página sai subindo e a nova entra de baixo (FadeUpwards do Flutter);
+  a capa do cartão de obra "voa" até a página da obra (Hero).
+- **Cabeçalho** — esconde ao rolar para baixo, indicador deslizante entre os links, barra de progresso de leitura,
+  menu móvel com revelação circular e itens escalonados.
+- **Obras** — filtros com fundo deslizante; ao filtrar, os cartões se reorganizam com animação de layout.
+- **Simulador** — maquete 3D, valores interpolados, barras de custo animadas, opções com seleção deslizante.
+- **CSS puro** — preenchimento dos botões, grade de prancha em movimento, granulação, varredura, brilho de
+  carregamento (shimmer), anel pulsante em obras em andamento, borda cônica girando, gancho balançando no 404.
+
+Desempenho e acessibilidade:
+- O three.js (~145 kB gzip) é baixado **só quando uma cena aparece**, num arquivo separado; a cena pausa fora da
+  tela e com a aba oculta, e limita a resolução em celulares.
+- Sem WebGL, o site mostra o desenho técnico em SVG no lugar da cena.
+- `prefers-reduced-motion`: cenas 3D ficam estáticas, transições e transformações são desligadas.
+- Compatível com a CSP estrita: nenhuma biblioteca injeta `<style>` ou scripts inline (o modo `popLayout` do
+  Motion, que injetaria `<style>`, não é usado).
+
+> Sobre "Flutter animations": Flutter é um framework de apps em Dart e não roda dentro deste site React.
+> O que foi trazido é o modelo de animação dele (curvas, AnimatedSwitcher, staggered/Interval,
+> TweenAnimationBuilder, Hero e transição de página FadeUpwards), reimplementado para a web.
 
 ---
 
@@ -129,7 +172,7 @@ Coloque um proxy com HTTPS na frente (Nginx, Caddy ou Cloudflare).
 - Token CSRF só em memória (nunca em `localStorage`); cookie de sessão inacessível ao JavaScript.
 - Parâmetros da URL validados contra listas fixas antes do uso; redirecionamento pós-login só para rotas internas (anti *open redirect*).
 - Links externos com `rel="noopener noreferrer"`; painel com `noindex` e bloqueado no `robots.txt`.
-- Código do painel carregado sob demanda (visitantes não baixam o admin); build sem source maps.
+- Código do painel e do three.js carregados sob demanda (visitantes não baixam o admin); build sem source maps.
 - Nenhuma dependência que injete `<style>`/scripts inline — por isso a CSP pode ser estrita.
 
 ### Testes

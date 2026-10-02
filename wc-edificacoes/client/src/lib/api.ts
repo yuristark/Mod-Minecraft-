@@ -64,11 +64,19 @@ const qs = (params: Record<string, string | number | boolean | undefined | null>
   return s ? `?${s}` : "";
 };
 
+// Resumos de obras já vistos em listagens: a página de detalhe abre instantaneamente
+// com eles (título, capa) enquanto busca o restante — e a transição "Hero" encontra a capa.
+const projectPeek = new Map<string, Project>();
+
 export const api = {
   projects: {
-    list: (p: { category?: Category; status?: ProjectStatus; featured?: boolean; page?: number; limit?: number } = {}) =>
-      request<Paged<Project>>("GET", `/projects${qs({ ...p, featured: p.featured ? 1 : undefined })}`),
+    list: async (p: { category?: Category; status?: ProjectStatus; featured?: boolean; page?: number; limit?: number } = {}) => {
+      const res = await request<Paged<Project>>("GET", `/projects${qs({ ...p, featured: p.featured ? 1 : undefined })}`);
+      res.items.forEach((it) => { if (projectPeek.size < 300) projectPeek.set(it.slug, it); });
+      return res;
+    },
     get: (slug: string) => request<Project>("GET", `/projects/${seg(slug)}`),
+    peek: (slug: string) => projectPeek.get(slug) ?? null,
   },
   simulator: () => request<SimulatorSettings>("GET", "/simulator"),
   createQuote: (q: QuoteInput) => request<{ protocol: string }>("POST", "/quotes", q),

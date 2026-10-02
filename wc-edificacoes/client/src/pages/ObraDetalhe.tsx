@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
+import { Link } from "@/components/Link";
 import { Modal } from "@/components/Modal";
 import { ProjectArt } from "@/components/ProjectArt";
 import { ProjectCard, StatusPill } from "@/components/ProjectCard";
@@ -9,6 +11,9 @@ import { useAsync } from "@/hooks/useAsync";
 import { useSeo } from "@/hooks/useSeo";
 import { api } from "@/lib/api";
 import { num } from "@/lib/estimate";
+import { heroName, StaggerItem, Staggered } from "@/motion/flutter";
+import { curves, durations } from "@/motion/tokens";
+import { Reveal, SplitWords } from "@/motion/ui";
 import NotFound from "./NotFound";
 
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -16,10 +21,13 @@ const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export default function ObraDetalhe() {
   const { slug = "" } = useParams();
   const valid = SLUG_RE.test(slug) && slug.length <= 140;
-  const { data: project, error, loading } = useAsync(
+  const { data, error, loading } = useAsync(
     () => (valid ? api.projects.get(slug) : Promise.reject(new Error("invalid"))),
     [slug, valid],
   );
+  // `data` pode ser da obra anterior enquanto a nova carrega; o resumo da listagem (peek) cobre esse intervalo
+  const full = data && data.slug === slug ? data : null;
+  const project = full ?? (valid ? api.projects.peek(slug) : null);
   const related = useAsync(
     () => (project ? api.projects.list({ category: project.category, limit: 4 }) : Promise.resolve(null)),
     [project?.category],
@@ -28,13 +36,13 @@ export default function ObraDetalhe() {
   useSeo(project?.title ?? (loading ? "Carregando obra" : "Obra"), project?.summary);
 
   if (!valid || (!loading && error)) return <NotFound title="Obra não encontrada" />;
-  if (loading || !project) {
-    return <div className="container py-24" aria-busy="true"><div className="h-12 w-2/3 animate-pulse bg-concrete-2 motion-reduce:animate-none" /></div>;
+  if (!project) {
+    return <div className="container py-24" aria-busy="true"><div className="shimmer h-12 w-2/3" /></div>;
   }
 
-  const images = project.images ?? [];
+  const images = full?.images ?? [];
   const others = (related.data?.items ?? []).filter((p) => p.id !== project.id).slice(0, 3);
-  const paragraphs = project.description.split(/\n{2,}/).filter(Boolean);
+  const paragraphs = (full?.description ?? "").split(/\n{2,}/).filter(Boolean);
 
   return (
     <>
@@ -48,13 +56,13 @@ export default function ObraDetalhe() {
               <StatusPill status={project.status} className="border border-line" />
               <span className="label-mono text-ink-3">{CATEGORY_LABEL[project.category]}</span>
             </div>
-            <h1 className="mt-5 max-w-5xl text-display-lg uppercase text-balance">{project.title}</h1>
-            <p className="mt-6 max-w-3xl text-xl leading-relaxed text-ink-3 text-pretty">{project.summary}</p>
+            <h1 className="mt-5 max-w-5xl text-display-lg uppercase text-balance"><SplitWords key={project.slug} text={project.title} gap={0.04} /></h1>
+            <Reveal delay={0.3} y={16}><p className="mt-6 max-w-3xl text-xl leading-relaxed text-ink-3 text-pretty">{project.summary}</p></Reveal>
           </div>
         </header>
 
         {/* Imagem principal */}
-        <div className="container mt-10">
+        <div className="container mt-10" style={heroName(`obra-${project.slug}`)}>
           {images.length > 0 ? (
             <button type="button" onClick={() => setLightbox(0)} className="group relative block w-full overflow-hidden bg-concrete-2" aria-label="Ampliar imagem principal">
               <img
@@ -63,12 +71,14 @@ export default function ObraDetalhe() {
                 width={images[0].width}
                 height={images[0].height}
                 fetchPriority="high"
-                className="aspect-[16/9] w-full object-cover"
+                className="aspect-[16/9] w-full object-cover transition-transform [transition-duration:1400ms] [transition-timing-function:var(--ease-out-expo)] group-hover:scale-[1.03]"
               />
               <span className="absolute bottom-4 right-4 inline-flex items-center gap-2 bg-ink/85 px-3 py-2 text-sm text-paper">
                 <Expand className="h-4 w-4" aria-hidden="true" /> {images.length} {images.length === 1 ? "foto" : "fotos"}
               </span>
             </button>
+          ) : !full && project.cover ? (
+            <img src={project.cover.thumbUrl} alt={project.cover.alt || project.title} width={project.cover.width} height={project.cover.height} className="aspect-[16/9] w-full bg-concrete-2 object-cover" />
           ) : (
             <div className="border border-line bg-concrete-2">
               <ProjectArt seed={project.slug} category={project.category} status={project.status} animate fit="meet" className="aspect-[16/8] h-auto w-full" label={`Desenho ilustrativo da fachada de ${project.title}`} />
@@ -78,20 +88,21 @@ export default function ObraDetalhe() {
 
         <div className="container grid gap-12 py-14 lg:grid-cols-[1fr_340px] lg:gap-20">
           <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-ink-2">
-            {paragraphs.map((p, i) => <p key={i} className="whitespace-pre-line text-pretty">{p}</p>)}
+            {!full && <div aria-busy="true" className="space-y-3"><div className="shimmer h-4 w-full" /><div className="shimmer h-4 w-11/12" /><div className="shimmer h-4 w-4/5" /></div>}
+            {paragraphs.map((p, i) => <Reveal key={i} as="p" y={20} delay={i * 0.05} className="whitespace-pre-line text-pretty">{p}</Reveal>)}
 
             {images.length > 1 && (
               <div className="!mt-12">
                 <h2 className="label-mono mb-4 text-ink-3">Galeria</h2>
-                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <Staggered as="ul" gap={0.05} className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                   {images.slice(1).map((img, i) => (
-                    <li key={img.id}>
+                    <StaggerItem as="li" key={img.id}>
                       <button type="button" onClick={() => setLightbox(i + 1)} className="block w-full overflow-hidden bg-concrete-2" aria-label={`Ampliar foto ${i + 2}`}>
                         <img src={img.thumbUrl} alt={img.alt || `${project.title} — foto ${i + 2}`} width={img.width} height={img.height} loading="lazy" decoding="async" className="aspect-square w-full object-cover transition-transform duration-500 hover:scale-105" />
                       </button>
-                    </li>
+                    </StaggerItem>
                   ))}
-                </ul>
+                </Staggered>
               </div>
             )}
           </div>
@@ -122,7 +133,7 @@ export default function ObraDetalhe() {
               <Link to={`/obras?tipo=${project.category}`} className="hidden items-center gap-2 font-semibold text-signal-strong sm:inline-flex">Ver todas <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
             </div>
             <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {others.map((p) => <ProjectCard key={p.id} project={p} />)}
+              {others.map((p, i) => <Reveal key={p.id} delay={i * 0.1} className="h-full"><ProjectCard project={p} /></Reveal>)}
             </div>
           </div>
         </section>
@@ -149,8 +160,10 @@ function Lightbox({ images, index, onChange, title }: {
   title: string;
 }) {
   const close = useCallback(() => onChange(null), [onChange]);
+  const [dir, setDir] = useState(1);
   const go = useCallback((delta: number) => {
     if (index === null) return;
+    setDir(delta);
     onChange((index + delta + images.length) % images.length);
   }, [index, images.length, onChange]);
 
@@ -169,7 +182,30 @@ function Lightbox({ images, index, onChange, title }: {
     <Modal open={index !== null} onClose={close} label={`Galeria de fotos — ${title}`}>
       {img && (
         <div className="relative flex h-[100dvh] w-screen items-center justify-center p-4 md:p-12">
-          <img src={img.url} alt={img.alt || title} width={img.width} height={img.height} className="max-h-full max-w-full object-contain" />
+          <AnimatePresence mode="wait" initial={false} custom={dir}>
+            <motion.img
+              key={img.url}
+              src={img.url}
+              alt={img.alt || title}
+              width={img.width}
+              height={img.height}
+              className="max-h-full max-w-full object-contain"
+              custom={dir}
+              variants={{
+                enter: (d: number) => ({ opacity: 0, x: d * 80, scale: 0.98 }),
+                center: { opacity: 1, x: 0, scale: 1 },
+                exit: (d: number) => ({ opacity: 0, x: d * -80, scale: 0.98 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: durations.medium, ease: curves.fastOutSlowIn }}
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.6}
+              onDragEnd={(_, info) => { if (info.offset.x < -80) go(1); else if (info.offset.x > 80) go(-1); }}
+            />
+          </AnimatePresence>
           <p className="label-mono absolute left-4 top-4 bg-ink/80 px-2 py-1 text-paper">{(index ?? 0) + 1} / {images.length}</p>
           <button type="button" onClick={close} className="absolute right-4 top-4 grid h-11 w-11 place-items-center bg-paper text-ink" aria-label="Fechar galeria"><X className="h-5 w-5" aria-hidden="true" /></button>
           {images.length > 1 && (

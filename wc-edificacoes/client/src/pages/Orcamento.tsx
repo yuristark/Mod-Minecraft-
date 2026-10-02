@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { CheckCircle2, Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
+import { motion } from "motion/react";
+import { Clock, Loader2, Mail, MapPin, MessageCircle, Phone, Send } from "lucide-react";
 import { SectionLabel } from "@/components/Brand";
+import { Link } from "@/components/Link";
 import { Turnstile, TURNSTILE_ENABLED } from "@/components/Turnstile";
 import { CATEGORY_LABEL, STANDARD_LABEL, START_WINDOW_LABEL, site, whatsappLink } from "@/config/site";
 import { useAsync } from "@/hooks/useAsync";
@@ -9,6 +11,9 @@ import { useSeo } from "@/hooks/useSeo";
 import { api, ApiError, errorMessage } from "@/lib/api";
 import { brl, computeEstimate } from "@/lib/estimate";
 import type { Category, QuoteInput, Standard, StartWindow } from "@/lib/types";
+import { AnimatedSwitcher, StaggerItem, Staggered } from "@/motion/flutter";
+import { curves, springs } from "@/motion/tokens";
+import { Reveal, SplitWords } from "@/motion/ui";
 
 const ext = { target: "_blank", rel: "noopener noreferrer" } as const;
 const MAX_MSG = 3000;
@@ -104,15 +109,21 @@ export default function Orcamento() {
   if (status === "done") {
     return (
       <section className="container max-w-3xl py-20 md:py-28">
-        <CheckCircle2 className="h-12 w-12 text-ok" aria-hidden="true" />
-        <h1 className="mt-6 text-display-lg uppercase" tabIndex={-1}>Pedido recebido!</h1>
-        <p className="mt-6 text-lg leading-relaxed text-ink-3">
-          Obrigado, {form.name.split(" ")[0]}. Nossa equipe vai analisar as informações e entrar em contato em até 1 dia útil.
-        </p>
-        <div className="mt-8 inline-block border border-ink bg-paper px-6 py-4">
+        {/* Selo de confirmação: círculo e "check" desenhados em sequência, com mola no final */}
+        <motion.svg viewBox="0 0 52 52" className="h-14 w-14 text-ok" aria-hidden="true" initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ ...springs.bouncy, delay: 0.9 }}>
+          <motion.circle cx="26" cy="26" r="24" fill="none" stroke="currentColor" strokeWidth="2.5" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.7, ease: curves.easeInOutCubic }} />
+          <motion.path d="M15 27 l7 7 l15 -16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="square" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, ease: curves.easeOutCubic, delay: 0.6 }} />
+        </motion.svg>
+        <h1 className="mt-6 text-display-lg uppercase" tabIndex={-1}><SplitWords text="Pedido recebido!" delay={0.3} /></h1>
+        <Reveal delay={0.6}>
+          <p className="mt-6 text-lg leading-relaxed text-ink-3">
+            Obrigado, {form.name.split(" ")[0]}. Nossa equipe vai analisar as informações e entrar em contato em até 1 dia útil.
+          </p>
+        </Reveal>
+        <motion.div className="conic-border mt-8 inline-block bg-paper px-6 py-4" initial={{ opacity: 0, rotateX: -60 }} animate={{ opacity: 1, rotateX: 0 }} transition={{ ...springs.gentle, delay: 0.8 }}>
           <p className="label-mono text-ink-3">Protocolo</p>
           <p className="mt-1 font-mono text-2xl font-medium tracking-wider">{protocol}</p>
-        </div>
+        </motion.div>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row">
           <a href={whatsappLink(`Olá! Acabei de enviar um pedido de orçamento pelo site (protocolo ${protocol}).`)} {...ext} className="btn btn-ink">
             <MessageCircle className="h-4 w-4" aria-hidden="true" /> Falar no WhatsApp
@@ -132,10 +143,12 @@ export default function Orcamento() {
         <div className="container pb-12 pt-14 md:pt-20">
           <SectionLabel>Orçamento e contato</SectionLabel>
           <div className="mt-5 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
-            <h1 className="text-display-xl uppercase">Vamos conversar sobre a sua obra</h1>
-            <p className="max-w-md text-lg leading-relaxed text-ink-3">
-              Preencha o formulário e receba o contato de um engenheiro em até 1 dia útil. Sem compromisso.
-            </p>
+            <h1 className="text-display-xl uppercase"><SplitWords text="Vamos conversar sobre" highlight="a sua obra" highlightClassName="text-signal-strong" /></h1>
+            <Reveal delay={0.3}>
+              <p className="max-w-md text-lg leading-relaxed text-ink-3">
+                Preencha o formulário e receba o contato de um engenheiro em até 1 dia útil. Sem compromisso.
+              </p>
+            </Reveal>
           </div>
         </div>
       </section>
@@ -251,23 +264,27 @@ export default function Orcamento() {
             <Turnstile onToken={onToken} resetKey={resetKey} />
 
             <button type="submit" className="btn btn-signal w-full sm:w-auto" disabled={status === "sending"}>
-              {status === "sending" ? "Enviando…" : "Enviar pedido de orçamento"}
+              <AnimatedSwitcher switchKey={status} className="inline-flex items-center gap-2">
+                {status === "sending"
+                  ? <><Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />Enviando…</>
+                  : <>Enviar pedido de orçamento<Send className="h-4 w-4" aria-hidden="true" /></>}
+              </AnimatedSwitcher>
             </button>
             <p id="form-obs" className="text-xs text-ink-3">Seus dados trafegam com criptografia (HTTPS) e não são compartilhados com terceiros.</p>
           </div>
         </form>
 
-        <aside className="space-y-4 lg:sticky lg:top-[calc(var(--header-h)+24px)] lg:self-start">
-          <div className="on-dark bg-ink p-6 text-paper">
+        <aside className="space-y-4 lg:sticky lg:top-[calc(var(--header-offset)+24px)] lg:self-start lg:transition-[top] lg:duration-300">
+          <div className="on-dark grain relative overflow-hidden bg-ink p-6 text-paper">
             <p className="label-mono text-paper/60">Prefere conversar agora?</p>
             <a href={whatsappLink()} {...ext} className="btn btn-signal mt-4 w-full"><MessageCircle className="h-4 w-4" aria-hidden="true" /> Chamar no WhatsApp</a>
             <a href={`tel:${site.contact.phoneHref}`} className="btn btn-ghost mt-3 w-full"><Phone className="h-4 w-4" aria-hidden="true" /> {site.contact.phone}</a>
           </div>
-          <ul className="divide-y divide-line border border-line bg-paper text-sm">
-            <li className="flex gap-3 p-5"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><a href={`mailto:${site.contact.email}`} className="break-all hover:underline">{site.contact.email}</a></li>
-            <li className="flex gap-3 p-5"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><a href={site.contact.mapsUrl} {...ext} className="hover:underline">{site.contact.address}</a></li>
-            <li className="flex gap-3 p-5"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><span>{site.contact.hours}</span></li>
-          </ul>
+          <Staggered as="ul" className="divide-y divide-line border border-line bg-paper text-sm">
+            <StaggerItem as="li" className="flex gap-3 p-5"><Mail className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><a href={`mailto:${site.contact.email}`} className="break-all hover:underline">{site.contact.email}</a></StaggerItem>
+            <StaggerItem as="li" className="flex gap-3 p-5"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><a href={site.contact.mapsUrl} {...ext} className="hover:underline">{site.contact.address}</a></StaggerItem>
+            <StaggerItem as="li" className="flex gap-3 p-5"><Clock className="mt-0.5 h-4 w-4 shrink-0 text-signal-strong" aria-hidden="true" /><span>{site.contact.hours}</span></StaggerItem>
+          </Staggered>
         </aside>
       </section>
     </>
@@ -283,7 +300,10 @@ function TriRadio({ name, legend, value, onChange }: { name: string; legend: str
         {opts.map(([v, l]) => (
           <label key={l} className="cursor-pointer">
             <input type="radio" name={name} checked={value === v} onChange={() => onChange(v)} className="peer sr-only" />
-            <span className="block border border-line bg-paper py-2.5 text-center text-sm peer-checked:border-ink peer-checked:bg-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-signal-strong">{l}</span>
+            <span className="relative block overflow-hidden border border-line bg-paper py-2.5 text-center text-sm transition-colors duration-300 hover:border-ink peer-checked:border-ink peer-checked:text-paper peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-signal-strong">
+              {value === v && <motion.span layoutId={`tri-${name}`} aria-hidden="true" className="absolute inset-0 bg-ink" transition={springs.snappy} />}
+              <span className="relative">{l}</span>
+            </span>
           </label>
         ))}
       </div>

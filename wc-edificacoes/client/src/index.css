@@ -44,6 +44,19 @@
     --ok: #2f6b45;
     --danger: #b3261e;
     --header-h: 72px;
+    --header-offset: var(--header-h);
+
+    /* ---- Tokens de movimento (espelham src/motion/tokens.ts) ---- */
+    --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);          /* Curves.fastOutSlowIn */
+    --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);  /* Curves.easeOutCubic */
+    --ease-out-back: cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Curves.easeOutBack */
+    --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-emphasized: cubic-bezier(0.05, 0.7, 0.1, 1);     /* M3 emphasized decelerate */
+    --ease-emphasized-accel: cubic-bezier(0.3, 0, 0.8, 0.15);
+    --dur-fast: 200ms;
+    --dur-medium: 300ms;
+    --dur-slow: 500ms;
+    --dur-slower: 800ms;
     --c-ink: 23 24 26;
     --c-ink-2: 42 44 48;
     --c-ink-3: 92 95 102;
@@ -91,18 +104,34 @@
   }
   .section-pad { @apply py-20 md:py-28; }
 
-  /* Botões: cantos retos, peso de obra */
+  /* Botões: cantos retos, peso de obra.
+     Hover: a cor "sobe" de baixo para cima (::before) com a curva emphasized;
+     clique: leve compressão + onda de toque (estilo InkWell do Flutter, ver lib/ripple.ts). */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-5 h-12 text-[0.95rem] font-semibold transition-[background-color,color,border-color,transform] duration-150 select-none whitespace-nowrap;
+    @apply relative isolate inline-flex items-center justify-center gap-2 overflow-hidden px-5 h-12 text-[0.95rem] font-semibold select-none whitespace-nowrap;
     font-stretch: 108%;
+    transition: color var(--dur-medium) var(--ease-standard), border-color var(--dur-medium) var(--ease-standard), transform var(--dur-fast) var(--ease-out-back), background-color var(--dur-medium) var(--ease-standard);
   }
-  .btn:active { transform: translateY(1px); }
+  .btn::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--btn-fill, transparent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform var(--dur-slow) var(--ease-emphasized);
+  }
+  .btn:hover::before, .btn:focus-visible::before { transform: scaleY(1); }
+  .btn svg { transition: transform var(--dur-medium) var(--ease-out-back); }
+  .btn:hover svg:last-child:not(:first-child) { transform: translateX(3px); }
+  .btn:active { transform: scale(0.97); }
   .btn:disabled { @apply opacity-60 cursor-not-allowed; }
-  .btn-signal { @apply bg-signal-strong text-white hover:bg-ink; }
-  .on-dark .btn-signal { @apply bg-signal text-ink hover:bg-paper; }
-  .btn-ink { @apply bg-ink text-paper hover:bg-signal-strong; }
-  .btn-ghost { @apply border border-ink/80 text-ink hover:bg-ink hover:text-paper; }
-  .on-dark .btn-ghost { @apply border-paper/50 text-paper hover:bg-paper hover:text-ink; }
+  .btn-signal { @apply bg-signal-strong text-white; --btn-fill: var(--ink); }
+  .on-dark .btn-signal { @apply bg-signal text-ink; --btn-fill: var(--paper); }
+  .btn-ink { @apply bg-ink text-paper; --btn-fill: var(--signal-strong); }
+  .btn-ghost { @apply border border-ink/80 text-ink hover:text-paper; --btn-fill: var(--ink); }
+  .on-dark .btn-ghost { @apply border-paper/50 text-paper hover:border-paper hover:text-ink; --btn-fill: var(--paper); }
   .btn-sm { @apply h-9 px-3 text-sm; }
 
   /* Campos de formulário — erros só aparecem depois da interação (:user-invalid) */
@@ -135,10 +164,67 @@
   }
 
   .link-underline {
-    background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px;
-    transition: background-size 0.25s ease;
+    background: linear-gradient(currentColor, currentColor) no-repeat 100% 100% / 0 1px;
+    transition: background-size var(--dur-slow) var(--ease-emphasized);
   }
-  .link-underline:hover, .link-underline[aria-current="page"] { background-size: 100% 1px; }
+  .link-underline:hover, .link-underline[aria-current="page"] { background-size: 100% 1px; background-position-x: 0; }
+
+  /* Brilho especular dos cartões com inclinação 3D (TiltCard expõe --mx/--my) */
+  .tilt-glare { position: relative; }
+  .tilt-glare::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgb(255 255 255 / 0.22), transparent 40%);
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-standard);
+    mix-blend-mode: soft-light;
+  }
+  .tilt:hover .tilt-glare::after { opacity: 1; }
+
+  /* Textura de granulação (ruído SVG) sobre seções escuras */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Cartões: a cor de fundo "sobe" no hover, como nos botões */
+  .hover-fill { position: relative; isolation: isolate; }
+  .hover-fill::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--fill, rgb(var(--c-paper)));
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform var(--dur-slow) var(--ease-emphasized);
+  }
+  .hover-fill:hover::before, .hover-fill:focus-within::before { transform: scaleY(1); }
+
+  /* Controle deslizante com a identidade da marca */
+  .range { -webkit-appearance: none; appearance: none; height: 28px; background: transparent; cursor: pointer; }
+  .range::-webkit-slider-runnable-track { height: 2px; background: linear-gradient(to right, var(--range-fill, var(--signal)) var(--range-pct, 50%), color-mix(in srgb, currentColor 25%, transparent) var(--range-pct, 50%)); }
+  .range::-moz-range-track { height: 2px; background: color-mix(in srgb, currentColor 25%, transparent); }
+  .range::-moz-range-progress { height: 2px; background: var(--range-fill, var(--signal)); }
+  .range::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none; margin-top: -9px; width: 20px; height: 20px; border-radius: 0;
+    background: var(--range-fill, var(--signal)); border: 3px solid currentColor;
+    transition: transform var(--dur-fast) var(--ease-out-back);
+  }
+  .range::-moz-range-thumb { width: 14px; height: 14px; border-radius: 0; background: var(--range-fill, var(--signal)); border: 3px solid currentColor; }
+  .range:active::-webkit-slider-thumb, .range:hover::-webkit-slider-thumb { transform: scale(1.25) rotate(45deg); }
+  .range:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
+
+  /* Placeholder de carregamento com brilho deslizante (substitui o "pulse") */
+  .shimmer {
+    background: linear-gradient(100deg, rgb(var(--c-concrete-2)) 30%, rgb(var(--c-paper)) 50%, rgb(var(--c-concrete-2)) 70%) 0 0 / 300% 100%;
+  }
 
   /* Dialog nativo */
   dialog.wc-dialog { @apply p-0 bg-transparent max-w-none max-h-none; }
@@ -154,6 +240,8 @@
 }
 
 /* ---------- Animações (respeitam prefers-reduced-motion) ---------- */
+@property --angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+
 @media (prefers-reduced-motion: no-preference) {
   /* Traço sendo "desenhado" nas pranchas */
   .draw-path {
@@ -185,5 +273,106 @@
   }
 
   .marquee-track { animation: marquee 38s linear infinite; }
+  .marquee-wrap:hover .marquee-track { animation-play-state: paused; }
   @keyframes marquee { to { transform: translateX(-50%); } }
+
+  /* Logo: o "W" é redesenhado ao passar o mouse */
+  .group:hover .logo-w { stroke-dasharray: 1; animation: logo-draw 0.9s var(--ease-emphasized) both; }
+  @keyframes logo-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+
+  /* Grade de prancha deslizando lentamente (fundo "vivo") */
+  .blueprint-pan { animation: blueprint-pan 60s linear infinite; }
+  @keyframes blueprint-pan { to { background-position: 48px 48px, 48px 48px; } }
+
+  /* Linha de varredura sobre a prancha 3D */
+  .scanline::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--signal), transparent);
+    box-shadow: 0 0 18px 2px color-mix(in srgb, var(--signal) 55%, transparent);
+    z-index: 3;
+    pointer-events: none;
+    animation: scan 7s var(--ease-standard) infinite;
+    opacity: 0;
+  }
+  @keyframes scan { 0% { top: 0; opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { top: 100%; opacity: 0; } }
+
+  .shimmer { animation: shimmer 1.6s var(--ease-standard) infinite; }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+
+  /* Anel pulsante (obra em andamento) */
+  .pulse-ring { position: relative; }
+  .pulse-ring::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    border: 1.5px solid currentColor;
+    animation: pulse-ring 1.8s var(--ease-out-cubic) infinite;
+  }
+  @keyframes pulse-ring { from { transform: scale(0.6); opacity: 0.9; } to { transform: scale(2.2); opacity: 0; } }
+
+  /* Texto com brilho metálico percorrendo (destaques) */
+  .text-sheen {
+    background: linear-gradient(110deg, currentColor 35%, color-mix(in srgb, currentColor 35%, white) 50%, currentColor 65%) 0 0 / 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: sheen 5s var(--ease-standard) infinite;
+  }
+  @keyframes sheen { 0%, 55% { background-position: 100% 0; } 100% { background-position: -50% 0; } }
+
+  /* Borda com gradiente cônico girando (cartão de destaque) */
+  .conic-border { position: relative; isolation: isolate; }
+  .conic-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    z-index: -1;
+    background: conic-gradient(from var(--angle), transparent 0 70%, var(--signal) 85%, transparent 100%);
+    animation: spin-angle 5s linear infinite;
+  }
+  @keyframes spin-angle { to { --angle: 360deg; } }
+
+  /* Ícone de rolagem */
+  .scroll-cue { animation: scroll-cue 2.2s var(--ease-standard) infinite; }
+  @keyframes scroll-cue { 0% { transform: translateY(0); opacity: 0; } 30% { opacity: 1; } 80% { transform: translateY(10px); opacity: 0; } 100% { opacity: 0; } }
+
+  /* Gancho balançando (página 404) */
+  .swing { transform-origin: 50% 0; animation: swing 3.2s var(--ease-standard) infinite alternate; }
+  @keyframes swing { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+
+  /* ---------- Transições de página (View Transitions API) ----------
+     Página: FadeUpwards do Flutter (sai subindo e esmaecendo; a nova entra de baixo).
+     Elementos com o mesmo view-transition-name "voam" entre as páginas (Hero). */
+  ::view-transition-old(root) { animation: vt-out var(--dur-medium) var(--ease-emphasized-accel) both; }
+  ::view-transition-new(root) { animation: vt-in 520ms var(--ease-emphasized) 60ms both; }
+  ::view-transition-group(*) { animation-duration: 560ms; animation-timing-function: var(--ease-emphasized); }
+  ::view-transition-group(site-header) { animation: none; }
+  @keyframes vt-out { to { opacity: 0; transform: translateY(-16px); } }
+  @keyframes vt-in { from { opacity: 0; transform: translateY(28px); } }
+}
+
+/* Onda de toque (InkWell / Material ripple) — o elemento é criado por lib/ripple.ts */
+.ripple-ink {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: currentColor;
+  opacity: 0.22;
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple var(--dur-slower) var(--ease-standard) forwards;
+}
+@keyframes ripple { to { transform: translate(-50%, -50%) scale(1); opacity: 0; } }
+
+.site-header { view-transition-name: site-header; }
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
+  .ripple-ink { display: none; }
+  .btn::before { transition: none; }
 }

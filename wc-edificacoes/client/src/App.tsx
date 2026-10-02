@@ -1,8 +1,10 @@
 import { lazy, Suspense, useEffect } from "react";
-import { Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { Outlet, ScrollRestoration, type RouteObject } from "react-router-dom";
+import { MotionConfig } from "motion/react";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { IS_DEMO } from "@/lib/api";
+import { installRipple } from "@/lib/ripple";
 import Home from "@/pages/Home";
 import Obras from "@/pages/Obras";
 import ObraDetalhe from "@/pages/ObraDetalhe";
@@ -16,18 +18,16 @@ import NotFound from "@/pages/NotFound";
 // O painel é carregado sob demanda: visitantes do site não baixam o código do admin
 const AdminApp = lazy(() => import("@/admin/AdminApp"));
 
-function ScrollManager() {
-  const { pathname, hash } = useLocation();
-  useEffect(() => {
-    if (hash) {
-      const id = decodeURIComponent(hash.slice(1));
-      // aguarda a página renderizar antes de rolar até a âncora
-      const t = window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ block: "start" }), 60);
-      return () => window.clearTimeout(t);
-    }
-    window.scrollTo(0, 0);
-  }, [pathname, hash]);
-  return null;
+function Root() {
+  useEffect(() => installRipple(), []);
+  return (
+    // reducedMotion="user": quem pede menos movimento no sistema não recebe transformações animadas
+    <MotionConfig reducedMotion="user">
+      {/* rola ao topo a cada página, restaura a posição ao voltar e respeita âncoras (#) */}
+      <ScrollRestoration />
+      <Outlet />
+    </MotionConfig>
+  );
 }
 
 function PublicLayout() {
@@ -47,31 +47,32 @@ function PublicLayout() {
   );
 }
 
-export default function App() {
-  return (
-    <>
-      <ScrollManager />
-      <Routes>
-        <Route element={<PublicLayout />}>
-          <Route index element={<Home />} />
-          <Route path="obras" element={<Obras />} />
-          <Route path="obras/:slug" element={<ObraDetalhe />} />
-          <Route path="servicos" element={<Servicos />} />
-          <Route path="simulador" element={<Simulador />} />
-          <Route path="orcamento" element={<Orcamento />} />
-          <Route path="empresa" element={<Empresa />} />
-          <Route path="privacidade" element={<Privacidade />} />
-          <Route path="*" element={<NotFound />} />
-        </Route>
-        <Route
-          path="admin/*"
-          element={
-            <Suspense fallback={<div className="grid min-h-screen place-items-center bg-ink font-mono text-sm text-paper/60">Carregando painel…</div>}>
-              <AdminApp />
-            </Suspense>
-          }
-        />
-      </Routes>
-    </>
-  );
-}
+export const routes: RouteObject[] = [
+  {
+    element: <Root />,
+    children: [
+      {
+        element: <PublicLayout />,
+        children: [
+          { index: true, element: <Home /> },
+          { path: "obras", element: <Obras /> },
+          { path: "obras/:slug", element: <ObraDetalhe /> },
+          { path: "servicos", element: <Servicos /> },
+          { path: "simulador", element: <Simulador /> },
+          { path: "orcamento", element: <Orcamento /> },
+          { path: "empresa", element: <Empresa /> },
+          { path: "privacidade", element: <Privacidade /> },
+          { path: "*", element: <NotFound /> },
+        ],
+      },
+      {
+        path: "admin/*",
+        element: (
+          <Suspense fallback={<div className="grid min-h-screen place-items-center bg-ink font-mono text-sm text-paper/60">Carregando painel…</div>}>
+            <AdminApp />
+          </Suspense>
+        ),
+      },
+    ],
+  },
+];

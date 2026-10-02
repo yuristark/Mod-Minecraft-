@@ -15,6 +15,8 @@ export default defineConfig(({ mode }) => {
       sourcemap: false, // não publica o código-fonte original em produção
       assetsInlineLimit: demo ? 100_000_000 : 4096,
       cssCodeSplit: !demo,
+      // three.js (~570 kB) fica num chunk próprio, carregado só quando uma cena 3D aparece
+      chunkSizeWarningLimit: 700,
     },
     server: {
       port: 5173,

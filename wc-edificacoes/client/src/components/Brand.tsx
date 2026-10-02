@@ -5,7 +5,7 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 64 64" className={cn("shrink-0", className)} aria-hidden="true">
       <rect width="64" height="64" fill="currentColor" />
-      <path d="M10 20 L21 46 L32 27 L43 46 L54 20" fill="none" stroke="#e8642c" strokeWidth="5" strokeLinejoin="miter" />
+      <path d="M10 20 L21 46 L32 27 L43 46 L54 20" pathLength={1} className="logo-w" fill="none" stroke="#e8642c" strokeWidth="5" strokeLinejoin="miter" />
     </svg>
   );
 }

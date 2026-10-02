@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { AnimatePresence, LayoutGroup, motion } from "motion/react";
 import { SectionLabel } from "@/components/Brand";
 import { ProjectCard, ProjectCardSkeleton } from "@/components/ProjectCard";
 import { CATEGORY_LABEL, STATUS_LABEL } from "@/config/site";
@@ -7,6 +8,9 @@ import { useSeo } from "@/hooks/useSeo";
 import { api, errorMessage } from "@/lib/api";
 import type { Category, Project, ProjectStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { AnimatedSwitcher } from "@/motion/flutter";
+import { curves, durations, springs } from "@/motion/tokens";
+import { Reveal, SplitWords } from "@/motion/ui";
 
 const PAGE = 9;
 const isCategory = (v: string | null): v is Category => !!v && v in CATEGORY_LABEL;
@@ -53,15 +57,17 @@ export default function Obras() {
         <div className="container pb-12 pt-14 md:pb-16 md:pt-20">
           <SectionLabel>Portfólio</SectionLabel>
           <div className="mt-5 grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-end">
-            <h1 className="text-display-xl uppercase">Obras</h1>
-            <p className="max-w-md text-lg leading-relaxed text-ink-3">
-              Projetos entregues, em execução e em lançamento. Filtre por tipo e fase para encontrar obras parecidas com a sua.
-            </p>
+            <h1 className="text-display-xl uppercase"><SplitWords text="Obras" /></h1>
+            <Reveal delay={0.2}>
+              <p className="max-w-md text-lg leading-relaxed text-ink-3">
+                Projetos entregues, em execução e em lançamento. Filtre por tipo e fase para encontrar obras parecidas com a sua.
+              </p>
+            </Reveal>
           </div>
         </div>
       </section>
 
-      <div className="sticky top-[var(--header-h)] z-30 border-b border-line bg-concrete/95 backdrop-blur supports-[backdrop-filter]:bg-concrete/80">
+      <div className="sticky top-[var(--header-offset)] z-30 transition-[top] duration-300 [transition-timing-function:var(--ease-standard)] border-b border-line bg-concrete/95 backdrop-blur supports-[backdrop-filter]:bg-concrete/80">
         <div className="container flex flex-col gap-3 py-3 lg:flex-row lg:items-center lg:justify-between">
           <FilterGroup label="Tipo" value={category} options={CATEGORY_LABEL} onChange={(v) => setFilter("tipo", v)} />
           <FilterGroup label="Fase" value={status} options={STATUS_LABEL} onChange={(v) => setFilter("fase", v)} />
@@ -70,11 +76,28 @@ export default function Obras() {
 
       <section className="container py-12 md:py-16" aria-live="polite" aria-busy={loading}>
         <p className="label-mono mb-6 text-ink-3">
-          {loading && page === 1 ? "Carregando…" : `${total} ${total === 1 ? "obra encontrada" : "obras encontradas"}`}
+          <AnimatedSwitcher switchKey={loading && page === 1 ? "loading" : `${total}-${category}-${status}`}>
+            {loading && page === 1 ? "Carregando…" : `${total} ${total === 1 ? "obra encontrada" : "obras encontradas"}`}
+          </AnimatedSwitcher>
         </p>
         {error && <p role="alert" className="border border-danger/40 bg-[#fbefed] p-4 text-danger">{error}</p>}
+        {/* Ao filtrar, os cartões que ficam deslizam para a nova posição (layout) e os demais saem/entram */}
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((p, i) => <ProjectCard key={p.id} project={p} index={i} />)}
+          <AnimatePresence initial={false}>
+            {items.map((p, i) => (
+              <motion.div
+                key={p.id}
+                layout
+                className="h-full"
+                initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1, transition: { duration: durations.slow, ease: curves.easeOutExpo, delay: (i % PAGE) * 0.05 } }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: durations.fast, ease: curves.emphasizedAccelerate } }}
+                transition={springs.gentle}
+              >
+                <ProjectCard project={p} index={i} />
+              </motion.div>
+            ))}
+          </AnimatePresence>
           {loading && Array.from({ length: page === 1 ? 6 : 3 }).map((_, i) => <ProjectCardSkeleton key={`s${i}`} />)}
         </div>
         {!loading && !error && items.length === 0 && (
@@ -97,13 +120,15 @@ function FilterGroup({ label, value, options, onChange }: {
   label: string; value?: string; options: Record<string, string>; onChange: (v?: string) => void;
 }) {
   return (
-    <div role="group" aria-label={`Filtrar por ${label.toLowerCase()}`} className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] -mx-1 px-1">
-      <span className="label-mono mr-1 shrink-0 text-ink-3">{label}</span>
-      <Chip active={!value} onClick={() => onChange(undefined)}>Todas</Chip>
-      {Object.entries(options).map(([k, v]) => (
-        <Chip key={k} active={value === k} onClick={() => onChange(k)}>{v}</Chip>
-      ))}
-    </div>
+    <LayoutGroup id={`filter-${label}`}>
+      <div role="group" aria-label={`Filtrar por ${label.toLowerCase()}`} className="flex items-center gap-2 overflow-x-auto [scrollbar-width:none] -mx-1 px-1">
+        <span className="label-mono mr-1 shrink-0 text-ink-3">{label}</span>
+        <Chip active={!value} onClick={() => onChange(undefined)}>Todas</Chip>
+        {Object.entries(options).map(([k, v]) => (
+          <Chip key={k} active={value === k} onClick={() => onChange(k)}>{v}</Chip>
+        ))}
+      </div>
+    </LayoutGroup>
   );
 }
 
@@ -113,12 +138,14 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
       type="button"
       aria-pressed={active}
       onClick={onClick}
+      data-ripple
       className={cn(
-        "shrink-0 border px-3.5 py-2 text-sm font-medium transition-colors",
-        active ? "border-ink bg-ink text-paper" : "border-line bg-paper hover:border-ink",
+        "relative shrink-0 overflow-hidden border px-3.5 py-2 text-sm font-medium transition-colors duration-300",
+        active ? "border-ink text-paper" : "border-line bg-paper hover:border-ink",
       )}
     >
-      {children}
+      {active && <motion.span layoutId="chip-pill" aria-hidden="true" className="absolute inset-0 bg-ink" transition={springs.snappy} />}
+      <span className="relative">{children}</span>
     </button>
   );
 }
