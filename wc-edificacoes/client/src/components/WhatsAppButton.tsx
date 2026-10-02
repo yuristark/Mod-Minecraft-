@@ -20,7 +20,8 @@ export function WhatsAppButton() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const show = visible && pathname !== "/orcamento";
+  // No simulador do celular, o WhatsApp fica na barra fixa de estimativa
+  const show = visible && pathname !== "/orcamento" && !(pathname === "/simulador" && window.innerWidth < 1024);
   return (
     <AnimatePresence>
       {show && (

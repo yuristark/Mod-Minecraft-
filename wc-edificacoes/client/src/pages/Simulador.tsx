@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { useSearchParams } from "react-router-dom";
-import { motion } from "motion/react";
-import { ArrowRight, Info, Move3d, Share2 } from "lucide-react";
+import { AnimatePresence, motion } from "motion/react";
+import { ArrowRight, Check, Info, MessageCircle, Mountain, Move3d, Ruler, Share2, Trees } from "lucide-react";
 import { SectionLabel } from "@/components/Brand";
 import { Link } from "@/components/Link";
-import { CATEGORY_LABEL, STANDARD_LABEL } from "@/config/site";
+import { CATEGORY_LABEL, STANDARD_LABEL, whatsappLink } from "@/config/site";
 import { useAsync } from "@/hooks/useAsync";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useSeo } from "@/hooks/useSeo";
 import { api } from "@/lib/api";
 import { brl, computeEstimate, num } from "@/lib/estimate";
@@ -15,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { AnimatedSwitcher, TweenNumber } from "@/motion/flutter";
 import { curves, durations, springs } from "@/motion/tokens";
 import { Reveal, SplitWords } from "@/motion/ui";
-import { massing } from "@/three/massing";
+import { FEATURE_LABEL, featureOf, massing, type Feature } from "@/three/massing";
 import type { ModelProps } from "@/three/model";
 import { ThreeCanvas } from "@/three/ThreeCanvas";
 
@@ -72,11 +73,57 @@ export default function Simulador() {
   const stages = useMemo(() => STAGES[type], [type]);
   const maxPct = Math.max(...stages.map((s) => s.pct));
 
-  const modelProps = useMemo<ModelProps>(() => ({ category: type, standard, area: safeArea || 20 }), [type, standard, safeArea]);
+  // Adicionais marcados → efeitos visuais na maquete (jardim, terreno, cotas de projeto)
+  const features = useMemo(() => {
+    const set = new Set<Feature>();
+    for (const k of extras) { const f = featureOf(k, settings?.extras[k]?.label); if (f) set.add(f); }
+    return [...set];
+  }, [extras, settings]);
+  const featureKey = features.join(",");
+  const modelProps = useMemo<ModelProps>(
+    () => ({ category: type, standard, area: safeArea || 20, features: featureKey ? (featureKey.split(",") as Feature[]) : [] }),
+    [type, standard, safeArea, featureKey],
+  );
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
   const vol = massing(type, standard, safeArea || 20);
 
   const toggleExtra = (k: string) => setExtras((prev) => (prev.includes(k) ? prev.filter((x) => x !== k) : [...prev, k]));
   const quoteLink = `/orcamento?${new URLSearchParams({ tipo: type, padrao: standard, area: String(safeArea || ""), extras: extras.join(",") })}`;
+
+  const maquete = (
+                    <div className="on-dark relative overflow-hidden border-b border-paper/10 bg-ink text-paper">
+            <div aria-hidden="true" className="studio-bg absolute inset-0" />
+            <ThreeCanvas
+              load={loadModel}
+              props={modelProps}
+              className={isDesktop ? "h-[340px]" : "h-[230px] sm:h-[280px]"}
+              canvasClassName="cursor-grab touch-pan-y active:cursor-grabbing"
+              label={`Maquete 3D ilustrativa: ${CATEGORY_LABEL[type]}, ${vol.floors} pavimento(s), cerca de ${num(Math.round(vol.width))} por ${num(Math.round(vol.depth))} metros`}
+              placeholder={<span className="label-mono animate-pulse text-paper/40">Carregando maquete 3D…</span>}
+              fallback={null}
+            >
+              <div aria-hidden="true" className="pointer-events-none absolute inset-x-4 top-3 flex items-start justify-between font-mono text-[0.62rem] uppercase tracking-wider text-paper/55">
+                <span className="flex flex-col gap-1.5">
+                  <span className="text-signal">Maquete · {CATEGORY_LABEL[type]} · {STANDARD_LABEL[standard]}</span>
+                  <span className="flex flex-wrap gap-1">
+                    <AnimatePresence initial={false}>
+                      {features.map((f) => (
+                        <motion.span key={f} initial={{ opacity: 0, scale: 0.6 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.6 }} transition={springs.bouncy}
+                          className="border border-signal/50 bg-signal/15 px-1.5 py-0.5 text-paper">+ {FEATURE_LABEL[f]}</motion.span>
+                      ))}
+                    </AnimatePresence>
+                  </span>
+                </span>
+                <span className="flex items-center gap-1.5"><Move3d className="h-3.5 w-3.5" />Arraste para girar</span>
+              </div>
+              <div aria-hidden="true" className="pointer-events-none absolute inset-x-4 bottom-3 grid grid-cols-3 border-t border-paper/15 pt-2 font-mono text-[0.62rem] uppercase tracking-wider text-paper/55">
+                <span>≈ <TweenNumber value={vol.width} format={fmt1} duration={durations.slow} /> × <TweenNumber value={vol.depth} format={fmt1} duration={durations.slow} /> m</span>
+                <span className="text-center"><AnimatedSwitcher switchKey={vol.floors}>{vol.floors} {vol.floors === 1 ? "pavimento" : "pavimentos"}</AnimatedSwitcher></span>
+                <span className="text-right">h ≈ <TweenNumber value={vol.height} format={fmt1} duration={durations.slow} /> m</span>
+              </div>
+            </ThreeCanvas>
+          </div>
+  );
 
   return (
     <>
@@ -94,7 +141,13 @@ export default function Simulador() {
         </div>
       </section>
 
-      <section className="container grid gap-10 py-12 md:py-16 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
+      <section className="container grid gap-10 pb-28 pt-6 md:pt-10 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:py-16">
+        {/* Celular: maquete fixa no topo enquanto se escolhem as opções — cada toque aparece na hora */}
+        {!isDesktop && (
+          <div className="sticky top-[var(--header-offset)] z-20 -mx-4 shadow-[0_14px_30px_-18px_rgb(0_0_0/0.6)] transition-[top] duration-300 sm:-mx-6">
+            {maquete}
+          </div>
+        )}
         {/* ----------------- Entradas ----------------- */}
         <form className="space-y-10" onSubmit={(e) => e.preventDefault()} aria-describedby="sim-nota">
           <fieldset>
@@ -136,15 +189,29 @@ export default function Simulador() {
             <fieldset>
               <legend className="text-lg font-bold"><span className="label-mono mr-3 text-signal-strong">D</span>Itens adicionais</legend>
               <div className="mt-4 space-y-2">
-                {Object.entries(settings.extras).map(([k, e]) => (
-                  <label key={k} data-ripple className="relative overflow-hidden flex cursor-pointer items-center justify-between gap-4 border border-line bg-paper px-4 py-3.5 hover:border-ink has-[:checked]:border-ink has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-signal-strong">
-                    <span className="flex items-center gap-3">
-                      <input type="checkbox" checked={extras.includes(k)} onChange={() => toggleExtra(k)} className="h-4 w-4 accent-[#17181a]" />
-                      <span className="font-medium">{e.label}</span>
-                    </span>
-                    <span className="font-mono text-sm text-ink-3">+{num(e.percent, 1)}%</span>
-                  </label>
-                ))}
+                {Object.entries(settings.extras).map(([k, e]) => {
+                  const on = extras.includes(k);
+                  const f = featureOf(k, e.label);
+                  const Icon = f === "landscape" ? Trees : f === "earthwork" ? Mountain : f === "design" ? Ruler : null;
+                  return (
+                    <label key={k} data-ripple className={cn(
+                      "relative flex cursor-pointer items-center justify-between gap-4 overflow-hidden border px-4 py-3.5 transition-colors duration-300 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-signal-strong",
+                      on ? "border-ink bg-ink text-paper" : "border-line bg-paper hover:border-ink",
+                    )}>
+                      <span className="flex items-center gap-3">
+                        <input type="checkbox" checked={on} onChange={() => toggleExtra(k)} className="peer sr-only" />
+                        <span aria-hidden="true" className={cn("grid h-5 w-5 shrink-0 place-items-center border transition-colors", on ? "border-signal bg-signal text-ink" : "border-ink-3")}>
+                          <AnimatePresence initial={false}>
+                            {on && <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={springs.bouncy}><Check className="h-3.5 w-3.5" strokeWidth={3} /></motion.span>}
+                          </AnimatePresence>
+                        </span>
+                        <span className="font-medium">{e.label}</span>
+                        {Icon && <Icon className={cn("h-4 w-4 shrink-0", on ? "text-signal" : "text-ink-3")} aria-hidden="true" />}
+                      </span>
+                      <span className={cn("font-mono text-sm", on ? "text-paper/70" : "text-ink-3")}>+{num(e.percent, 1)}%</span>
+                    </label>
+                  );
+                })}
               </div>
             </fieldset>
           )}
@@ -152,29 +219,7 @@ export default function Simulador() {
 
         {/* ----------------- Resultado ----------------- */}
         <div className="lg:sticky lg:top-[calc(var(--header-offset)+24px)] lg:self-start lg:transition-[top] lg:duration-300">
-          {/* Maquete 3D */}
-          <div className="on-dark relative overflow-hidden border-b border-paper/10 bg-ink text-paper">
-            <div aria-hidden="true" className="blueprint-grid-fine absolute inset-0 text-paper" />
-            <ThreeCanvas
-              load={loadModel}
-              props={modelProps}
-              className="h-[260px] md:h-[300px]"
-              canvasClassName="cursor-grab touch-pan-y active:cursor-grabbing"
-              label={`Maquete 3D ilustrativa: ${CATEGORY_LABEL[type]}, ${vol.floors} pavimento(s), cerca de ${num(Math.round(vol.width))} por ${num(Math.round(vol.depth))} metros`}
-              placeholder={<span className="label-mono animate-pulse text-paper/40">Carregando maquete 3D…</span>}
-              fallback={null}
-            >
-              <div aria-hidden="true" className="pointer-events-none absolute inset-x-4 top-3 flex items-start justify-between font-mono text-[0.62rem] uppercase tracking-wider text-paper/55">
-                <span className="text-signal">Maquete · volumetria</span>
-                <span className="flex items-center gap-1.5"><Move3d className="h-3.5 w-3.5" />Arraste para girar</span>
-              </div>
-              <div aria-hidden="true" className="pointer-events-none absolute inset-x-4 bottom-3 grid grid-cols-3 border-t border-paper/15 pt-2 font-mono text-[0.62rem] uppercase tracking-wider text-paper/55">
-                <span>≈ <TweenNumber value={vol.width} format={fmt1} duration={durations.slow} /> × <TweenNumber value={vol.depth} format={fmt1} duration={durations.slow} /> m</span>
-                <span className="text-center"><AnimatedSwitcher switchKey={vol.floors}>{vol.floors} {vol.floors === 1 ? "pavimento" : "pavimentos"}</AnimatedSwitcher></span>
-                <span className="text-right">h ≈ <TweenNumber value={vol.height} format={fmt1} duration={durations.slow} /> m</span>
-              </div>
-            </ThreeCanvas>
-          </div>
+          {isDesktop && maquete}
           <div className="on-dark bg-ink p-6 text-paper md:p-9" aria-live="polite">
             <p className="label-mono text-paper/60">Investimento estimado</p>
             {loading && <p className="mt-4 text-paper/60">Carregando valores de referência…</p>}
@@ -249,6 +294,25 @@ export default function Simulador() {
           )}
         </div>
       </section>
+
+      {/* Celular: barra fixa com o valor e o próximo passo */}
+      {!isDesktop && est && (
+        <div className="on-dark fixed inset-x-0 bottom-0 z-40 border-t border-paper/10 bg-ink/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 text-paper backdrop-blur">
+          <div className="flex items-center gap-3">
+            <div className="min-w-0 flex-1">
+              <p className="label-mono text-[0.6rem] text-paper/55">Estimativa</p>
+              <p className="truncate font-bold tabular stretch-wide">
+                <TweenNumber value={est.min} format={fmtBrl} duration={durations.slow} /> <span className="text-paper/40">–</span> <TweenNumber value={est.max} format={fmtBrl} duration={durations.slow} />
+              </p>
+            </div>
+            <a href={whatsappLink(`Olá! Fiz uma simulação no site: ${CATEGORY_LABEL[type]}, ${num(safeArea)} m², padrão ${STANDARD_LABEL[standard].toLowerCase()}. Gostaria de um orçamento.`)}
+              target="_blank" rel="noopener noreferrer" aria-label="Falar no WhatsApp" className="grid h-11 w-11 shrink-0 place-items-center bg-[#25d366] text-[#0b3d1f]">
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            </a>
+            <Link to={quoteLink} className="btn btn-signal h-11 shrink-0 px-4">Orçar</Link>
+          </div>
+        </div>
+      )}
     </>
   );
 }

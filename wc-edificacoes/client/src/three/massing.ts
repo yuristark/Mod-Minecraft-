@@ -43,3 +43,24 @@ export function massing(category: Category, standard: Standard, area: number): M
   const depth = fp / width;
   return { floors, width, depth, floorH, height: floors * floorH };
 }
+
+/** Efeito visual de cada item adicional do simulador na maquete. */
+export type Feature = "landscape" | "earthwork" | "design";
+
+/**
+ * Reconhece o adicional pela chave ou pelo nome cadastrado no painel (o cliente pode renomear
+ * ou criar itens). Itens sem representação visual retornam null.
+ */
+export function featureOf(key: string, label = ""): Feature | null {
+  const t = `${key} ${label}`.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  if (/paisag|jardim|externa|area verde|gramado/.test(t)) return "landscape";
+  if (/terraplen|fundac|terreno|contencao|arrimo|solo/.test(t)) return "earthwork";
+  if (/projeto|arquitet|complementar|desenho/.test(t)) return "design";
+  return null;
+}
+
+export const FEATURE_LABEL: Record<Feature, string> = {
+  landscape: "Paisagismo",
+  earthwork: "Terraplenagem",
+  design: "Projeto",
+};

@@ -221,6 +221,9 @@
   .range:active::-webkit-slider-thumb, .range:hover::-webkit-slider-thumb { transform: scale(1.25) rotate(45deg); }
   .range:focus-visible { outline: 2px solid var(--signal); outline-offset: 4px; }
 
+  /* Fundo de "estúdio" da maquete: luz suave vinda de cima */
+  .studio-bg { background: radial-gradient(120% 90% at 50% 15%, #34363b 0%, #1d1f22 55%, #121315 100%); }
+
   /* Brilho laranja difuso: gradiente radial (custo zero) no lugar de filter: blur (caro na GPU) */
   .glow { background: radial-gradient(closest-side, rgb(var(--c-signal) / 0.13), rgb(var(--c-signal) / 0.05) 55%, transparent); }
 

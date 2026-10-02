@@ -1,5 +1,6 @@
 import { ArrowUp, ArrowUpRight, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { Logo } from "@/components/Brand";
+import { useLocation } from "react-router-dom";
 import { Link } from "@/components/Link";
 import { site, whatsappLink } from "@/config/site";
 import { StaggerItem, Staggered } from "@/motion/flutter";
@@ -10,10 +11,12 @@ const ext = { target: "_blank", rel: "noopener noreferrer" } as const;
 export function SiteFooter() {
   const year = new Date().getFullYear();
   const socials = Object.entries(site.social).filter(([, url]) => url);
+  // Na própria página de orçamento a chamada "Pedir orçamento" é redundante
+  const showCta = useLocation().pathname !== "/orcamento";
   return (
     <footer className="on-dark bg-ink text-paper">
       {/* Faixa de chamada */}
-      <div className="grain relative overflow-hidden border-b border-paper/10 text-paper">
+      {showCta && <div className="grain relative overflow-hidden border-b border-paper/10 text-paper">
         <div aria-hidden="true" className="blueprint-grid blueprint-pan absolute inset-0" />
         <div className="container relative grid gap-8 py-16 md:grid-cols-[1.4fr_1fr] md:items-end md:py-24">
           <div>
@@ -25,7 +28,7 @@ export function SiteFooter() {
             <Magnetic><a href={whatsappLink()} {...ext} className="btn btn-ghost w-full sm:w-auto"><MessageCircle className="h-4 w-4" aria-hidden="true" />WhatsApp</a></Magnetic>
           </Reveal>
         </div>
-      </div>
+      </div>}
 
       <Staggered className="container grid gap-12 py-14 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
         <StaggerItem className="space-y-5">

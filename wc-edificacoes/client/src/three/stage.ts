@@ -24,6 +24,10 @@ export interface StageOptions {
   fov?: number;
   fog?: { color: Color; near: number; far: number };
   shadows?: boolean;
+  /** liga sombras também no celular (cenas pequenas, como a maquete) */
+  mobileShadows?: boolean;
+  /** resolução mínima da qualidade adaptativa (cenas leves podem manter nitidez) */
+  minPixelRatio?: number;
   /** quando true, só renderiza sob demanda (prefers-reduced-motion) */
   still?: boolean;
   onFrame: (t: number, dt: number) => void;
@@ -38,7 +42,7 @@ export interface Stage {
   dispose: () => void;
 }
 
-export function createStage({ canvas, fov = 35, fog, shadows = true, still = false, onFrame }: StageOptions): Stage {
+export function createStage({ canvas, fov = 35, fog, shadows = true, mobileShadows = false, minPixelRatio, still = false, onFrame }: StageOptions): Stage {
   const host = canvas.parentElement ?? canvas;
   const isMobile = window.matchMedia("(max-width: 767px)").matches || navigator.maxTouchPoints > 1;
 
@@ -46,14 +50,14 @@ export function createStage({ canvas, fov = 35, fog, shadows = true, still = fal
   // e sem pedir a GPU de alto desempenho (poupa bateria).
   const renderer = new WebGLRenderer({ canvas, antialias: !isMobile, alpha: true, powerPreference: isMobile ? "default" : "high-performance" });
   const maxRatio = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 1.75);
-  const minRatio = Math.min(maxRatio, isMobile ? 0.75 : 1);
+  const minRatio = Math.min(maxRatio, minPixelRatio ?? (isMobile ? 0.75 : 1));
   let ratio = maxRatio;
   renderer.setPixelRatio(ratio);
   renderer.outputColorSpace = SRGBColorSpace;
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.setClearColor(0x000000, 0);
-  renderer.shadowMap.enabled = shadows && !isMobile;
+  renderer.shadowMap.enabled = shadows && (!isMobile || mobileShadows);
   renderer.shadowMap.type = PCFShadowMap;
 
   const scene = new Scene();
