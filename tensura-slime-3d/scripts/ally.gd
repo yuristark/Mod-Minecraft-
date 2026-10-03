@@ -47,7 +47,7 @@ func _ready() -> void:
 	_visual = Node3D.new()
 	add_child(_visual)
 	var ch: Dictionary = Data.CHARS[ally_id]
-	_model = Models.build(Data.MODELS[ch.model])
+	_model = Models.build(Data.MODELS[ch.model], ch.model)
 	_visual.add_child(_model)
 	_label = Util.label3d(ch.name, 36, Color(0.6, 1.0, 0.7), 2.5)
 	_label.no_depth_test = false

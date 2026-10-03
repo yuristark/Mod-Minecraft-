@@ -73,6 +73,25 @@ e a qualidade gráfica.
 - Nível/EXP, poções feitas de Ervas Hipokute, **Enciclopédia** com personagens e lore do
   anime/mangá, salvamento automático e manual.
 
+### Modelos 3D feitos no Blender
+Os **68 personagens e monstros** (Rimuru humano e Lorde Demônio, Veldora, Ranga, Benimaru, Shion,
+Shuna, Souei, Hakurou, Diablo, Milim, os Lordes Demônio, Hinata, Yuuki, orcs, soldados, aranha,
+serpente, tanque mágico...) são modelos do **Blender** com:
+- corpo orgânico em proporções realistas, rosto (olhos com íris, nariz, boca, orelhas), cabelo em mechas,
+  chifres, roupas (casaco, saia, capa, armadura), asas, caudas e armas;
+- texturas de relevo (normal maps de pele, tecido, couro, metal, pelo e escamas);
+- **esqueleto com animações** `idle`, `walk` e `attack`, que o jogo toca sozinho.
+
+Ficam em `models/*.gltf` (texturas compartilhadas em `models/texturas/`). Os arquivos editáveis
+`.blend` estão em `../blender/modelos_blend/` e o gerador em `../blender/gerar_modelos.py`
+(lê as cores/cabelo/armas de `scripts/game_data.gd`). Para gerar de novo depois de mudar algo:
+```
+blender -b -P blender/gerar_modelos.py            # todos
+blender -b -P blender/gerar_modelos.py -- shion   # só alguns
+blender -b -P blender/gerar_modelos.py -- --blend # também salva os .blend
+```
+Se um modelo for apagado, o jogo usa automaticamente a versão simples feita de primitivas.
+
 ### Gráficos
 Terreno com relevo e colisão (HeightMap), céu procedural, neblina, água com ondas e reflexo
 Fresnel, grama com vento e árvores em MultiMesh, corpo do Rimuru com shader de gelatina,
@@ -90,7 +109,8 @@ scripts/player.gd        Rimuru: movimento, formas, combo, skills, Predador, ní
 scripts/enemy.gd         monstros e chefes (padrões de ataque)
 scripts/ally.gd          aliados do grupo
 scripts/npc.gd           personagens para conversar
-scripts/models.gd        modelos procedurais (humanoides, lobos, dragão, aranha...)
+scripts/models.gd        carrega os modelos do Blender (models/) e anima; tem versão em primitivas de reserva
+models/                  modelos .gltf exportados do Blender + texturas
 scripts/fx.gd            efeitos (partículas, raios, feixes, avisos no chão, números de dano)
 scripts/hud.gd           interface, diálogos, menu completo e telas
 scripts/touch_controls.gd joystick e botões de toque (multitoque)
@@ -101,6 +121,7 @@ scripts/util.gd          funções para criar malhas e materiais
 shaders/                 terreno, água, grama, slime, portal e aviso de ataque
 tests/smoke_test.gd      teste automático que joga a história inteira
 tests/screenshots.gd     tira screenshots das áreas (precisa de tela)
+tests/model_gallery.gd   galeria com foto de cada modelo (precisa de tela)
 ```
 
 Para adicionar conteúdo (novo chefe, skill, fala ou capítulo) basta editar `scripts/game_data.gd`.

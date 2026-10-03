@@ -123,12 +123,18 @@ func _form_node(id: String) -> Node3D:
 	if _form_nodes.has(id):
 		return _form_nodes[id]
 	var spec := {}
+	var model_key := ""
 	match id:
 		"bat": spec = {"kind": "bat", "color": Color(0.3, 0.5, 0.85), "scale": 1.3}
 		"wolf": spec = {"kind": "quadruped", "color": Color(0.22, 0.28, 0.42), "horn": true, "star": true, "eye": Color(1.0, 0.8, 0.2)}
 		"human": spec = Data.MODELS["rimuru_human"]
 		"demon_lord": spec = Data.MODELS["rimuru_demon"]
-	var n := Models.build(spec)
+	match id:
+		"bat": model_key = "player_bat"
+		"wolf": model_key = "player_wolf"
+		"human": model_key = "rimuru_human"
+		"demon_lord": model_key = "rimuru_demon"
+	var n := Models.build(spec, model_key)
 	_visual.add_child(n)
 	_form_nodes[id] = n
 	return n

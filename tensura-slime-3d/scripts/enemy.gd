@@ -73,9 +73,11 @@ func _ready() -> void:
 	_visual = Node3D.new()
 	add_child(_visual)
 	var spec: Dictionary = data.get("model", {})
+	var model_key: String = type_id
 	if data.has("model_id"):
 		spec = Data.MODELS[data.model_id]
-	_model = Models.build(spec)
+		model_key = data.model_id
+	_model = Models.build(spec, model_key)
 	_visual.add_child(_model)
 	if data.get("flying", false):
 		_fly_height = 1.6
@@ -435,7 +437,11 @@ func _die() -> void:
 	collision_layer = 0
 	collision_mask = Util.LAYER_WORLD
 	var tw := create_tween()
-	tw.tween_property(_visual, "scale", _visual.scale * Vector3(1.2, 0.35, 1.2), 0.3)
+	if _model.get_meta("kind", "") == "blender":
+		Models.knock_down(_model)
+		tw.tween_interval(0.01)
+	else:
+		tw.tween_property(_visual, "scale", _visual.scale * Vector3(1.2, 0.35, 1.2), 0.3)
 	if data.get("flying", false):
 		tw.parallel().tween_property(_visual, "position:y", 0.2, 0.4)
 	# corpo fica azulado (pronto para o Predador)

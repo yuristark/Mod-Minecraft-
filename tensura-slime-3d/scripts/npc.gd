@@ -19,7 +19,7 @@ func _ready() -> void:
 	var ch: Dictionary = Data.CHARS[npc_id]
 	_visual = Node3D.new()
 	add_child(_visual)
-	_model = Models.build(Data.MODELS[ch.model])
+	_model = Models.build(Data.MODELS[ch.model], ch.model)
 	_visual.add_child(_model)
 	_t = randf() * 5.0
 	var y := 2.6

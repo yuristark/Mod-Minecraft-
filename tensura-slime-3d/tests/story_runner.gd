@@ -164,6 +164,13 @@ func extras() -> void:
 	for i in 6:
 		main.spawn_enemy("orc", p.global_position + Vector3(4 + i, 0, -6))
 	await wait(3)
+	var blender_count := 0
+	for e in get_tree().get_nodes_in_group("enemy"):
+		if e._model.get_meta("kind", "") == "blender":
+			blender_count += 1
+	check(blender_count > 0, "inimigos usando modelos do Blender")
+	for a in get_tree().get_nodes_in_group("ally"):
+		check(a._model.get_meta("kind", "") == "blender", "aliado %s com modelo do Blender" % a.ally_id)
 	for sid in Data.SKILLS:
 		if Data.SKILLS[sid].kind == "active":
 			p.mp = p.max_mp

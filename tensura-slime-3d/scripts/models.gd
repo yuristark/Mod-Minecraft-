@@ -1,13 +1,25 @@
 extends RefCounted
-## Modelos procedurais (só primitivas) de todos os personagens e monstros.
-## Todos olham para -Z. Use build(spec) para criar e animate(...) para animar.
+## Modelos de todos os personagens e monstros. Todos olham para -Z.
+## build(spec, id): se existir res://models/<id>.gltf (gerado no Blender por
+## blender/gerar_modelos.py) usa esse modelo com esqueleto e animações (idle/walk/attack);
+## senão monta a versão simples com primitivas. animate(...) anima os dois tipos.
 
 const Util := preload("res://scripts/util.gd")
+const MODEL_DIR := "res://models/%s.gltf"
+
+static var use_blender_models := true
 
 
-static func build(spec: Dictionary) -> Node3D:
+static func has_blender_model(id: String) -> bool:
+	return use_blender_models and id != "" and ResourceLoader.exists(MODEL_DIR % id)
+
+
+static func build(spec: Dictionary, id := "") -> Node3D:
 	var kind: String = spec.get("kind", "humanoid")
 	var root := Node3D.new()
+	if has_blender_model(id):
+		_blender(root, spec, id)
+		return root
 	root.set_meta("kind", kind)
 	match kind:
 		"humanoid": _humanoid(root, spec)
@@ -32,6 +44,8 @@ static func build(spec: Dictionary) -> Node3D:
 static func animate(root: Node3D, t: float, move: float, attack := -1.0) -> void:
 	var kind: String = root.get_meta("kind", "humanoid")
 	match kind:
+		"blender":
+			_animate_blender(root, move, attack)
 		"humanoid":
 			var sw := sin(t * 11.0) * 0.7 * move
 			_rot(root, "Rig/LegL", Vector3(sw, 0, 0))
@@ -72,6 +86,73 @@ static func animate(root: Node3D, t: float, move: float, attack := -1.0) -> void
 		"fairy":
 			_rot(root, "WingL", Vector3(0, sin(t * 20.0) * 0.5, 0))
 			_rot(root, "WingR", Vector3(0, -sin(t * 20.0) * 0.5, 0))
+
+
+# ---------------------------------------------------------------- modelos do Blender
+static func _blender(root: Node3D, spec: Dictionary, id: String) -> void:
+	root.set_meta("kind", "blender")
+	root.set_meta("model_id", id)
+	var inst: Node3D = (load(MODEL_DIR % id) as PackedScene).instantiate()
+	inst.name = "Model"
+	root.add_child(inst)
+	var ap := inst.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if ap:
+		for anim_name in ["idle", "walk"]:
+			if ap.has_animation(anim_name):
+				ap.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+		if ap.has_animation("idle"):
+			ap.play("idle")
+			ap.seek(randf() * ap.current_animation_length, true)
+		root.set_meta("ap", ap)
+	root.set_meta("attacking", false)
+	if spec.has("aura"):
+		var light := OmniLight3D.new()
+		light.light_color = spec.aura
+		light.light_energy = 1.2
+		light.omni_range = 5.0
+		light.position.y = 1.3
+		root.add_child(light)
+	var s: float = spec.get("scale", 1.0)
+	if s != 1.0:
+		root.scale = Vector3.ONE * s
+
+
+static func _animate_blender(root: Node3D, move: float, attack: float) -> void:
+	var ap = root.get_meta("ap", null)
+	if ap == null or not is_instance_valid(ap):
+		return
+	var was: bool = root.get_meta("attacking", false)
+	if attack >= 0.0:
+		if not was and ap.has_animation("attack"):
+			ap.speed_scale = 1.4
+			ap.play("attack", 0.06)
+		root.set_meta("attacking", true)
+		return
+	root.set_meta("attacking", false)
+	if ap.current_animation == "attack" and ap.is_playing():
+		return
+	if move > 0.08 and ap.has_animation("walk"):
+		ap.speed_scale = clampf(0.6 + move * 1.2, 0.6, 2.2)
+		if ap.current_animation != "walk":
+			ap.play("walk", 0.2)
+	elif ap.has_animation("idle"):
+		ap.speed_scale = 1.0
+		if ap.current_animation != "idle":
+			ap.play("idle", 0.3)
+
+
+## Deixa o modelo "caído" (corpos para o Predador).
+static func knock_down(root: Node3D) -> void:
+	if root.get_meta("kind", "") != "blender":
+		return
+	var ap = root.get_meta("ap", null)
+	if ap and is_instance_valid(ap):
+		ap.pause()
+	var m := root.get_node_or_null("Model") as Node3D
+	if m:
+		var tw := m.create_tween()
+		tw.tween_property(m, "rotation:x", PI / 2.0, 0.35).set_ease(Tween.EASE_IN)
+		tw.parallel().tween_property(m, "position:y", 0.25, 0.35)
 
 
 static func _rot(root: Node, path: String, r: Vector3) -> void:
